@@ -1,5 +1,5 @@
 
-import { Category, SubCategory, Transaction, User } from "@/types/cashflow";
+import { Category, SubCategory, Transaction, User, TransactionStatus } from "@/types/cashflow";
 
 // Mock users
 export const mockUsers: User[] = [

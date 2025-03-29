@@ -15,6 +15,8 @@ const DashboardCharts = () => {
       name: item.categoryName,
       amount: item.amount,
       type: item.type,
+      // Add a fill property directly to each data item
+      fill: item.type === 'income' ? '#059669' : '#e11d48',
     }));
 
   // Prepare data for the monthly chart
@@ -45,10 +47,10 @@ const DashboardCharts = () => {
               <Bar 
                 dataKey="amount" 
                 name="Amount" 
-                fill={(data, index) => {
-                  const item = categoryData[index];
-                  return item.type === 'income' ? '#059669' : '#e11d48';
-                }}
+                // Use the fill from the data item instead of a function
+                fill="#059669"
+                // Use fillOpacity=0 to make the default fill invisible
+                fillOpacity={0}
               />
             </BarChart>
           </ResponsiveContainer>
