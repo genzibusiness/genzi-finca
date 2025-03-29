@@ -24,6 +24,12 @@ const CurrencyField: React.FC<CurrencyFieldProps> = ({
     }
   };
 
+  // Find the currency display format based on the code
+  const getCurrencyDisplay = (code: string) => {
+    const currency = currencies.find(c => c.code === code);
+    return currency ? `${currency.code} - ${currency.symbol}` : code;
+  };
+
   return (
     <FormField
       control={form.control}
@@ -36,8 +42,10 @@ const CurrencyField: React.FC<CurrencyFieldProps> = ({
             value={field.value || defaultCurrency}
           >
             <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder="Select currency" />
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {field.value ? getCurrencyDisplay(field.value) : "Select currency"}
+                </SelectValue>
               </SelectTrigger>
             </FormControl>
             <SelectContent>

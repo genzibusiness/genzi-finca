@@ -10,6 +10,13 @@ interface PaymentTypeFieldProps {
 }
 
 const PaymentTypeField: React.FC<PaymentTypeFieldProps> = ({ form, paymentTypes }) => {
+  // Find the payment type name based on the ID
+  const getPaymentTypeName = (id: string) => {
+    if (id === 'none') return 'None';
+    const paymentType = paymentTypes.find(pt => pt.id === id);
+    return paymentType?.name || id;
+  };
+
   return (
     <FormField
       control={form.control}
@@ -19,8 +26,10 @@ const PaymentTypeField: React.FC<PaymentTypeFieldProps> = ({ form, paymentTypes 
           <FormLabel>Payment Type</FormLabel>
           <Select onValueChange={field.onChange} value={field.value || ''}>
             <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder="Select payment type" />
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {field.value ? getPaymentTypeName(field.value) : "Select payment type"}
+                </SelectValue>
               </SelectTrigger>
             </FormControl>
             <SelectContent>

@@ -1,14 +1,11 @@
-
 export type TransactionStatus = "paid" | "received" | "yet_to_be_paid" | "yet_to_be_received";
 
 export type TransactionType = "income" | "expense";
 
 export type CurrencyType = "SGD" | "INR" | "USD" | "EUR" | "GBP";
 
-// Define both the enum type and the general string type for expense types
-export type ExpenseTypeEnum = "Salary" | "Marketing" | "Services" | "Software" | "Other";
-// Use ExpenseTypeEnum directly as the type for expense_type to ensure type safety
-export type ExpenseType = ExpenseTypeEnum | string;
+// Define expense types as string for more flexibility
+export type ExpenseType = string;
 
 export interface Category {
   id: string;

@@ -10,6 +10,12 @@ interface StatusFieldProps {
 }
 
 const StatusField: React.FC<StatusFieldProps> = ({ form, statuses }) => {
+  // Find the full status name based on the normalized name
+  const getStatusDisplayName = (value: string) => {
+    const status = statuses.find(s => s.name_normalized === value);
+    return status?.name || value;
+  };
+
   return (
     <FormField
       control={form.control}
@@ -19,8 +25,10 @@ const StatusField: React.FC<StatusFieldProps> = ({ form, statuses }) => {
           <FormLabel>Status</FormLabel>
           <Select onValueChange={field.onChange} value={field.value}>
             <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {field.value ? getStatusDisplayName(field.value) : "Select status"}
+                </SelectValue>
               </SelectTrigger>
             </FormControl>
             <SelectContent>
