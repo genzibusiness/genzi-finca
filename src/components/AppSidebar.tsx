@@ -49,9 +49,11 @@ const AppSidebar = () => {
       <SidebarHeader className="border-b">
         <div className="flex items-center justify-between px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <Badge variant="outline" className="text-lg font-bold text-black bg-white p-1 h-7 border-black">
-              GF
-            </Badge>
+            <img 
+              src="/lovable-uploads/c6205e0f-d02f-4ea9-a6dd-ea17fa945b79.png" 
+              alt="Genzi Finca Logo" 
+              className="h-8 w-8" 
+            />
             <span className="font-bold">Genzi Finca</span>
           </Link>
         </div>

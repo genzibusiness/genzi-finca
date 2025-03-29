@@ -5,7 +5,6 @@ import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { BadgeDollarSign } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -51,7 +50,11 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center">
-            <BadgeDollarSign size={40} className="text-primary" />
+            <img 
+              src="/lovable-uploads/c6205e0f-d02f-4ea9-a6dd-ea17fa945b79.png" 
+              alt="Genzi Finca Logo" 
+              className="h-16 w-16" 
+            />
           </div>
           <CardTitle className="text-2xl">Genzi Finca</CardTitle>
           <CardDescription>Manage your finances with ease</CardDescription>
