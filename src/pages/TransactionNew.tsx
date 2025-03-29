@@ -69,6 +69,10 @@ const TransactionNew = () => {
       const payment_type_id = transaction.payment_type_id === 'none' ? null : transaction.payment_type_id;
       const paid_by_user_id = transaction.paid_by_user_id === 'none' ? null : transaction.paid_by_user_id;
       
+      // Ensure document_url and comment are properly handled as null if empty
+      const document_url = transaction.document_url || null;
+      const comment = transaction.comment || null;
+      
       const transactionData = {
         amount: transaction.amount,
         date: transaction.date,
@@ -76,9 +80,9 @@ const TransactionNew = () => {
         status: validStatus,
         type: transaction.type,
         user_id: user.id,
-        expense_type: validExpenseType, // This ensures expense_type is null for income transactions
-        comment: transaction.comment || null,
-        document_url: transaction.document_url || null,
+        expense_type: validExpenseType,
+        comment: comment,
+        document_url: document_url,
         includes_tax: transaction.includes_tax || false,
         payment_type_id: payment_type_id,
         paid_by_user_id: paid_by_user_id

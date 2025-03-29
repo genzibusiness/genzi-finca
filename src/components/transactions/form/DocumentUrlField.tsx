@@ -24,6 +24,11 @@ const DocumentUrlField: React.FC<DocumentUrlFieldProps> = ({ form }) => {
                 placeholder="https://example.com/invoice.pdf"
                 {...field}
                 value={field.value || ''}
+                onChange={(e) => {
+                  // Set to null if empty string, otherwise use the value
+                  const value = e.target.value.trim() === '' ? null : e.target.value;
+                  field.onChange(value);
+                }}
               />
               {field.value && (
                 <Button

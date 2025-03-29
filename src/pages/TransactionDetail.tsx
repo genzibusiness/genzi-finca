@@ -76,6 +76,10 @@ const TransactionDetail = () => {
       const payment_type_id = updatedTransaction.payment_type_id === 'none' ? null : updatedTransaction.payment_type_id;
       const paid_by_user_id = updatedTransaction.paid_by_user_id === 'none' ? null : updatedTransaction.paid_by_user_id;
       
+      // Ensure document_url and comment are properly handled as null if empty
+      const document_url = updatedTransaction.document_url || null;
+      const comment = updatedTransaction.comment || null;
+      
       const { error } = await supabase
         .from('transactions')
         .update({
@@ -84,9 +88,9 @@ const TransactionDetail = () => {
           type: updatedTransaction.type,
           currency: updatedTransaction.currency,
           expense_type: validExpenseType,
-          comment: updatedTransaction.comment,
+          comment: comment,
           status: updatedTransaction.status,
-          document_url: updatedTransaction.document_url,
+          document_url: document_url,
           includes_tax: updatedTransaction.includes_tax,
           payment_type_id: payment_type_id,
           paid_by_user_id: paid_by_user_id

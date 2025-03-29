@@ -15,8 +15,8 @@ const createTransactionFormSchema = () => {
     expense_type: z.string().nullable().optional(),
     status: z.string(),
     currency: z.string(),
-    comment: z.string().optional(),
-    document_url: z.string().optional(),
+    comment: z.string().nullable().optional(),
+    document_url: z.string().nullable().optional(),
     includes_tax: z.boolean().optional(),
     payment_type_id: z.string().optional(),
     paid_by_user_id: z.string().optional(),
@@ -42,6 +42,8 @@ export const useTransactionForm = (
           payment_type_id: transaction.payment_type_id || '',
           paid_by_user_id: transaction.paid_by_user_id || '',
           expense_type: transaction.expense_type || null,
+          document_url: transaction.document_url || null,
+          comment: transaction.comment || null,
         }
       : {
           amount: 0,
@@ -49,8 +51,8 @@ export const useTransactionForm = (
           type: 'expense',
           status: '',
           currency: defaultCurrency,
-          comment: '',
-          document_url: '',
+          comment: null,
+          document_url: null,
           includes_tax: false,
           payment_type_id: '',
           paid_by_user_id: '',
@@ -140,6 +142,10 @@ export const useTransactionForm = (
     // Prepare expense_type - ensure it's null for income transactions
     const expense_type = values.type === 'income' ? null : values.expense_type;
     
+    // Handle empty strings for nullable text fields
+    const document_url = values.document_url || null;
+    const comment = values.comment || null;
+    
     // Prepare transaction data
     const transactionData = {
       ...values,
@@ -147,6 +153,8 @@ export const useTransactionForm = (
       expense_type: expense_type,
       payment_type_id: payment_type_id,
       paid_by_user_id: paid_by_user_id,
+      document_url: document_url,
+      comment: comment,
     };
     
     return transactionData;
