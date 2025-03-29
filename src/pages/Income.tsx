@@ -25,8 +25,6 @@ const Income = () => {
         
         <DashboardFilters />
         <TransactionList 
-          showSubCategory 
-          showCreatedBy 
           filterType="income"
         />
       </div>

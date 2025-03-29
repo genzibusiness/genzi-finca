@@ -1,4 +1,4 @@
-// Replace the incorrect import
+
 import React from 'react';
 import { useState, useEffect } from 'react';
 import {
@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -29,7 +28,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
-// Fix by importing the correct function
+// Import the corrected hook
 import { useTransactionListData } from '@/hooks/useTransactionListData';
 
 interface Transaction {
@@ -43,9 +42,32 @@ interface Transaction {
   status: string;
 }
 
-const TransactionList = () => {
+interface TransactionListProps {
+  showSubCategory?: boolean;
+  showCreatedBy?: boolean;
+  selectedMonth?: string | null;
+  selectedYear?: string | null;
+  selectedCategory?: string | null;
+  filterType?: string | null;
+}
+
+const TransactionList: React.FC<TransactionListProps> = ({ 
+  showSubCategory = false,
+  showCreatedBy = false,
+  selectedMonth = null,
+  selectedYear = null,
+  selectedCategory = null,
+  filterType = null
+}) => {
   const navigate = useNavigate();
-  const { transactions, isLoading, error, deleteTransaction } = useTransactionListData();
+  const { transactions, isLoading, error, deleteTransaction } = useTransactionListData({
+    showSubCategory,
+    showCreatedBy,
+    selectedMonth,
+    selectedYear,
+    selectedCategory,
+    filterType
+  });
   const [data, setData] = useState<Transaction[]>([]);
 
   useEffect(() => {
