@@ -8,7 +8,7 @@ import { useCashflow } from '@/context/CashflowContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Transaction } from '@/types/cashflow';
 
-const TransactionNew = () => {
+const TransactionContent = () => {
   const navigate = useNavigate();
   const { addTransaction } = useCashflow();
   
@@ -18,22 +18,28 @@ const TransactionNew = () => {
   };
   
   return (
+    <div className="container max-w-3xl py-6">
+      <PageHeader 
+        title="New Transaction" 
+        description="Create a new transaction record"
+      />
+      
+      <Card>
+        <CardContent className="pt-6">
+          <TransactionForm 
+            onSubmit={handleSubmit}
+            onCancel={() => navigate('/transactions')}
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const TransactionNew = () => {
+  return (
     <AppLayout>
-      <div className="container max-w-3xl py-6">
-        <PageHeader 
-          title="New Transaction" 
-          description="Create a new transaction record"
-        />
-        
-        <Card>
-          <CardContent className="pt-6">
-            <TransactionForm 
-              onSubmit={handleSubmit}
-              onCancel={() => navigate('/transactions')}
-            />
-          </CardContent>
-        </Card>
-      </div>
+      <TransactionContent />
     </AppLayout>
   );
 };
