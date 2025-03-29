@@ -33,16 +33,17 @@ import StatusBadge from '@/components/StatusBadge';
 
 // Import the corrected hook
 import { useTransactionListData } from '@/hooks/useTransactionListData';
+import { TransactionType, TransactionStatus } from '@/types/cashflow';
 
 interface Transaction {
   id: string;
   date: string;
-  type: string;
+  type: TransactionType;
   amount: number;
   currency: string;
   expense_type: string | null;
   comment: string | null;
-  status: string;
+  status: TransactionStatus;
 }
 
 interface TransactionListProps {
@@ -75,7 +76,14 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
   useEffect(() => {
     if (transactions) {
-      setData(transactions);
+      // Ensure the data is properly typed when setting state
+      const typedTransactions = transactions.map(transaction => ({
+        ...transaction,
+        // Cast the string values to their respective union types
+        type: transaction.type as TransactionType,
+        status: transaction.status as TransactionStatus
+      }));
+      setData(typedTransactions);
     }
   }, [transactions]);
 
