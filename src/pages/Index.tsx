@@ -37,8 +37,10 @@ const Index = () => {
         
         <DashboardFilters />
         <DashboardSummary />
-        <DashboardCharts />
-        <RecentTransactions />
+        <div className="grid gap-4 grid-cols-1">
+          <DashboardCharts />
+          <RecentTransactions />
+        </div>
       </div>
     </AppLayout>
   );

@@ -3,6 +3,7 @@ import React from 'react';
 import { useCashflow } from '@/context/CashflowContext';
 import TopExpensesChart from './charts/TopExpensesChart';
 import MonthlyCashFlowChart from './charts/MonthlyCashFlowChart';
+import StatusBasedChart from './charts/StatusBasedChart';
 
 const DashboardCharts = () => {
   const { selectedMonth, selectedYear, selectedCategory, selectedType } = useCashflow();
@@ -17,6 +18,13 @@ const DashboardCharts = () => {
       />
       
       <MonthlyCashFlowChart 
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        selectedCategory={selectedCategory}
+        selectedType={selectedType}
+      />
+
+      <StatusBasedChart 
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
         selectedCategory={selectedCategory}
