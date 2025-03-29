@@ -1,14 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
-import { useCashflow } from '@/context/CashflowContext';
 import TransactionDetailView from '@/components/transactions/TransactionDetail';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Transaction } from '@/types/cashflow';
+import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,12 +24,69 @@ import {
 const TransactionDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getTransactionById, updateTransaction, deleteTransaction } = useCashflow();
-  
+  const [transaction, setTransaction] = useState<Transaction | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
-  const transaction = getTransactionById(id || '');
+  useEffect(() => {
+    if (!id) return;
+    
+    const fetchTransaction = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setTransaction(data as Transaction);
+        }
+      } catch (error: any) {
+        console.error('Error fetching transaction:', error);
+        toast.error('Failed to load transaction details');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchTransaction();
+  }, [id]);
+  
+  const handleDelete = async () => {
+    if (!transaction) return;
+    
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', transaction.id);
+      
+      if (error) throw error;
+      
+      toast.success('Transaction deleted successfully');
+      navigate('/transactions');
+    } catch (error: any) {
+      console.error('Error deleting transaction:', error);
+      toast.error(error.message || 'Failed to delete transaction');
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <div className="container max-w-3xl py-6">
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading transaction details...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
   
   if (!transaction) {
     return (
@@ -47,16 +105,6 @@ const TransactionDetailPage = () => {
       </AppLayout>
     );
   }
-  
-  const handleUpdate = (data: Omit<Transaction, 'id'>) => {
-    updateTransaction({ ...data, id: transaction.id });
-    setIsEditing(false);
-  };
-  
-  const handleDelete = () => {
-    deleteTransaction(transaction.id);
-    navigate('/transactions');
-  };
   
   return (
     <AppLayout>

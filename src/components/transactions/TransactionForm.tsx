@@ -59,7 +59,7 @@ const getStatusOptions = (type: string) => {
 };
 
 interface TransactionFormProps {
-  initialData?: any;
+  initialData?: Transaction;
   onCancel: () => void;
 }
 

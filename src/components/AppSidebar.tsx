@@ -36,7 +36,7 @@ const AppSidebar = () => {
       <SidebarHeader className="px-6 py-4">
         <Link to="/" className="flex items-center gap-2">
           <BadgeDollarSign size={30} className="text-sidebar-primary" />
-          <span className="text-xl font-bold tracking-tight">CashFlow</span>
+          <span className="text-xl font-bold tracking-tight">Zinca</span>
         </Link>
         <SidebarTrigger className="md:hidden absolute right-2 top-4" />
       </SidebarHeader>
