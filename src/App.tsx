@@ -36,35 +36,37 @@ const App = () => {
   );
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <CashflowProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                {/* Auth routes - no protection */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                
-                {/* Protected routes */}
-                <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
-                <Route path="/transactions/new" element={<ProtectedRoute><TransactionNew /></ProtectedRoute>} />
-                <Route path="/transactions/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/configure" element={<ProtectedRoute><ConfigureMasterData /></ProtectedRoute>} />
-                
-                {/* Catch-all route */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </CashflowProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <CashflowProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  {/* Auth routes - no protection */}
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  
+                  {/* Protected routes */}
+                  <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                  <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+                  <Route path="/transactions/new" element={<ProtectedRoute><TransactionNew /></ProtectedRoute>} />
+                  <Route path="/transactions/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
+                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                  <Route path="/configure" element={<ProtectedRoute><ConfigureMasterData /></ProtectedRoute>} />
+                  
+                  {/* Catch-all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </CashflowProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 

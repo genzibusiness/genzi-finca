@@ -7,9 +7,11 @@ import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 const TransactionNew = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [defaultCurrency, setDefaultCurrency] = useState<CurrencyType>("INR");
   const [loading, setLoading] = useState(false);
 
@@ -48,13 +50,8 @@ const TransactionNew = () => {
         throw new Error('Missing required fields for transaction');
       }
       
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) {
-        console.error('Auth error:', userError);
-        throw new Error('User not authenticated');
-      }
-      
-      if (!userData || !userData.user) {
+      // Use the user from Auth context instead of fetching it again
+      if (!user) {
         throw new Error('User not authenticated');
       }
       
@@ -73,7 +70,7 @@ const TransactionNew = () => {
         currency: transaction.currency,
         status: validStatus,
         type: transaction.type,
-        user_id: userData.user.id,
+        user_id: user.id,
         expense_type: validExpenseType,
         comment: transaction.comment || null,
         document_url: transaction.document_url || null,
