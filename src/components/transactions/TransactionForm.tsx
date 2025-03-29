@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { CalendarIcon, Check } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -38,10 +38,10 @@ type TransactionFormProps = {
 const TransactionForm = ({ transaction, onSave, isSubmitting = false }: TransactionFormProps) => {
   const navigate = useNavigate();
   
-  const [expenseTypes, setExpenseTypes] = useState([]);
-  const [statuses, setStatuses] = useState([]);
-  const [currencies, setCurrencies] = useState([]);
-  const [defaultCurrency, setDefaultCurrency] = useState('INR');
+  const [expenseTypes, setExpenseTypes] = useState<{id: string, name: string}[]>([]);
+  const [statuses, setStatuses] = useState<{id: string, name: string, type: string}[]>([]);
+  const [currencies, setCurrencies] = useState<{id: string, code: string, name: string, symbol: string}[]>([]);
+  const [defaultCurrency, setDefaultCurrency] = useState<string>('INR');
   
   // Initialize form with transaction data or defaults
   const form = useForm({
@@ -65,44 +65,80 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log('Fetching form data');
+        
         // Fetch expense types
-        const { data: expenseTypesData } = await supabase
+        const { data: expenseTypesData, error: expenseTypesError } = await supabase
           .from('expense_types')
           .select('id, name')
           .eq('active', true);
         
+        if (expenseTypesError) {
+          console.error('Error fetching expense types:', expenseTypesError);
+          throw expenseTypesError;
+        }
+        
         if (expenseTypesData) {
+          console.log('Expense types:', expenseTypesData);
           setExpenseTypes(expenseTypesData);
         }
         
         // Fetch transaction statuses
-        const { data: statusesData } = await supabase
+        const { data: statusesData, error: statusesError } = await supabase
           .from('transaction_statuses')
           .select('id, name, type')
           .eq('active', true);
         
+        if (statusesError) {
+          console.error('Error fetching statuses:', statusesError);
+          throw statusesError;
+        }
+        
         if (statusesData) {
+          console.log('Statuses:', statusesData);
           setStatuses(statusesData);
+          
+          // Set default status based on transaction type
+          const currentType = form.getValues('type');
+          const relevantStatuses = statusesData.filter(
+            (status) => !status.type || status.type === currentType
+          );
+          
+          if (relevantStatuses.length > 0 && !form.getValues('status')) {
+            form.setValue('status', relevantStatuses[0].name);
+          }
         }
         
         // Fetch currencies
-        const { data: currenciesData } = await supabase
+        const { data: currenciesData, error: currenciesError } = await supabase
           .from('currencies')
           .select('id, code, name, symbol')
           .eq('active', true);
         
+        if (currenciesError) {
+          console.error('Error fetching currencies:', currenciesError);
+          throw currenciesError;
+        }
+        
         if (currenciesData) {
+          console.log('Currencies:', currenciesData);
           setCurrencies(currenciesData);
         }
         
         // Fetch default currency
-        const { data: defaultCurrencyData } = await supabase
+        const { data: defaultCurrencyData, error: defaultCurrencyError } = await supabase
           .from('currencies')
           .select('code')
           .eq('is_default', true)
           .single();
         
+        if (defaultCurrencyError && defaultCurrencyError.code !== 'PGRST116') {
+          console.error('Error fetching default currency:', defaultCurrencyError);
+          throw defaultCurrencyError;
+        }
+        
         if (defaultCurrencyData) {
+          console.log('Default currency:', defaultCurrencyData.code);
           setDefaultCurrency(defaultCurrencyData.code);
           
           // Set default currency if creating a new transaction
@@ -144,6 +180,8 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
   // Handle form submission
   const onSubmit = async (values) => {
     try {
+      console.log('Form values:', values);
+      
       // Format the date for database
       const formattedDate = format(values.date, 'yyyy-MM-dd');
       
@@ -154,6 +192,8 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
         // If expense type is empty and type is income, set to null
         expense_type: values.type === 'income' ? null : values.expense_type,
       };
+      
+      console.log('Submitting transaction:', transactionData);
       
       // Save transaction data
       if (onSave) {

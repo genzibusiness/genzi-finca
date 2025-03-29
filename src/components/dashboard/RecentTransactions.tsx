@@ -26,7 +26,7 @@ const RecentTransactions = () => {
   useEffect(() => {
     fetchRecentTransactions();
 
-    // Set up realtime subscription
+    // Set up realtime subscription for all transaction changes
     const channel = supabase
       .channel('public:transactions')
       .on('postgres_changes', { 
@@ -34,6 +34,7 @@ const RecentTransactions = () => {
         schema: 'public', 
         table: 'transactions' 
       }, () => {
+        console.log('Transaction changed, refetching data');
         fetchRecentTransactions();
       })
       .subscribe();
@@ -47,14 +48,20 @@ const RecentTransactions = () => {
   const fetchRecentTransactions = async () => {
     try {
       setIsLoading(true);
+      console.log('Fetching recent transactions');
+      
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
         .order('date', { ascending: false })
         .limit(5);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching transactions:', error);
+        throw error;
+      }
       
+      console.log('Fetched transactions:', data);
       setTransactions(data as Transaction[]);
     } catch (error) {
       console.error('Error fetching recent transactions:', error);

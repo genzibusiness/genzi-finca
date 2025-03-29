@@ -57,13 +57,18 @@ const TransactionNew = () => {
         comment: transaction.comment || null
       };
       
+      console.log('Saving transaction:', transactionData);
+      
       const { data, error } = await supabase
         .from('transactions')
         .insert(transactionData)
         .select('id')
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
       toast.success('Transaction created successfully');
       navigate(`/transactions/${data.id}`);
