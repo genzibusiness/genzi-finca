@@ -4,32 +4,42 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
 import { ArrowDown, ArrowUp, PiggyBank } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCashflow } from '@/context/CashflowContext';
 
 const DashboardSummary = () => {
+  const [loading, setLoading] = useState(true);
+  const [defaultCurrency, setDefaultCurrency] = useState('INR');
+  const { 
+    filteredTransactions, 
+    selectedMonth, 
+    selectedYear, 
+    selectedCategory, 
+    selectedType 
+  } = useCashflow();
+
   const [summary, setSummary] = useState({
     totalIncome: 0,
     totalExpenses: 0,
     netCashflow: 0
   });
-  const [loading, setLoading] = useState(true);
-  const [defaultCurrency, setDefaultCurrency] = useState('INR');
 
   useEffect(() => {
-    fetchSummaryData();
     fetchDefaultCurrency();
-  }, []);
+    calculateSummary();
+  }, [filteredTransactions]);
 
   const fetchDefaultCurrency = async () => {
     try {
       const { data, error } = await supabase
         .from('currencies')
         .select('code')
-        .eq('active', true)
-        .order('code', { ascending: true })
-        .limit(1)
+        .eq('is_default', true)
         .single();
       
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 is the error code when no rows are returned
+        throw error;
+      }
       
       if (data) {
         setDefaultCurrency(data.code);
@@ -39,29 +49,18 @@ const DashboardSummary = () => {
     }
   };
 
-  const fetchSummaryData = async () => {
+  const calculateSummary = () => {
+    setLoading(true);
+    
     try {
-      setLoading(true);
-      
-      // Fetch total income
-      const { data: incomeData, error: incomeError } = await supabase
-        .from('transactions')
-        .select('amount')
-        .eq('type', 'income');
-      
-      if (incomeError) throw incomeError;
-      
-      // Fetch total expenses
-      const { data: expenseData, error: expenseError } = await supabase
-        .from('transactions')
-        .select('amount')
-        .eq('type', 'expense');
-      
-      if (expenseError) throw expenseError;
-      
-      // Calculate totals
-      const totalIncome = incomeData?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) || 0;
-      const totalExpenses = expenseData?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) || 0;
+      // Calculate totals from filtered transactions
+      const totalIncome = filteredTransactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+        
+      const totalExpenses = filteredTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
       
       setSummary({
         totalIncome,
@@ -69,10 +68,37 @@ const DashboardSummary = () => {
         netCashflow: totalIncome - totalExpenses
       });
     } catch (error) {
-      console.error('Error fetching summary data:', error);
+      console.error('Error calculating summary:', error);
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Function to get subtitle text based on current filters
+  const getSubtitleText = () => {
+    const parts = [];
+    
+    if (selectedYear) {
+      parts.push(selectedYear);
+    }
+    
+    if (selectedMonth) {
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      parts.push(monthNames[parseInt(selectedMonth) - 1]);
+    }
+    
+    if (selectedCategory) {
+      parts.push(`Category: ${selectedCategory}`);
+    }
+    
+    if (selectedType) {
+      parts.push(`Type: ${selectedType}`);
+    }
+    
+    return parts.length > 0 ? parts.join(' • ') : 'YTD';
   };
   
   return (
@@ -93,7 +119,7 @@ const DashboardSummary = () => {
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            YTD Income
+            {getSubtitleText()} Income
           </p>
         </CardContent>
       </Card>
@@ -114,7 +140,7 @@ const DashboardSummary = () => {
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            YTD Expenses
+            {getSubtitleText()} Expenses
           </p>
         </CardContent>
       </Card>
@@ -135,7 +161,7 @@ const DashboardSummary = () => {
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            YTD Net
+            {getSubtitleText()} Net
           </p>
         </CardContent>
       </Card>

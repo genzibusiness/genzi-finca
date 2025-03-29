@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Pencil, Trash, Plus } from 'lucide-react';
+import { Pencil, Trash, Plus, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
@@ -47,6 +47,7 @@ interface Currency {
   name: string;
   symbol: string;
   active: boolean;
+  is_default: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -62,7 +63,8 @@ const CurrencyConfig = () => {
     code: '', 
     name: '', 
     symbol: '',
-    active: true 
+    active: true,
+    is_default: false
   });
   
   useEffect(() => {
@@ -89,7 +91,7 @@ const CurrencyConfig = () => {
   };
   
   const handleAddClick = () => {
-    setFormData({ code: '', name: '', symbol: '', active: true });
+    setFormData({ code: '', name: '', symbol: '', active: true, is_default: false });
     setIsAddDialogOpen(true);
   };
   
@@ -99,7 +101,8 @@ const CurrencyConfig = () => {
       code: currency.code, 
       name: currency.name, 
       symbol: currency.symbol, 
-      active: currency.active 
+      active: currency.active,
+      is_default: currency.is_default || false 
     });
     setIsEditDialogOpen(true);
   };
@@ -124,10 +127,51 @@ const CurrencyConfig = () => {
     }
     return true;
   };
+
+  const handleSetDefault = async (currencyId: string) => {
+    try {
+      setIsLoading(true);
+      
+      // First, update all currencies to not be default
+      const { error: resetError } = await supabase
+        .from('currencies')
+        .update({ is_default: false })
+        .neq('id', 'dummy');
+      
+      if (resetError) throw resetError;
+      
+      // Then set the selected currency as default
+      const { error: updateError } = await supabase
+        .from('currencies')
+        .update({ is_default: true })
+        .eq('id', currencyId);
+      
+      if (updateError) throw updateError;
+      
+      toast.success('Default currency updated');
+      fetchCurrencies();
+    } catch (error) {
+      console.error('Error setting default currency:', error);
+      toast.error('Failed to update default currency');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const handleSubmitAdd = async () => {
     try {
       if (!validateForm()) return;
+      
+      // Check if making this the default currency
+      if (formData.is_default) {
+        // Reset all other currencies to not be default
+        const { error: resetError } = await supabase
+          .from('currencies')
+          .update({ is_default: false })
+          .neq('id', 'dummy');
+        
+        if (resetError) throw resetError;
+      }
       
       const { error } = await supabase
         .from('currencies')
@@ -135,7 +179,8 @@ const CurrencyConfig = () => {
           code: formData.code.trim().toUpperCase(), 
           name: formData.name.trim(),
           symbol: formData.symbol.trim(),
-          active: formData.active 
+          active: formData.active,
+          is_default: formData.is_default
         }]);
       
       if (error) throw error;
@@ -154,12 +199,24 @@ const CurrencyConfig = () => {
       if (!currentCurrency) return;
       if (!validateForm()) return;
       
+      // Check if making this the default currency
+      if (formData.is_default) {
+        // Reset all other currencies to not be default
+        const { error: resetError } = await supabase
+          .from('currencies')
+          .update({ is_default: false })
+          .neq('id', currentCurrency.id);
+        
+        if (resetError) throw resetError;
+      }
+      
       const { error } = await supabase
         .from('currencies')
         .update({ 
           name: formData.name.trim(),
           symbol: formData.symbol.trim(),
-          active: formData.active 
+          active: formData.active,
+          is_default: formData.is_default
         })
         .eq('id', currentCurrency.id);
       
@@ -219,13 +276,14 @@ const CurrencyConfig = () => {
                 <TableHead>Name</TableHead>
                 <TableHead>Symbol</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Default</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {currencies.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4">
+                  <TableCell colSpan={6} className="text-center py-4">
                     No currencies found. Add one to get started.
                   </TableCell>
                 </TableRow>
@@ -243,11 +301,32 @@ const CurrencyConfig = () => {
                       )}
                     </TableCell>
                     <TableCell>
+                      {currency.is_default ? (
+                        <span className="text-green-600 font-medium flex items-center">
+                          <Check className="h-4 w-4 mr-1" /> Default
+                        </span>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleSetDefault(currency.id)}
+                          disabled={isLoading}
+                        >
+                          Set Default
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <div className="flex gap-2">
                         <Button variant="ghost" size="icon" onClick={() => handleEditClick(currency)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(currency)}>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDeleteClick(currency)}
+                          disabled={currency.is_default}
+                        >
                           <Trash className="h-4 w-4" />
                         </Button>
                       </div>
@@ -308,6 +387,16 @@ const CurrencyConfig = () => {
                 }
               />
               <Label htmlFor="active">Active</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is_default"
+                checked={formData.is_default}
+                onCheckedChange={(checked) => 
+                  setFormData({ ...formData, is_default: checked === true })
+                }
+              />
+              <Label htmlFor="is_default">Set as default currency</Label>
             </div>
           </div>
           <DialogFooter>
@@ -372,6 +461,23 @@ const CurrencyConfig = () => {
               />
               <Label htmlFor="edit-active">Active</Label>
             </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="edit-is-default"
+                checked={formData.is_default}
+                onCheckedChange={(checked) => 
+                  setFormData({ ...formData, is_default: checked === true })
+                }
+              />
+              <Label htmlFor="edit-is-default">
+                Set as default currency
+              </Label>
+              {currentCurrency?.is_default && (
+                <p className="text-xs text-muted-foreground ml-2">
+                  This is currently set as the default currency.
+                </p>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
@@ -392,11 +498,20 @@ const CurrencyConfig = () => {
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
               currency "{currentCurrency?.code} - {currentCurrency?.name}".
+              {currentCurrency?.is_default && (
+                <p className="mt-2 text-destructive font-medium">
+                  You cannot delete the default currency. Please set another currency as default first.
+                </p>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction 
+              onClick={handleDelete} 
+              className="bg-destructive text-destructive-foreground"
+              disabled={currentCurrency?.is_default}
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

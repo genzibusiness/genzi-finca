@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Transaction } from '@/types/cashflow';
 import { Button } from '@/components/ui/button';
@@ -34,6 +33,7 @@ interface CurrencyOption {
   code: string;
   name: string;
   symbol: string;
+  is_default: boolean;
 }
 
 interface ExpenseTypeOption {
@@ -124,12 +124,17 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         setStatusOptions(statuses || []);
         
         // If no initial data and we have default values, set them
-        if (!initialData && currencies?.length && transactionTypes?.length && expenseTypes?.length && statuses?.length) {
-          // Default to first values
+        if (!initialData && currencies?.length && transactionTypes?.length && statuses?.length) {
+          // Find default currency
+          const defaultCurrency = currencies.find(c => c.is_default)?.code || currencies[0]?.code || '';
+          
+          // Default to first transaction type
           const defaultTransactionType = transactionTypes[0]?.name || '';
-          const defaultCurrency = currencies[0]?.code || '';
+          
+          // Find appropriate status for the transaction type
           const defaultStatus = statuses.find(s => s.type === defaultTransactionType)?.name || statuses[0]?.name || '';
           
+          // Set form data with defaults
           setFormData(prev => ({
             ...prev,
             currency: defaultCurrency,
@@ -335,6 +340,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               {currencyOptions.map((option) => (
                 <SelectItem key={option.code} value={option.code}>
                   {option.code} - {option.name} ({option.symbol})
+                  {option.is_default && " (Default)"}
                 </SelectItem>
               ))}
             </SelectContent>
