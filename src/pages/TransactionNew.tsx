@@ -45,12 +45,15 @@ const TransactionNew = () => {
         throw new Error('User not authenticated');
       }
       
+      // Ensure status value is lowercase to match enum values in database
+      const status = transaction.status.toLowerCase();
+      
       // Create transaction with all required fields
       const transactionData = {
         amount: transaction.amount,
         date: transaction.date,
         currency: transaction.currency,
-        status: transaction.status,
+        status: status,
         type: transaction.type,
         user_id: userData.user.id,
         expense_type: transaction.expense_type || null,

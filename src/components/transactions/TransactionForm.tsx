@@ -96,16 +96,22 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
         
         if (statusesData) {
           console.log('Statuses:', statusesData);
-          setStatuses(statusesData);
+          // Transform status names to lowercase to match database enum values
+          const normalizedStatuses = statusesData.map(status => ({
+            ...status,
+            name_normalized: status.name.toLowerCase().replace(/\s+/g, '_')
+          }));
+          
+          setStatuses(normalizedStatuses);
           
           // Set default status based on transaction type
           const currentType = form.getValues('type');
-          const relevantStatuses = statusesData.filter(
+          const relevantStatuses = normalizedStatuses.filter(
             (status) => !status.type || status.type === currentType
           );
           
           if (relevantStatuses.length > 0 && !form.getValues('status')) {
-            form.setValue('status', relevantStatuses[0].name);
+            form.setValue('status', relevantStatuses[0].name_normalized);
           }
         }
         
@@ -163,8 +169,8 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
           (status) => !status.type || status.type === value.type
         );
         
-        if (relevantStatuses.length > 0 && !relevantStatuses.find(s => s.name === form.getValues('status'))) {
-          form.setValue('status', relevantStatuses[0].name);
+        if (relevantStatuses.length > 0 && !relevantStatuses.find(s => s.name_normalized === form.getValues('status'))) {
+          form.setValue('status', relevantStatuses[0].name_normalized);
         }
       }
     });
@@ -335,7 +341,7 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
                   </FormControl>
                   <SelectContent>
                     {filteredStatuses.map((status) => (
-                      <SelectItem key={status.id} value={status.name}>
+                      <SelectItem key={status.id} value={status.name_normalized}>
                         {status.name}
                       </SelectItem>
                     ))}
