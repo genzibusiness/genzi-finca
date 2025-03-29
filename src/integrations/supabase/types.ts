@@ -15,6 +15,7 @@ export type Database = {
           code: string
           created_at: string
           id: string
+          is_default: boolean | null
           name: string
           symbol: string
           updated_at: string
@@ -24,6 +25,7 @@ export type Database = {
           code: string
           created_at?: string
           id?: string
+          is_default?: boolean | null
           name: string
           symbol: string
           updated_at?: string
@@ -33,6 +35,7 @@ export type Database = {
           code?: string
           created_at?: string
           id?: string
+          is_default?: boolean | null
           name?: string
           symbol?: string
           updated_at?: string

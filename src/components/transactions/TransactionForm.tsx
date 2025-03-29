@@ -1,418 +1,404 @@
-import React, { useEffect, useState } from 'react';
-import { Transaction } from '@/types/cashflow';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
+import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
-interface TransactionFormProps {
-  initialData?: Transaction;
-  onCancel: () => void;
-}
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 
-interface CurrencyOption {
-  code: string;
-  name: string;
-  symbol: string;
-  is_default: boolean;
-}
+const formSchema = z.object({
+  amount: z.coerce.number().positive({ message: 'Amount must be positive' }),
+  date: z.date(),
+  type: z.enum(['income', 'expense']),
+  expense_type: z.string().optional(),
+  status: z.string(),
+  currency: z.string(),
+  comment: z.string().optional(),
+});
 
-interface ExpenseTypeOption {
-  id: string;
-  name: string;
-}
-
-interface TransactionTypeOption {
-  id: string;
-  name: string;
-}
-
-interface StatusOption {
-  id: string;
-  name: string;
-  type: string;
-}
-
-const TransactionForm: React.FC<TransactionFormProps> = ({
-  initialData,
-  onCancel,
-}) => {
-  const { user } = useAuth();
+const TransactionForm = ({ transaction, onSave }) => {
   const navigate = useNavigate();
   
-  // State for form data
-  const [formData, setFormData] = useState({
-    amount: initialData?.amount || '',
-    date: initialData?.date || format(new Date(), 'yyyy-MM-dd'),
-    type: initialData?.type || '',
-    currency: initialData?.currency || '',
-    expense_type: initialData?.expense_type || '',
-    comment: initialData?.comment || '',
-    status: initialData?.status || '',
-  });
+  const [expenseTypes, setExpenseTypes] = useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [defaultCurrency, setDefaultCurrency] = useState('INR');
+  const [open, setOpen] = useState(false);
   
-  // State for the date picker
-  const [date, setDate] = useState<Date | undefined>(
-    initialData?.date ? new Date(initialData.date) : new Date()
-  );
-  
-  // State for master data options
-  const [currencyOptions, setCurrencyOptions] = useState<CurrencyOption[]>([]);
-  const [expenseTypeOptions, setExpenseTypeOptions] = useState<ExpenseTypeOption[]>([]);
-  const [transactionTypeOptions, setTransactionTypeOptions] = useState<TransactionTypeOption[]>([]);
-  const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
-  
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Fetch master data options from Supabase
-  useEffect(() => {
-    const fetchMasterData = async () => {
-      try {
-        // Fetch currencies
-        const { data: currencies, error: currenciesError } = await supabase
-          .from('currencies')
-          .select('*')
-          .eq('active', true);
-        
-        if (currenciesError) throw currenciesError;
-        setCurrencyOptions(currencies || []);
-        
-        // Fetch expense types
-        const { data: expenseTypes, error: expenseTypesError } = await supabase
-          .from('expense_types')
-          .select('*')
-          .eq('active', true);
-        
-        if (expenseTypesError) throw expenseTypesError;
-        setExpenseTypeOptions(expenseTypes || []);
-        
-        // Fetch transaction types
-        const { data: transactionTypes, error: transactionTypesError } = await supabase
-          .from('transaction_types')
-          .select('*')
-          .eq('active', true);
-        
-        if (transactionTypesError) throw transactionTypesError;
-        setTransactionTypeOptions(transactionTypes || []);
-        
-        // Fetch statuses
-        const { data: statuses, error: statusesError } = await supabase
-          .from('transaction_statuses')
-          .select('*')
-          .eq('active', true);
-        
-        if (statusesError) throw statusesError;
-        setStatusOptions(statuses || []);
-        
-        // If no initial data and we have default values, set them
-        if (!initialData && currencies?.length && transactionTypes?.length && statuses?.length) {
-          // Find default currency
-          const defaultCurrency = currencies.find(c => c.is_default)?.code || currencies[0]?.code || '';
-          
-          // Default to first transaction type
-          const defaultTransactionType = transactionTypes[0]?.name || '';
-          
-          // Find appropriate status for the transaction type
-          const defaultStatus = statuses.find(s => s.type === defaultTransactionType)?.name || statuses[0]?.name || '';
-          
-          // Set form data with defaults
-          setFormData(prev => ({
-            ...prev,
-            currency: defaultCurrency,
-            type: defaultTransactionType,
-            status: defaultStatus,
-            expense_type: defaultTransactionType === 'expense' ? expenseTypes[0]?.name || '' : '',
-          }));
+  // Initialize form with transaction data or defaults
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: transaction
+      ? {
+          ...transaction,
+          date: new Date(transaction.date),
         }
-      } catch (error) {
-        console.error('Error fetching master data:', error);
-        toast.error('Failed to load form options');
+      : {
+          amount: 0,
+          date: new Date(),
+          type: 'expense',
+          status: '',
+          currency: '',
+          comment: '',
+        },
+  });
+
+  // Fetch expense types, statuses, currencies, and default currency on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      // Fetch expense types
+      const { data: expenseTypesData } = await supabase
+        .from('expense_types')
+        .select('id, name')
+        .eq('active', true);
+      
+      if (expenseTypesData) {
+        setExpenseTypes(expenseTypesData);
+      }
+      
+      // Fetch transaction statuses
+      const { data: statusesData } = await supabase
+        .from('transaction_statuses')
+        .select('id, name, type')
+        .eq('active', true);
+      
+      if (statusesData) {
+        setStatuses(statusesData);
+      }
+      
+      // Fetch currencies
+      const { data: currenciesData } = await supabase
+        .from('currencies')
+        .select('id, code, name, symbol')
+        .eq('active', true);
+      
+      if (currenciesData) {
+        setCurrencies(currenciesData);
+      }
+      
+      // Fetch default currency
+      const { data: defaultCurrencyData, error } = await supabase
+        .from('currencies')
+        .select('code')
+        .eq('is_default', true)
+        .single();
+      
+      if (defaultCurrencyData) {
+        setDefaultCurrency(defaultCurrencyData.code);
+        
+        // Set default currency if creating a new transaction
+        if (!transaction && !form.getValues('currency')) {
+          form.setValue('currency', defaultCurrencyData.code);
+        }
       }
     };
     
-    fetchMasterData();
-  }, [initialData]);
+    fetchData();
+  }, []);
   
-  // Update status options when type changes
+  // Update displayed form fields based on transaction type
   useEffect(() => {
-    // Filter status options based on the selected type
-    const filteredOptions = statusOptions.filter(option => option.type === formData.type);
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'type') {
+        const relevantStatuses = statuses.filter(
+          (status) => !status.type || status.type === value.type
+        );
+        
+        if (relevantStatuses.length > 0 && !relevantStatuses.find(s => s.name === form.getValues('status'))) {
+          form.setValue('status', relevantStatuses[0].name);
+        }
+      }
+    });
     
-    // If current status is not valid for the selected type, reset it
-    if (filteredOptions.length > 0 && !filteredOptions.some(o => o.name === formData.status)) {
-      setFormData(prev => ({
-        ...prev,
-        status: filteredOptions[0]?.name || ''
-      }));
-    }
-  }, [formData.type, statusOptions, formData.status]);
-
-  const handleDateChange = (newDate: Date | undefined) => {
-    if (newDate) {
-      setDate(newDate);
-      setFormData(prev => ({
-        ...prev,
-        date: format(newDate, 'yyyy-MM-dd'),
-      }));
-    }
-  };
+    return () => subscription.unsubscribe();
+  }, [form, statuses]);
   
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  // Filter statuses based on selected transaction type
+  const filteredStatuses = statuses.filter(
+    (status) => !status.type || status.type === form.getValues('type')
+  );
   
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Clear expense_type if type changes to income
-    if (name === 'type' && value === 'income') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-        expense_type: null
-      }));
-    }
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) {
-      toast.error('You must be logged in to create a transaction');
-      return;
-    }
-    
-    if (!formData.amount || parseFloat(formData.amount.toString()) <= 0) {
-      toast.error('Please enter a valid amount greater than 0');
-      return;
-    }
-    
-    setIsLoading(true);
-    
+  // Handle form submission
+  const onSubmit = async (values) => {
     try {
-      console.log('Submitting transaction:', formData);
+      setIsSubmitting(true);
       
-      // Prepare data for insertion
+      // Format the date for database
+      const formattedDate = format(values.date, 'yyyy-MM-dd');
+      
+      // Prepare transaction data
       const transactionData = {
-        amount: parseFloat(formData.amount.toString()),
-        date: formData.date,
-        type: formData.type,
-        currency: formData.currency,
-        expense_type: formData.type === 'expense' ? formData.expense_type : null,
-        comment: formData.comment || null,
-        status: formData.status,
-        user_id: user.id,
+        ...values,
+        date: formattedDate,
+        // If expense type is empty and type is income, set to null
+        expense_type: values.type === 'income' ? null : values.expense_type,
       };
       
-      console.log('Transaction data to submit:', transactionData);
-      
-      let result;
-      
-      if (initialData?.id) {
-        // Update existing transaction
-        console.log('Updating transaction:', initialData.id);
-        result = await supabase
-          .from('transactions')
-          .update(transactionData as any) // Type assertion to bypass TS error
-          .eq('id', initialData.id);
-      } else {
-        // Insert new transaction
-        console.log('Creating new transaction');
-        result = await supabase
-          .from('transactions')
-          .insert(transactionData as any); // Type assertion to bypass TS error
+      // Save transaction data
+      if (onSave) {
+        await onSave(transactionData);
       }
       
-      console.log('Supabase result:', result);
+      // Show success message
+      toast.success(
+        transaction ? 'Transaction updated successfully' : 'Transaction created successfully'
+      );
       
-      if (result.error) {
-        throw result.error;
-      }
-      
-      toast.success(initialData?.id ? 'Transaction updated successfully' : 'Transaction created successfully');
-      setTimeout(() => navigate('/transactions'), 1000);
-    } catch (error: any) {
+      // Navigate back
+      navigate(-1);
+    } catch (error) {
       console.error('Error saving transaction:', error);
-      toast.error(error.message || 'Failed to save transaction');
+      toast.error('Failed to save transaction');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
-
+  
+  // Handle cancel button click
+  const handleCancel = () => {
+    navigate(-1);
+  };
+  
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="amount">Amount</Label>
-          <Input
-            id="amount"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Transaction Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select transaction type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="income">Income</SelectItem>
+                    <SelectItem value="expense">Expense</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
             name="amount"
-            type="number"
-            step="0.01"
-            value={formData.amount}
-            onChange={handleChange}
-            required
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Amount</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="date">Date</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full justify-start text-left font-normal"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, 'PPP') : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={handleDateChange}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="type">Type</Label>
-          <Select
-            value={formData.type}
-            onValueChange={(value) => handleSelectChange('type', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              {transactionTypeOptions.map((option) => (
-                <SelectItem key={option.id} value={option.name}>
-                  {option.name.charAt(0).toUpperCase() + option.name.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="currency"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Currency</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || defaultCurrency}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {currencies.map((currency) => (
+                      <SelectItem key={currency.code} value={currency.code}>
+                        {currency.code} - {currency.symbol}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {filteredStatuses.map((status) => (
+                      <SelectItem key={status.id} value={status.name}>
+                        {status.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="currency">Currency</Label>
-          <Select
-            value={formData.currency}
-            onValueChange={(value) => handleSelectChange('currency', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {currencyOptions.map((option) => (
-                <SelectItem key={option.code} value={option.code}>
-                  {option.code} - {option.name} ({option.symbol})
-                  {option.is_default && " (Default)"}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {formData.type === 'expense' && (
-          <div className="space-y-2">
-            <Label htmlFor="expense_type">Expense Type</Label>
-            <Select
-              value={formData.expense_type || ''}
-              onValueChange={(value) => handleSelectChange('expense_type', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select expense type" />
-              </SelectTrigger>
-              <SelectContent>
-                {expenseTypeOptions.map((option) => (
-                  <SelectItem key={option.id} value={option.name}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {form.watch('type') === 'expense' && (
+          <FormField
+            control={form.control}
+            name="expense_type"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Expense Category</FormLabel>
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        className="w-full justify-between"
+                      >
+                        {field.value
+                          ? expenseTypes.find(
+                              (expenseType) => expenseType.name === field.value
+                            )?.name
+                          : "Select category"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search category..." />
+                      <CommandEmpty>No category found.</CommandEmpty>
+                      <CommandGroup>
+                        {expenseTypes.map((expenseType) => (
+                          <CommandItem
+                            key={expenseType.id}
+                            value={expenseType.name}
+                            onSelect={() => {
+                              form.setValue("expense_type", expenseType.name);
+                              setOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                field.value === expenseType.name
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            {expenseType.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         )}
         
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
-          <Select
-            value={formData.status}
-            onValueChange={(value) => handleSelectChange('status', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions
-                .filter(option => option.type === formData.type)
-                .map((option) => (
-                  <SelectItem key={option.id} value={option.name}>
-                    {option.name.replace(/_/g, ' ')}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="comment">Comment</Label>
-        <Textarea
-          id="comment"
+        <FormField
+          control={form.control}
           name="comment"
-          value={formData.comment}
-          onChange={handleChange}
-          placeholder="Add any additional details..."
-          rows={3}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Comment</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Add details about this transaction"
+                  className="resize-none"
+                  {...field}
+                  value={field.value || ''}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Saving...' : (initialData ? 'Update' : 'Create')} Transaction
-        </Button>
-      </div>
-    </form>
+        
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={handleCancel} type="button">
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : transaction ? 'Update' : 'Create'}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
 

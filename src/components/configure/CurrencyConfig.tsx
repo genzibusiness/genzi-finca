@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -132,15 +131,7 @@ const CurrencyConfig = () => {
     try {
       setIsLoading(true);
       
-      // First, update all currencies to not be default
-      const { error: resetError } = await supabase
-        .from('currencies')
-        .update({ is_default: false })
-        .neq('id', 'dummy');
-      
-      if (resetError) throw resetError;
-      
-      // Then set the selected currency as default
+      // Update the selected currency as default
       const { error: updateError } = await supabase
         .from('currencies')
         .update({ is_default: true })
@@ -161,17 +152,6 @@ const CurrencyConfig = () => {
   const handleSubmitAdd = async () => {
     try {
       if (!validateForm()) return;
-      
-      // Check if making this the default currency
-      if (formData.is_default) {
-        // Reset all other currencies to not be default
-        const { error: resetError } = await supabase
-          .from('currencies')
-          .update({ is_default: false })
-          .neq('id', 'dummy');
-        
-        if (resetError) throw resetError;
-      }
       
       const { error } = await supabase
         .from('currencies')
@@ -198,17 +178,6 @@ const CurrencyConfig = () => {
     try {
       if (!currentCurrency) return;
       if (!validateForm()) return;
-      
-      // Check if making this the default currency
-      if (formData.is_default) {
-        // Reset all other currencies to not be default
-        const { error: resetError } = await supabase
-          .from('currencies')
-          .update({ is_default: false })
-          .neq('id', currentCurrency.id);
-        
-        if (resetError) throw resetError;
-      }
       
       const { error } = await supabase
         .from('currencies')
