@@ -5,7 +5,7 @@ export type TransactionType = "income" | "expense";
 
 export type CurrencyType = "SGD" | "INR" | "USD" | "EUR" | "GBP";
 
-// ExpenseType can be any string
+// Update ExpenseType to be any string instead of a specific union of values
 export type ExpenseType = string;
 
 export interface Category {

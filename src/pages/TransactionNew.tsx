@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Transaction, CurrencyType, TransactionStatus, ExpenseType, TransactionType } from '@/types/cashflow';
@@ -13,7 +12,6 @@ const TransactionNew = () => {
   const [defaultCurrency, setDefaultCurrency] = useState<CurrencyType>("INR");
   const [loading, setLoading] = useState(false);
 
-  // Fetch the default currency
   useEffect(() => {
     const fetchDefaultCurrency = async () => {
       const { data } = await supabase
@@ -34,26 +32,19 @@ const TransactionNew = () => {
     try {
       setLoading(true);
       
-      // Ensure all required fields are present
       if (!transaction.amount || !transaction.date || !transaction.currency || !transaction.status || !transaction.type) {
         throw new Error('Missing required fields for transaction');
       }
       
-      // Get current user
       const { data: userData } = await supabase.auth.getUser();
       if (!userData || !userData.user) {
         throw new Error('User not authenticated');
       }
       
-      // Ensure status value is a valid TransactionStatus enum value
       const validStatus = isValidTransactionStatus(transaction.status) 
         ? transaction.status 
         : 'yet_to_be_paid';
       
-      // Cast expense_type to ExpenseType to ensure type safety
-      const expenseType = transaction.expense_type as ExpenseType | null;
-      
-      // Create transaction with all required fields
       const transactionData = {
         amount: transaction.amount,
         date: transaction.date,
@@ -61,7 +52,7 @@ const TransactionNew = () => {
         status: validStatus,
         type: transaction.type,
         user_id: userData.user.id,
-        expense_type: expenseType,
+        expense_type: transaction.expense_type || null,
         comment: transaction.comment || null,
         document_url: transaction.document_url || null,
         includes_tax: transaction.includes_tax || false
@@ -81,7 +72,6 @@ const TransactionNew = () => {
       }
       
       toast.success('Transaction created successfully');
-      // Redirect to transactions page instead of transaction detail
       navigate('/transactions');
     } catch (error: any) {
       console.error('Error creating transaction:', error);
@@ -91,7 +81,6 @@ const TransactionNew = () => {
     }
   };
 
-  // Helper function to validate transaction status
   const isValidTransactionStatus = (status: string): status is TransactionStatus => {
     return ['paid', 'received', 'yet_to_be_paid', 'yet_to_be_received'].includes(status as TransactionStatus);
   };
@@ -100,7 +89,6 @@ const TransactionNew = () => {
     navigate('/transactions');
   };
 
-  // Create an empty transaction object
   const emptyTransaction: Partial<Transaction> = {
     type: 'expense',
     amount: 0,

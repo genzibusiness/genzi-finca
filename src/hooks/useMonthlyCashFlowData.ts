@@ -63,12 +63,6 @@ export const useMonthlyCashFlowData = (
     }
   };
 
-  // Helper function to validate expense type
-  const isValidExpenseType = (value: string | null): value is ExpenseType => {
-    return value !== null;
-  };
-
-  // Helper function to validate transaction type
   const isValidTransactionType = (value: string | null): value is TransactionType => {
     if (!value) return false;
     return ['income', 'expense'].includes(value as TransactionType);
@@ -103,7 +97,7 @@ export const useMonthlyCashFlowData = (
         query = query.eq('type', selectedType);
       }
       
-      if (selectedCategory && isValidExpenseType(selectedCategory)) {
+      if (selectedCategory) {
         query = query.eq('expense_type', selectedCategory);
       }
       

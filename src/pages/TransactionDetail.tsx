@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Transaction, ExpenseType } from '@/types/cashflow';
+import { Transaction } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -66,11 +65,10 @@ const TransactionDetail = () => {
       // Ensure we have a transaction to update
       if (!transaction || !id) return;
       
-      // Cast expense_type to ExpenseType to ensure type safety
-      const expenseType = updatedTransaction.expense_type as ExpenseType | null;
+      // Since ExpenseType is now just string, we don't need to cast it
       
       // Optimistically update the transaction in the UI
-      setTransaction({ ...transaction, ...updatedTransaction, expense_type: expenseType });
+      setTransaction({ ...transaction, ...updatedTransaction });
     
       // Persist the changes to the database
       const { error } = await supabase
@@ -80,7 +78,7 @@ const TransactionDetail = () => {
           date: updatedTransaction.date,
           type: updatedTransaction.type,
           currency: updatedTransaction.currency,
-          expense_type: expenseType,
+          expense_type: updatedTransaction.expense_type,
           comment: updatedTransaction.comment,
           status: updatedTransaction.status,
           document_url: updatedTransaction.document_url,

@@ -98,6 +98,7 @@ export const useExpenseCategoriesData = (
       }
       
       if (selectedCategory) {
+        // We can directly use the string value now
         query = query.eq('expense_type', selectedCategory);
       }
       
