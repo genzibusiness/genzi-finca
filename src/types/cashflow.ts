@@ -1,3 +1,4 @@
+
 export type TransactionStatus = "paid" | "received" | "yet_to_be_paid" | "yet_to_be_received";
 
 export type TransactionType = "income" | "expense";
@@ -56,7 +57,7 @@ export interface CashflowSummary {
 
 export interface Currency {
   id: string;
-  code: string;
+  code: CurrencyType;
   name: string;
   symbol: string;
   active: boolean;

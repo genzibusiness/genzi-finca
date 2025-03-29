@@ -62,7 +62,7 @@ const TransactionDetail = () => {
   const handleSave = async (updatedTransaction: Partial<Transaction>) => {
     try {
       // Ensure we have a transaction to update
-      if (!transaction) return;
+      if (!transaction || !id) return;
       
       // Optimistically update the transaction in the UI
       setTransaction({ ...transaction, ...updatedTransaction });
@@ -70,7 +70,15 @@ const TransactionDetail = () => {
       // Persist the changes to the database
       const { error } = await supabase
         .from('transactions')
-        .update(updatedTransaction)
+        .update({
+          amount: updatedTransaction.amount,
+          date: updatedTransaction.date,
+          type: updatedTransaction.type,
+          currency: updatedTransaction.currency,
+          expense_type: updatedTransaction.expense_type,
+          comment: updatedTransaction.comment,
+          status: updatedTransaction.status
+        })
         .eq('id', id);
         
       if (error) throw error;

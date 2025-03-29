@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 const TransactionNew = () => {
   const navigate = useNavigate();
   const [defaultCurrency, setDefaultCurrency] = useState<CurrencyType>("INR");
+  const [loading, setLoading] = useState(false);
 
   // Fetch the default currency
   useEffect(() => {
@@ -31,10 +32,34 @@ const TransactionNew = () => {
 
   const handleSave = async (transaction: Partial<Transaction>) => {
     try {
-      // Ensure we're passing a single object, not an array
+      setLoading(true);
+      
+      // Ensure all required fields are present
+      if (!transaction.amount || !transaction.date || !transaction.currency || !transaction.status || !transaction.type) {
+        throw new Error('Missing required fields for transaction');
+      }
+      
+      // Get current user
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData || !userData.user) {
+        throw new Error('User not authenticated');
+      }
+      
+      // Create transaction with all required fields
+      const transactionData = {
+        amount: transaction.amount,
+        date: transaction.date,
+        currency: transaction.currency,
+        status: transaction.status,
+        type: transaction.type,
+        user_id: userData.user.id,
+        expense_type: transaction.expense_type || null,
+        comment: transaction.comment || null
+      };
+      
       const { data, error } = await supabase
         .from('transactions')
-        .insert(transaction)
+        .insert(transactionData)
         .select('id')
         .single();
       
@@ -45,6 +70,8 @@ const TransactionNew = () => {
     } catch (error: any) {
       console.error('Error creating transaction:', error);
       toast.error(error.message || 'Failed to create transaction');
+    } finally {
+      setLoading(false);
     }
   };
 
