@@ -63,11 +63,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const [formData, setFormData] = useState({
     amount: initialData?.amount || '',
     date: initialData?.date || format(new Date(), 'yyyy-MM-dd'),
-    type: initialData?.type || 'expense',
-    currency: initialData?.currency || 'INR',
+    type: initialData?.type || '',
+    currency: initialData?.currency || '',
     expense_type: initialData?.expense_type || '',
     comment: initialData?.comment || '',
-    status: initialData?.status || 'yet_to_be_paid',
+    status: initialData?.status || '',
   });
   
   // State for the date picker
@@ -125,12 +125,17 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         
         // If no initial data and we have default values, set them
         if (!initialData && currencies?.length && transactionTypes?.length && expenseTypes?.length && statuses?.length) {
+          // Default to first values
+          const defaultTransactionType = transactionTypes[0]?.name || '';
+          const defaultCurrency = currencies[0]?.code || '';
+          const defaultStatus = statuses.find(s => s.type === defaultTransactionType)?.name || statuses[0]?.name || '';
+          
           setFormData(prev => ({
             ...prev,
-            currency: currencies[0].code,
-            type: transactionTypes[0].name,
-            expense_type: expenseTypes[0].name,
-            status: statuses.find(s => s.type === transactionTypes[0].name)?.name || statuses[0].name
+            currency: defaultCurrency,
+            type: defaultTransactionType,
+            status: defaultStatus,
+            expense_type: defaultTransactionType === 'expense' ? expenseTypes[0]?.name || '' : '',
           }));
         }
       } catch (error) {
@@ -186,6 +191,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     if (name === 'type' && value === 'income') {
       setFormData(prev => ({
         ...prev,
+        [name]: value,
         expense_type: null
       }));
     }
@@ -230,14 +236,14 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         console.log('Updating transaction:', initialData.id);
         result = await supabase
           .from('transactions')
-          .update(transactionData as any) // Use type assertion to bypass TS error
+          .update(transactionData as any) // Type assertion to bypass TS error
           .eq('id', initialData.id);
       } else {
         // Insert new transaction
         console.log('Creating new transaction');
         result = await supabase
           .from('transactions')
-          .insert(transactionData as any); // Use type assertion to bypass TS error
+          .insert(transactionData as any); // Type assertion to bypass TS error
       }
       
       console.log('Supabase result:', result);
