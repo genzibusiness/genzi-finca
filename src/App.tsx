@@ -18,7 +18,14 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import ConfigureMasterData from "./pages/ConfigureMasterData";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => {
   console.log("App rendering");
@@ -33,7 +40,7 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 {/* Auth routes - no protection */}
-                <Route path="/" element={<Navigate to="/auth" replace />} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 
