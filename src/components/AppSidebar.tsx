@@ -18,7 +18,8 @@ import {
   Plus,
   Settings,
   CreditCard,
-  Database
+  Database,
+  MessageCircle
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -83,6 +84,20 @@ const AppSidebar = () => {
               <Link to="/transactions">
                 <CreditCard className="h-5 w-5" />
                 <span>Transactions</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/chat')}
+              tooltip="Finca Chat"
+            >
+              <Link to="/chat">
+                <MessageCircle className="h-5 w-5" />
+                <span>Finca Chat</span>
+                <Badge variant="outline" className="ml-auto">New</Badge>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import ConfigureMasterData from "./pages/ConfigureMasterData";
+import FincaChat from "./pages/FincaChat";
 
 const App = () => {
   console.log("App rendering");
@@ -57,6 +58,7 @@ const App = () => {
                   <Route path="/transactions/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                   <Route path="/configure" element={<ProtectedRoute><ConfigureMasterData /></ProtectedRoute>} />
+                  <Route path="/chat" element={<ProtectedRoute><FincaChat /></ProtectedRoute>} />
                   
                   {/* Catch-all route */}
                   <Route path="*" element={<NotFound />} />
