@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -32,15 +31,25 @@ const Auth = () => {
   const { user, signIn, signUp, resetPassword } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('login');
   const navigate = useNavigate();
+  const [confirmationSuccess, setConfirmationSuccess] = useState(false);
+  
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const confirmed = searchParams.get('confirmed');
+    
+    if (confirmed === 'true') {
+      setConfirmationSuccess(true);
+      toast.success('Email confirmed successfully! You can now log in.');
+      window.history.replaceState({}, document.title, '/auth');
+    }
+  }, []);
 
-  // If already logged in, redirect to dashboard
   useEffect(() => {
     if (user) {
       navigate('/dashboard');
     }
   }, [user, navigate]);
 
-  // If user directly navigates to this page and is already logged in, redirect
   if (user) {
     return <Navigate to="/dashboard" />;
   }
@@ -58,6 +67,12 @@ const Auth = () => {
           </div>
           <CardTitle className="text-2xl">Genzi Finca</CardTitle>
           <CardDescription>Manage your finances with ease</CardDescription>
+          
+          {confirmationSuccess && (
+            <div className="mt-2 p-2 bg-green-50 text-green-700 rounded-md">
+              Email confirmed successfully! You can now log in.
+            </div>
+          )}
         </CardHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

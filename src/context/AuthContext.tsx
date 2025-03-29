@@ -101,6 +101,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
+      // Get the current URL for the redirect
+      const origin = window.location.origin;
+      const redirectUrl = `${origin}/api/auth-redirect`;
+      
       const { error } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -108,9 +112,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             name
           },
-          emailRedirectTo: `${window.location.origin}/auth`
+          emailRedirectTo: redirectUrl
         }
       });
+      
       if (error) throw error;
       toast.success('Registration successful! Please check your email to confirm your account.');
     } catch (error: any) {
@@ -130,11 +135,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     try {
+      // Get the current URL for the redirect
+      const origin = window.location.origin;
+      const redirectUrl = `${origin}/api/auth-redirect`;
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: redirectUrl,
       });
+      
       if (error) throw error;
-      toast.success('Password reset email sent');
+      toast.success('Password reset email sent. Please check your inbox.');
     } catch (error: any) {
       toast.error(error.message || 'Error sending password reset email');
       throw error;

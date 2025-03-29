@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,8 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const resetSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -23,10 +25,92 @@ const resetSchema = z.object({
 const ResetPassword = () => {
   const { user, updatePassword } = useAuth();
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isTokenValid, setIsTokenValid] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
+  const navigate = useNavigate();
   
-  // If not authenticated via the reset link, redirect to login
-  if (!user && !isSuccess) {
-    return <Navigate to="/auth" />;
+  // Check for token in URL
+  useEffect(() => {
+    const handleToken = async () => {
+      try {
+        // Get token from URL
+        const searchParams = new URLSearchParams(window.location.search);
+        const token = searchParams.get('token');
+        
+        if (!token) {
+          toast.error('Password reset token is missing');
+          setIsVerifying(false);
+          return;
+        }
+        
+        // Verify token with Supabase
+        const { data, error } = await supabase.auth.verifyOtp({
+          token_hash: token,
+          type: 'recovery',
+        });
+        
+        if (error) {
+          console.error('Error verifying token:', error);
+          toast.error('Invalid or expired password reset token');
+          setIsTokenValid(false);
+        } else {
+          console.log('Token verified successfully:', data);
+          setIsTokenValid(true);
+          // Clean up URL
+          window.history.replaceState({}, document.title, '/reset-password');
+        }
+      } catch (error) {
+        console.error('Error during token verification:', error);
+        toast.error('Failed to verify reset token');
+        setIsTokenValid(false);
+      } finally {
+        setIsVerifying(false);
+      }
+    };
+    
+    handleToken();
+  }, []);
+  
+  // If still verifying token, show loading
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-2 text-center">
+            <div className="flex justify-center">
+              <BadgeDollarSign size={40} className="text-primary" />
+            </div>
+            <CardTitle className="text-2xl">Verifying Reset Link</CardTitle>
+            <CardDescription>Please wait while we verify your reset link...</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center p-6">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // If token is invalid and not logged in, redirect to login page
+  if (!isTokenValid && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-2 text-center">
+            <div className="flex justify-center">
+              <BadgeDollarSign size={40} className="text-destructive" />
+            </div>
+            <CardTitle className="text-2xl">Invalid Reset Link</CardTitle>
+            <CardDescription>The password reset link is invalid or has expired.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 p-6">
+            <Button className="w-full" onClick={() => navigate('/auth')}>
+              Return to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
   
   // If operation successful, show success message with link to login
@@ -91,6 +175,7 @@ const ResetPasswordForm = ({
       onSuccess();
     } catch (error) {
       console.error(error);
+      toast.error('Failed to update password. Please try again.');
     } finally {
       setIsLoading(false);
     }

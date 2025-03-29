@@ -6,19 +6,19 @@ import { useStatusBasedData } from '@/hooks/useStatusBasedData';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Define custom colors for different statuses
+// Define custom colors for different statuses with improved colors
 const STATUS_COLORS = {
   income: {
-    Paid: '#4ade80', // green-400
-    Pending: '#facc15', // yellow-400
-    Cancelled: '#f87171', // red-400
-    Planned: '#60a5fa', // blue-400
+    Paid: '#10b981', // emerald-500
+    Pending: '#f59e0b', // amber-500
+    Cancelled: '#ef4444', // red-500
+    Planned: '#3b82f6', // blue-500
   },
   expense: {
-    Paid: '#f87171', // red-400
-    Pending: '#facc15', // yellow-400
-    Cancelled: '#4ade80', // green-400
-    Planned: '#60a5fa', // blue-400
+    Paid: '#ef4444', // red-500
+    Pending: '#f59e0b', // amber-500
+    Cancelled: '#10b981', // emerald-500
+    Planned: '#3b82f6', // blue-500
   }
 };
 
