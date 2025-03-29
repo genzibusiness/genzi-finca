@@ -103,6 +103,7 @@ const TransactionNew = () => {
         <TransactionForm 
           transaction={emptyTransaction}
           onSave={handleSave}
+          isSubmitting={loading}
         />
       </div>
     </AppLayout>

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
+import { CalendarIcon, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -29,13 +29,18 @@ const formSchema = z.object({
   comment: z.string().optional(),
 });
 
-const TransactionForm = ({ transaction, onSave }) => {
+type TransactionFormProps = {
+  transaction: Partial<Transaction>;
+  onSave: (transaction: Partial<Transaction>) => Promise<void>;
+  isSubmitting?: boolean;
+};
+
+const TransactionForm = ({ transaction, onSave, isSubmitting = false }: TransactionFormProps) => {
   const navigate = useNavigate();
   
   const [expenseTypes, setExpenseTypes] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [currencies, setCurrencies] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [defaultCurrency, setDefaultCurrency] = useState('INR');
   
   // Initialize form with transaction data or defaults
@@ -44,7 +49,7 @@ const TransactionForm = ({ transaction, onSave }) => {
     defaultValues: transaction
       ? {
           ...transaction,
-          date: new Date(transaction.date),
+          date: transaction.date ? new Date(transaction.date) : new Date(),
         }
       : {
           amount: 0,
@@ -59,50 +64,55 @@ const TransactionForm = ({ transaction, onSave }) => {
   // Fetch expense types, statuses, currencies, and default currency on component mount
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch expense types
-      const { data: expenseTypesData } = await supabase
-        .from('expense_types')
-        .select('id, name')
-        .eq('active', true);
-      
-      if (expenseTypesData) {
-        setExpenseTypes(expenseTypesData);
-      }
-      
-      // Fetch transaction statuses
-      const { data: statusesData } = await supabase
-        .from('transaction_statuses')
-        .select('id, name, type')
-        .eq('active', true);
-      
-      if (statusesData) {
-        setStatuses(statusesData);
-      }
-      
-      // Fetch currencies
-      const { data: currenciesData } = await supabase
-        .from('currencies')
-        .select('id, code, name, symbol')
-        .eq('active', true);
-      
-      if (currenciesData) {
-        setCurrencies(currenciesData);
-      }
-      
-      // Fetch default currency
-      const { data: defaultCurrencyData, error } = await supabase
-        .from('currencies')
-        .select('code')
-        .eq('is_default', true)
-        .single();
-      
-      if (defaultCurrencyData) {
-        setDefaultCurrency(defaultCurrencyData.code);
+      try {
+        // Fetch expense types
+        const { data: expenseTypesData } = await supabase
+          .from('expense_types')
+          .select('id, name')
+          .eq('active', true);
         
-        // Set default currency if creating a new transaction
-        if (!transaction && !form.getValues('currency')) {
-          form.setValue('currency', defaultCurrencyData.code);
+        if (expenseTypesData) {
+          setExpenseTypes(expenseTypesData);
         }
+        
+        // Fetch transaction statuses
+        const { data: statusesData } = await supabase
+          .from('transaction_statuses')
+          .select('id, name, type')
+          .eq('active', true);
+        
+        if (statusesData) {
+          setStatuses(statusesData);
+        }
+        
+        // Fetch currencies
+        const { data: currenciesData } = await supabase
+          .from('currencies')
+          .select('id, code, name, symbol')
+          .eq('active', true);
+        
+        if (currenciesData) {
+          setCurrencies(currenciesData);
+        }
+        
+        // Fetch default currency
+        const { data: defaultCurrencyData } = await supabase
+          .from('currencies')
+          .select('code')
+          .eq('is_default', true)
+          .single();
+        
+        if (defaultCurrencyData) {
+          setDefaultCurrency(defaultCurrencyData.code);
+          
+          // Set default currency if creating a new transaction
+          if (!transaction.id && !form.getValues('currency')) {
+            form.setValue('currency', defaultCurrencyData.code);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching form data:', err);
+        toast.error('Failed to load form data. Please try again.');
       }
     };
     
@@ -134,8 +144,6 @@ const TransactionForm = ({ transaction, onSave }) => {
   // Handle form submission
   const onSubmit = async (values) => {
     try {
-      setIsSubmitting(true);
-      
       // Format the date for database
       const formattedDate = format(values.date, 'yyyy-MM-dd');
       
@@ -151,19 +159,9 @@ const TransactionForm = ({ transaction, onSave }) => {
       if (onSave) {
         await onSave(transactionData);
       }
-      
-      // Show success message
-      toast.success(
-        transaction ? 'Transaction updated successfully' : 'Transaction created successfully'
-      );
-      
-      // Navigate back
-      navigate(-1);
     } catch (error) {
       console.error('Error saving transaction:', error);
       toast.error('Failed to save transaction');
-    } finally {
-      setIsSubmitting(false);
     }
   };
   
@@ -363,7 +361,7 @@ const TransactionForm = ({ transaction, onSave }) => {
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : transaction ? 'Update' : 'Create'}
+            {isSubmitting ? 'Saving...' : transaction.id ? 'Update' : 'Create'}
           </Button>
         </div>
       </form>

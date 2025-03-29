@@ -42,6 +42,23 @@ const TransactionList: React.FC<TransactionListProps> = ({
   
   useEffect(() => {
     fetchTransactions();
+    
+    // Set up realtime subscription
+    const channel = supabase
+      .channel('public:transactions')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'transactions' 
+      }, () => {
+        fetchTransactions();
+      })
+      .subscribe();
+
+    // Cleanup subscription
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedMonth, selectedYear, selectedCategory, filterType]);
   
   const fetchTransactions = async () => {
@@ -86,7 +103,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
       
       if (error) throw error;
       
-      console.log('Fetched transactions:', data);
       setTransactions(data || []);
     } catch (error: any) {
       console.error('Error fetching transactions:', error);
