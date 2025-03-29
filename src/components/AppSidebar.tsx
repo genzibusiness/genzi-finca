@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BarChart3, PiggyBank, BadgeDollarSign, Settings, Users, LogOut } from 'lucide-react';
+import { Home, BadgeDollarSign, Settings, LogOut } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -23,20 +23,17 @@ const AppSidebar = () => {
   const { user, profile, signOut } = useAuth();
   
   const navItems = [
-    { title: 'Dashboard', path: '/', icon: Home },
+    { title: 'Dashboard', path: '/dashboard', icon: Home },
     { title: 'Transactions', path: '/transactions', icon: BadgeDollarSign },
-    { title: 'Income', path: '/income', icon: PiggyBank },
-    { title: 'Expenses', path: '/expenses', icon: BarChart3 },
-    { title: 'Team', path: '/team', icon: Users },
     { title: 'Settings', path: '/settings', icon: Settings },
   ];
 
   return (
     <Sidebar>
       <SidebarHeader className="px-6 py-4">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/dashboard" className="flex items-center gap-2">
           <BadgeDollarSign size={30} className="text-sidebar-primary" />
-          <span className="text-xl font-bold tracking-tight">Zinca</span>
+          <span className="text-xl font-bold tracking-tight">Genzi Finca</span>
         </Link>
         <SidebarTrigger className="md:hidden absolute right-2 top-4" />
       </SidebarHeader>

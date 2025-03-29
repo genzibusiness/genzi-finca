@@ -1,12 +1,57 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
-import { useCashflow } from '@/context/CashflowContext';
 import { ArrowDown, ArrowUp, PiggyBank } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const DashboardSummary = () => {
-  const { summary } = useCashflow();
+  const [summary, setSummary] = useState({
+    totalIncome: 0,
+    totalExpenses: 0,
+    netCashflow: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSummaryData();
+  }, []);
+
+  const fetchSummaryData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch total income
+      const { data: incomeData, error: incomeError } = await supabase
+        .from('transactions')
+        .select('amount')
+        .eq('type', 'income');
+      
+      if (incomeError) throw incomeError;
+      
+      // Fetch total expenses
+      const { data: expenseData, error: expenseError } = await supabase
+        .from('transactions')
+        .select('amount')
+        .eq('type', 'expense');
+      
+      if (expenseError) throw expenseError;
+      
+      // Calculate totals
+      const totalIncome = incomeData.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+      const totalExpenses = expenseData.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+      
+      setSummary({
+        totalIncome,
+        totalExpenses,
+        netCashflow: totalIncome - totalExpenses
+      });
+    } catch (error) {
+      console.error('Error fetching summary data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-3">

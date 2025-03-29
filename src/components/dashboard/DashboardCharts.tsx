@@ -1,31 +1,107 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCashflow } from '@/context/CashflowContext';
+import { supabase } from '@/integrations/supabase/client';
 import { BarChart, LineChart, ResponsiveContainer, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend, Line } from 'recharts';
 
 const DashboardCharts = () => {
-  const { summary } = useCashflow();
-  
-  // Prepare data for the category chart
-  const categoryData = summary.byCategory
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 5) // Top 5 categories
-    .map((item) => ({
-      name: item.categoryName,
-      amount: item.amount,
-      type: item.type,
-      // Add a fill property directly to each data item
-      fill: item.type === 'income' ? '#059669' : '#e11d48',
-    }));
+  const [categoryData, setCategoryData] = useState([]);
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Prepare data for the monthly chart
-  const monthlyData = summary.byMonth.map((item) => ({
-    name: new Date(item.month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-    income: item.income,
-    expense: item.expense,
-    net: item.income - item.expense,
-  }));
+  useEffect(() => {
+    fetchChartData();
+  }, []);
+
+  const fetchChartData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all transactions for processing
+      const { data: transactions, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('date', { ascending: true });
+      
+      if (error) throw error;
+      
+      // Process category data
+      const categoryMap = new Map();
+      
+      transactions.forEach(transaction => {
+        const category = transaction.expense_type || 'Other';
+        const existingAmount = categoryMap.get(category) || 0;
+        categoryMap.set(category, existingAmount + Number(transaction.amount));
+      });
+      
+      const processedCategoryData = Array.from(categoryMap.entries())
+        .map(([name, amount]) => ({
+          name,
+          amount,
+          fill: '#059669'
+        }))
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 5); // Top 5 categories
+      
+      setCategoryData(processedCategoryData);
+      
+      // Process monthly data
+      const monthMap = new Map();
+      
+      transactions.forEach(transaction => {
+        const month = transaction.date.substring(0, 7); // YYYY-MM format
+        if (!monthMap.has(month)) {
+          monthMap.set(month, { income: 0, expense: 0 });
+        }
+        
+        const monthData = monthMap.get(month);
+        if (transaction.type === 'income') {
+          monthData.income += Number(transaction.amount);
+        } else {
+          monthData.expense += Number(transaction.amount);
+        }
+        
+        monthMap.set(month, monthData);
+      });
+      
+      const processedMonthlyData = Array.from(monthMap.entries())
+        .map(([month, data]) => ({
+          name: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+          income: data.income,
+          expense: data.expense,
+          net: data.income - data.expense
+        }))
+        .sort((a, b) => new Date(a.month) - new Date(b.month));
+      
+      setMonthlyData(processedMonthlyData);
+    } catch (error) {
+      console.error('Error fetching chart data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="grid gap-4 mt-4 grid-cols-1 lg:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Categories</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[300px] flex items-center justify-center">
+          <p className="text-muted-foreground">Loading chart data...</p>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Cash Flow</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[300px] flex items-center justify-center">
+          <p className="text-muted-foreground">Loading chart data...</p>
+        </CardContent>
+      </Card>
+    </div>;
+  }
 
   return (
     <div className="grid gap-4 mt-4 grid-cols-1 lg:grid-cols-2">
@@ -47,9 +123,6 @@ const DashboardCharts = () => {
               <Bar 
                 dataKey="amount" 
                 name="Amount" 
-                // Use the fill from the data item instead of a function
-                fill="#059669"
-                // Use fillOpacity=0 to make the default fill invisible
                 fillOpacity={0}
               />
             </BarChart>

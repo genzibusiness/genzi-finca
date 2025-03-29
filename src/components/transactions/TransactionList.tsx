@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -12,9 +12,6 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash } from 'lucide-react';
@@ -35,12 +32,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface TransactionListProps {
   showSubCategory?: boolean;
   showCreatedBy?: boolean;
   limit?: number;
   filterType?: TransactionType;
+  selectedMonth?: string | null;
+  selectedYear?: string | null;
+  selectedCategory?: string | null;
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({
@@ -48,31 +56,89 @@ const TransactionList: React.FC<TransactionListProps> = ({
   showCreatedBy = false,
   limit,
   filterType,
+  selectedMonth,
+  selectedYear,
+  selectedCategory,
 }) => {
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchTransactions();
-  }, [limit, filterType]);
+  }, [limit, filterType, selectedMonth, selectedYear, selectedCategory, currentPage]);
 
   const fetchTransactions = async () => {
     setIsLoading(true);
     try {
+      // Count total rows for pagination
+      let countQuery = supabase
+        .from('transactions')
+        .select('id', { count: 'exact' });
+      
+      // Apply filters to count query
+      if (filterType) {
+        countQuery = countQuery.eq('type', filterType);
+      }
+      
+      if (selectedMonth) {
+        countQuery = countQuery.ilike('date', `%-${selectedMonth}-%`);
+      }
+      
+      if (selectedYear) {
+        countQuery = countQuery.ilike('date', `${selectedYear}-%`);
+      }
+      
+      if (selectedCategory) {
+        countQuery = countQuery.eq('expense_type', selectedCategory);
+      }
+      
+      const { count, error: countError } = await countQuery;
+      
+      if (countError) throw countError;
+      
+      setTotalCount(count || 0);
+      setTotalPages(Math.ceil((count || 0) / itemsPerPage));
+      
+      // Main query for data
       let query = supabase
         .from('transactions')
         .select('*, profiles(name)')
         .order('date', { ascending: false });
 
+      // Apply the same filters to main query
       if (filterType) {
         query = query.eq('type', filterType);
       }
+      
+      if (selectedMonth) {
+        query = query.ilike('date', `%-${selectedMonth}-%`);
+      }
+      
+      if (selectedYear) {
+        query = query.ilike('date', `${selectedYear}-%`);
+      }
+      
+      if (selectedCategory) {
+        query = query.eq('expense_type', selectedCategory);
+      }
 
+      // Apply pagination
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+      
       if (limit) {
         query = query.limit(limit);
+      } else {
+        query = query.range(from, to);
       }
 
       const { data, error } = await query;
@@ -99,6 +165,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
       
       setTransactions(prev => prev.filter(t => t.id !== id));
       toast.success('Transaction deleted successfully');
+      
+      // Refresh counts and pagination
+      fetchTransactions();
     } catch (error: any) {
       console.error('Error deleting transaction:', error);
       toast.error(error.message || 'Failed to delete transaction');
@@ -111,6 +180,59 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const confirmDelete = (id: string) => {
     setDeleteId(id);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Generate array of page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if there are less than maxVisiblePages
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always include first page, last page, and some pages around current page
+      pages.push(1);
+      
+      let startPage = Math.max(2, currentPage - 1);
+      let endPage = Math.min(totalPages - 1, currentPage + 1);
+      
+      // Adjust if we're near the beginning
+      if (currentPage <= 3) {
+        endPage = 4;
+      }
+      
+      // Adjust if we're near the end
+      if (currentPage >= totalPages - 2) {
+        startPage = totalPages - 3;
+      }
+      
+      // Add ellipsis if needed
+      if (startPage > 2) {
+        pages.push('ellipsis');
+      }
+      
+      // Add middle pages
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      
+      // Add ellipsis if needed
+      if (endPage < totalPages - 1) {
+        pages.push('ellipsis');
+      }
+      
+      // Add last page
+      pages.push(totalPages);
+    }
+    
+    return pages;
   };
 
   if (isLoading) {
@@ -163,7 +285,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   <TableCell>
                     <CurrencyDisplay 
                       amount={transaction.amount} 
-                      currency={transaction.currency}
                       type={transaction.type}
                     />
                   </TableCell>
@@ -197,6 +318,46 @@ const TransactionList: React.FC<TransactionListProps> = ({
           </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination - only show if not limited and has multiple pages */}
+      {!limit && totalPages > 1 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            {/* Previous button */}
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              />
+            </PaginationItem>
+            
+            {/* Page numbers */}
+            {getPageNumbers().map((page, index) => (
+              <PaginationItem key={index}>
+                {page === 'ellipsis' ? (
+                  <div className="flex h-9 w-9 items-center justify-center">...</div>
+                ) : (
+                  <PaginationLink
+                    isActive={page === currentPage}
+                    onClick={() => handlePageChange(page as number)}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                )}
+              </PaginationItem>
+            ))}
+            
+            {/* Next button */}
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
