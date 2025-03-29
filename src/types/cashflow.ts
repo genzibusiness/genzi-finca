@@ -35,6 +35,8 @@ export interface Transaction {
   updated_at: string;
   document_url?: string | null;
   includes_tax?: boolean | null;
+  payment_type_id?: string | null;
+  paid_by_user_id?: string | null;
 }
 
 export interface User {
@@ -84,6 +86,12 @@ export interface TransactionStatusItem {
   id: string;
   name: string;
   type: string;
+  active: boolean;
+}
+
+export interface PaymentTypeItem {
+  id: string;
+  name: string;
   active: boolean;
 }
 

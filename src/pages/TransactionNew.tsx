@@ -56,7 +56,9 @@ const TransactionNew = () => {
         expense_type: transaction.expense_type ? (transaction.expense_type as unknown as ExpenseTypeEnum) : null,
         comment: transaction.comment || null,
         document_url: transaction.document_url || null,
-        includes_tax: transaction.includes_tax || false
+        includes_tax: transaction.includes_tax || false,
+        payment_type_id: transaction.payment_type_id || null,
+        paid_by_user_id: transaction.paid_by_user_id || null
       };
       
       console.log('Saving transaction:', transactionData);
@@ -97,7 +99,9 @@ const TransactionNew = () => {
     status: 'yet_to_be_paid',
     currency: defaultCurrency,
     document_url: '',
-    includes_tax: false
+    includes_tax: false,
+    payment_type_id: '',
+    paid_by_user_id: ''
   };
 
   return (

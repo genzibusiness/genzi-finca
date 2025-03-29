@@ -30,6 +30,8 @@ const formSchema = z.object({
   comment: z.string().optional(),
   document_url: z.string().optional(),
   includes_tax: z.boolean().optional(),
+  payment_type_id: z.string().optional(),
+  paid_by_user_id: z.string().optional(),
 });
 
 type TransactionFormProps = {
@@ -46,13 +48,26 @@ interface TransactionStatusWithNormalized {
   name_normalized: string;
 }
 
+interface PaymentType {
+  id: string;
+  name: string;
+}
+
+interface User {
+  id: string;
+  email: string;
+}
+
 const TransactionForm = ({ transaction, onSave, isSubmitting = false }: TransactionFormProps) => {
   const navigate = useNavigate();
   
   const [expenseTypes, setExpenseTypes] = useState<{id: string, name: string}[]>([]);
   const [statuses, setStatuses] = useState<TransactionStatusWithNormalized[]>([]);
   const [currencies, setCurrencies] = useState<{id: string, code: string, name: string, symbol: string}[]>([]);
+  const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [defaultCurrency, setDefaultCurrency] = useState<string>('INR');
+  const [currencyRates, setCurrencyRates] = useState<{from_currency: string, to_currency: string, rate: number}[]>([]);
   
   // Initialize form with transaction data or defaults
   const form = useForm({
@@ -62,6 +77,8 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
           ...transaction,
           date: transaction.date ? new Date(transaction.date) : new Date(),
           includes_tax: transaction.includes_tax || false,
+          payment_type_id: transaction.payment_type_id || '',
+          paid_by_user_id: transaction.paid_by_user_id || '',
         }
       : {
           amount: 0,
@@ -72,6 +89,8 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
           comment: '',
           document_url: '',
           includes_tax: false,
+          payment_type_id: '',
+          paid_by_user_id: '',
         },
   });
 
@@ -145,6 +164,52 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
           setCurrencies(currenciesData);
         }
         
+        // Fetch payment types
+        const { data: paymentTypesData, error: paymentTypesError } = await supabase
+          .from('payment_types')
+          .select('id, name')
+          .eq('active', true);
+        
+        if (paymentTypesError) {
+          console.error('Error fetching payment types:', paymentTypesError);
+          throw paymentTypesError;
+        }
+        
+        if (paymentTypesData) {
+          console.log('Payment types:', paymentTypesData);
+          setPaymentTypes(paymentTypesData);
+        }
+        
+        // Fetch users
+        const { data: usersData, error: usersError } = await supabase
+          .from('profiles')
+          .select('id, name');
+        
+        if (usersError) {
+          console.error('Error fetching users:', usersError);
+          throw usersError;
+        }
+        
+        if (usersData) {
+          console.log('Users:', usersData);
+          setUsers(usersData);
+        }
+        
+        // Fetch currency rates
+        const { data: ratesData, error: ratesError } = await supabase
+          .from('currency_rates')
+          .select('from_currency, to_currency, rate');
+        
+        if (ratesError) {
+          console.error('Error fetching currency rates:', ratesError);
+          throw ratesError;
+        }
+        
+        if (ratesData) {
+          console.log('Currency rates:', ratesData);
+          setCurrencyRates(ratesData);
+        }
+        
         // Fetch default currency
         const { data: defaultCurrencyData, error: defaultCurrencyError } = await supabase
           .from('currencies')
@@ -187,15 +252,48 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
           form.setValue('status', relevantStatuses[0].name_normalized);
         }
       }
+      
+      // Apply currency conversion for SGD
+      if (name === 'currency' && value.currency === 'SGD') {
+        applyConversionRate(value.currency);
+      }
     });
     
     return () => subscription.unsubscribe();
-  }, [form, statuses]);
+  }, [form, statuses, currencyRates]);
   
   // Filter statuses based on selected transaction type
   const filteredStatuses = statuses.filter(
     (status) => !status.type || status.type === form.getValues('type')
   );
+  
+  // Apply currency conversion
+  const applyConversionRate = (selectedCurrency: string) => {
+    if (selectedCurrency === 'SGD' && defaultCurrency && defaultCurrency !== 'SGD') {
+      const conversionRate = currencyRates.find(
+        rate => rate.from_currency === 'SGD' && rate.to_currency === defaultCurrency
+      );
+      
+      if (conversionRate) {
+        const currentAmount = form.getValues('amount');
+        const convertedAmount = currentAmount * conversionRate.rate;
+        console.log(`Converting ${currentAmount} SGD to ${convertedAmount} ${defaultCurrency} (rate: ${conversionRate.rate})`);
+        
+        // Ask the user if they want to apply the conversion
+        const confirmConversion = window.confirm(
+          `Do you want to convert ${currentAmount} SGD to ${convertedAmount.toFixed(2)} ${defaultCurrency}?`
+        );
+        
+        if (confirmConversion) {
+          form.setValue('amount', Number(convertedAmount.toFixed(2)));
+          form.setValue('currency', defaultCurrency);
+          toast.success(`Converted amount from SGD to ${defaultCurrency}`);
+        }
+      } else {
+        console.log(`No conversion rate found for SGD to ${defaultCurrency}`);
+      }
+    }
+  };
   
   // Handle form submission
   const onSubmit = async (values) => {
@@ -211,6 +309,10 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
         date: formattedDate,
         // If expense type is empty and type is income, set to null
         expense_type: values.type === 'income' ? null : values.expense_type,
+        // Set payment_type_id to null if it's empty
+        payment_type_id: values.payment_type_id || null,
+        // Set paid_by_user_id to null if it's empty
+        paid_by_user_id: values.paid_by_user_id || null,
       };
       
       console.log('Submitting transaction:', transactionData);
@@ -357,6 +459,60 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
                     {filteredStatuses.map((status) => (
                       <SelectItem key={status.id} value={status.name_normalized}>
                         {status.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="payment_type_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Payment Type</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || ''}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select payment type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {paymentTypes.map((paymentType) => (
+                      <SelectItem key={paymentType.id} value={paymentType.id}>
+                        {paymentType.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="paid_by_user_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Paid By</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || ''}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select user" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

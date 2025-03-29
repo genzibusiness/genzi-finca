@@ -105,6 +105,30 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_types: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -191,6 +215,8 @@ export type Database = {
           expense_type: Database["public"]["Enums"]["expense_type"] | null
           id: string
           includes_tax: boolean | null
+          paid_by_user_id: string | null
+          payment_type_id: string | null
           status: Database["public"]["Enums"]["transaction_status"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
@@ -206,6 +232,8 @@ export type Database = {
           expense_type?: Database["public"]["Enums"]["expense_type"] | null
           id?: string
           includes_tax?: boolean | null
+          paid_by_user_id?: string | null
+          payment_type_id?: string | null
           status: Database["public"]["Enums"]["transaction_status"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
@@ -221,12 +249,22 @@ export type Database = {
           expense_type?: Database["public"]["Enums"]["expense_type"] | null
           id?: string
           includes_tax?: boolean | null
+          paid_by_user_id?: string | null
+          payment_type_id?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_payment_type_id_fkey"
+            columns: ["payment_type_id"]
+            isOneToOne: false
+            referencedRelation: "payment_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

@@ -87,7 +87,9 @@ const TransactionDetail = () => {
           comment: processedTransaction.comment,
           status: processedTransaction.status,
           document_url: processedTransaction.document_url,
-          includes_tax: processedTransaction.includes_tax
+          includes_tax: processedTransaction.includes_tax,
+          payment_type_id: processedTransaction.payment_type_id || null,
+          paid_by_user_id: processedTransaction.paid_by_user_id || null
         })
         .eq('id', id);
         
