@@ -27,7 +27,12 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
           <CardDescription>Income and expenses for the current year</CardDescription>
         </CardHeader>
         <CardContent>
-          <MonthlyCashFlowChart />
+          <MonthlyCashFlowChart 
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            selectedCategory={selectedCategory}
+            selectedType={selectedType}
+          />
         </CardContent>
       </Card>
       <Card>
@@ -36,7 +41,12 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
           <CardDescription>Biggest expense categories</CardDescription>
         </CardHeader>
         <CardContent>
-          <TopExpensesChart />
+          <TopExpensesChart 
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            selectedCategory={selectedCategory}
+            selectedType={selectedType}
+          />
         </CardContent>
       </Card>
       <Card className="col-span-3">
@@ -45,12 +55,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
           <CardDescription>Income and expense by transaction status</CardDescription>
         </CardHeader>
         <CardContent>
-          <StatusBasedChart 
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            selectedCategory={selectedCategory}
-            selectedType={selectedType}
-          />
+          <StatusBasedChart />
         </CardContent>
       </Card>
     </div>

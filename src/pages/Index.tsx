@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
 import DashboardSummary from '@/components/dashboard/DashboardSummary';
@@ -7,8 +7,17 @@ import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import DashboardFilters from '@/components/dashboard/DashboardFilters';
 import { supabase } from '@/integrations/supabase/client';
+import { useCashflow } from '@/context/CashflowContext';
+import { TransactionType } from '@/types/cashflow';
 
 const Index = () => {
+  const {
+    selectedMonth, 
+    selectedYear, 
+    selectedCategory, 
+    selectedType
+  } = useCashflow();
+
   useEffect(() => {
     // Enable real-time updates for transactions
     const channel = supabase
@@ -38,7 +47,12 @@ const Index = () => {
         <DashboardFilters />
         <DashboardSummary />
         <div className="grid gap-4 grid-cols-1">
-          <DashboardCharts />
+          <DashboardCharts 
+            selectedMonth={selectedMonth || ''}
+            selectedYear={selectedYear || ''}
+            selectedCategory={selectedCategory || ''}
+            selectedType={selectedType as TransactionType || 'expense'}
+          />
           <RecentTransactions />
         </div>
       </div>

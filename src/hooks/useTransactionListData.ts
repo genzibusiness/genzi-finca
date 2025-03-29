@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ExpenseType, TransactionType } from '@/types/cashflow';
 
 // Find and fix the issue on line 145 with String type
 // Changed from: const dateMatch = dateValue.match(/^\d{4}-\d{2}-\d{2}$/);
@@ -59,11 +60,18 @@ export const useTransactionListData = (
         }
         
         if (filterType) {
-          query = query.eq('type', filterType);
+          // Make sure filterType is either 'income' or 'expense' only
+          if (filterType === 'income' || filterType === 'expense') {
+            query = query.eq('type', filterType as TransactionType);
+          }
         }
         
         if (selectedCategory) {
-          query = query.eq('expense_type', selectedCategory);
+          // Ensure selectedCategory is a valid ExpenseType
+          const validExpenseTypes: ExpenseType[] = ["Salary", "Marketing", "Services", "Software", "Other"];
+          if (validExpenseTypes.includes(selectedCategory as ExpenseType)) {
+            query = query.eq('expense_type', selectedCategory as ExpenseType);
+          }
         }
 
         const { data, error } = await query;
