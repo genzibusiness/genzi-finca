@@ -115,7 +115,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'amount' ? value : value,
+      [name]: value,
     }));
   };
   
@@ -150,6 +150,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     setIsLoading(true);
     
     try {
+      console.log('Submitting transaction:', formData);
+      
       // Prepare data for insertion
       const transactionData = {
         amount: parseFloat(formData.amount.toString()),
@@ -162,27 +164,33 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         user_id: user.id,
       };
       
+      console.log('Transaction data to submit:', transactionData);
+      
       let result;
       
       if (initialData?.id) {
         // Update existing transaction
+        console.log('Updating transaction:', initialData.id);
         result = await supabase
           .from('transactions')
           .update(transactionData)
           .eq('id', initialData.id);
       } else {
         // Insert new transaction
+        console.log('Creating new transaction');
         result = await supabase
           .from('transactions')
           .insert(transactionData);
       }
+      
+      console.log('Supabase result:', result);
       
       if (result.error) {
         throw result.error;
       }
       
       toast.success(initialData?.id ? 'Transaction updated successfully' : 'Transaction created successfully');
-      navigate('/transactions');
+      setTimeout(() => navigate('/transactions'), 1000); // Added a short delay to ensure the toast is shown before navigation
     } catch (error: any) {
       console.error('Error saving transaction:', error);
       toast.error(error.message || 'Failed to save transaction');
