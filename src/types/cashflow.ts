@@ -1,7 +1,11 @@
 
-export type TransactionStatus = 'pending' | 'done' | 'cancelled' | 'recurring';
+export type TransactionStatus = 'paid' | 'received' | 'yet_to_be_paid' | 'yet_to_be_received';
 
 export type TransactionType = 'expense' | 'income';
+
+export type CurrencyType = 'SGD' | 'INR' | 'USD' | 'EUR' | 'GBP';
+
+export type ExpenseType = 'Salary' | 'Marketing' | 'Services' | 'Software' | 'Other';
 
 export interface Category {
   id: string;
@@ -17,18 +21,21 @@ export interface SubCategory {
 export interface Transaction {
   id: string;
   amount: number;
-  description: string;
   date: string; // YYYY-MM-DD
   type: TransactionType;
-  categoryId: string;
-  subCategoryId: string;
+  currency: CurrencyType;
+  expense_type?: ExpenseType | null;
+  comment?: string | null;
+  user_id: string;
   status: TransactionStatus;
-  createdBy: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface User {
   id: string;
   name: string;
+  email: string;
 }
 
 export interface CashflowSummary {

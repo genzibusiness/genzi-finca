@@ -1,6 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import { useCashflow } from '@/context/CashflowContext';
-import { Transaction, TransactionStatus, TransactionType } from '@/types/cashflow';
+import { Transaction } from '@/types/cashflow';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -20,60 +20,85 @@ import {
 } from '@/components/ui/select';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+
+// Currency options
+const currencyOptions = [
+  { value: 'SGD', label: 'SGD - Singapore Dollar' },
+  { value: 'INR', label: 'INR - Indian Rupee' },
+  { value: 'USD', label: 'USD - US Dollar' },
+  { value: 'EUR', label: 'EUR - Euro' },
+  { value: 'GBP', label: 'GBP - British Pound' },
+];
+
+// Expense type options
+const expenseTypeOptions = [
+  { value: 'Salary', label: 'Salary' },
+  { value: 'Marketing', label: 'Marketing' },
+  { value: 'Services', label: 'Services' },
+  { value: 'Software', label: 'Software' },
+  { value: 'Other', label: 'Other' },
+];
+
+// Transaction status options based on type
+const getStatusOptions = (type: string) => {
+  if (type === 'income') {
+    return [
+      { value: 'received', label: 'Received' },
+      { value: 'yet_to_be_received', label: 'Yet to be received' },
+    ];
+  } else {
+    return [
+      { value: 'paid', label: 'Paid' },
+      { value: 'yet_to_be_paid', label: 'Yet to be paid' },
+    ];
+  }
+};
 
 interface TransactionFormProps {
-  initialData?: Transaction;
-  onSubmit: (data: Omit<Transaction, 'id'>) => void;
+  initialData?: any;
   onCancel: () => void;
 }
 
-const statusOptions: { value: TransactionStatus; label: string }[] = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'done', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
-  { value: 'recurring', label: 'Recurring' },
-];
-
 const TransactionForm: React.FC<TransactionFormProps> = ({
   initialData,
-  onSubmit,
   onCancel,
 }) => {
-  const { categories, getSubCategoriesForCategory, users } = useCashflow();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
-  const [formData, setFormData] = useState<Omit<Transaction, 'id'>>({
-    amount: initialData?.amount || 0,
-    description: initialData?.description || '',
+  const [formData, setFormData] = useState({
+    amount: initialData?.amount || '',
     date: initialData?.date || format(new Date(), 'yyyy-MM-dd'),
     type: initialData?.type || 'expense',
-    categoryId: initialData?.categoryId || '',
-    subCategoryId: initialData?.subCategoryId || '',
-    status: initialData?.status || 'pending',
-    createdBy: initialData?.createdBy || (users[0]?.id || ''),
+    currency: initialData?.currency || 'SGD',
+    expense_type: initialData?.expense_type || 'Salary',
+    comment: initialData?.comment || '',
+    status: initialData?.status || 'yet_to_be_paid',
   });
   
   const [date, setDate] = useState<Date | undefined>(
     initialData?.date ? new Date(initialData.date) : new Date()
   );
   
-  const [availableSubCategories, setAvailableSubCategories] = useState(
-    getSubCategoriesForCategory(formData.categoryId)
-  );
+  const [isLoading, setIsLoading] = useState(false);
   
+  // Update status options when type changes
   useEffect(() => {
-    setAvailableSubCategories(getSubCategoriesForCategory(formData.categoryId));
-    
-    if (formData.categoryId && formData.subCategoryId) {
-      const validSubCategories = getSubCategoriesForCategory(formData.categoryId);
-      if (!validSubCategories.some(sc => sc.id === formData.subCategoryId)) {
-        setFormData(prev => ({
-          ...prev,
-          subCategoryId: validSubCategories[0]?.id || '',
-        }));
-      }
+    const statusOptions = getStatusOptions(formData.type);
+    // Reset status if it's not valid for the current type
+    const isValidStatus = statusOptions.some(option => option.value === formData.status);
+    if (!isValidStatus) {
+      setFormData(prev => ({
+        ...prev,
+        status: formData.type === 'income' ? 'yet_to_be_received' : 'yet_to_be_paid'
+      }));
     }
-  }, [formData.categoryId, getSubCategoriesForCategory]);
-  
+  }, [formData.type]);
+
   const handleDateChange = (newDate: Date | undefined) => {
     if (newDate) {
       setDate(newDate);
@@ -90,7 +115,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'amount' ? parseFloat(value) || 0 : value,
+      [name]: name === 'amount' ? value : value,
     }));
   };
   
@@ -99,11 +124,71 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       ...prev,
       [name]: value,
     }));
+
+    // Clear expense_type if type changes to income
+    if (name === 'type' && value === 'income') {
+      setFormData(prev => ({
+        ...prev,
+        expense_type: null
+      }));
+    }
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    if (!user) {
+      toast.error('You must be logged in to create a transaction');
+      return;
+    }
+    
+    if (!formData.amount || parseFloat(formData.amount.toString()) <= 0) {
+      toast.error('Please enter a valid amount greater than 0');
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Prepare data for insertion
+      const transactionData = {
+        amount: parseFloat(formData.amount.toString()),
+        date: formData.date,
+        type: formData.type,
+        currency: formData.currency,
+        expense_type: formData.type === 'expense' ? formData.expense_type : null,
+        comment: formData.comment || null,
+        status: formData.status,
+        user_id: user.id,
+      };
+      
+      let result;
+      
+      if (initialData?.id) {
+        // Update existing transaction
+        result = await supabase
+          .from('transactions')
+          .update(transactionData)
+          .eq('id', initialData.id);
+      } else {
+        // Insert new transaction
+        result = await supabase
+          .from('transactions')
+          .insert(transactionData);
+      }
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      toast.success(initialData?.id ? 'Transaction updated successfully' : 'Transaction created successfully');
+      navigate('/transactions');
+    } catch (error: any) {
+      console.error('Error saving transaction:', error);
+      toast.error(error.message || 'Failed to save transaction');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -145,24 +230,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           </Popover>
         </div>
       </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="type">Type</Label>
           <Select
             value={formData.type}
-            onValueChange={(value) => handleSelectChange('type', value as TransactionType)}
+            onValueChange={(value) => handleSelectChange('type', value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select type" />
@@ -175,16 +249,16 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
+          <Label htmlFor="currency">Currency</Label>
           <Select
-            value={formData.status}
-            onValueChange={(value) => handleSelectChange('status', value as TransactionStatus)}
+            value={formData.currency}
+            onValueChange={(value) => handleSelectChange('currency', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select status" />
+              <SelectValue placeholder="Select currency" />
             </SelectTrigger>
             <SelectContent>
-              {statusOptions.map((option) => (
+              {currencyOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -195,82 +269,65 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="categoryId">Category</Label>
-          <Select
-            value={formData.categoryId}
-            onValueChange={(value) => handleSelectChange('categoryId', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories
-                .filter(category => 
-                  formData.type === 'income' 
-                    ? ['cat1', 'cat2'].includes(category.id) 
-                    : !['cat1', 'cat2'].includes(category.id)
-                )
-                .map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
+        {formData.type === 'expense' && (
+          <div className="space-y-2">
+            <Label htmlFor="expense_type">Expense Type</Label>
+            <Select
+              value={formData.expense_type || ''}
+              onValueChange={(value) => handleSelectChange('expense_type', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select expense type" />
+              </SelectTrigger>
+              <SelectContent>
+                {expenseTypeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
-                ))
-              }
-            </SelectContent>
-          </Select>
-        </div>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         
         <div className="space-y-2">
-          <Label htmlFor="subCategoryId">Sub-Category</Label>
+          <Label htmlFor="status">Status</Label>
           <Select
-            value={formData.subCategoryId}
-            onValueChange={(value) => handleSelectChange('subCategoryId', value)}
-            disabled={!formData.categoryId || availableSubCategories.length === 0}
+            value={formData.status}
+            onValueChange={(value) => handleSelectChange('status', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select sub-category" />
+              <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
-              {availableSubCategories.length > 0 ? (
-                availableSubCategories.map((subCategory) => (
-                  <SelectItem key={subCategory.id} value={subCategory.id}>
-                    {subCategory.name}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="no-subcategories">No subcategories available</SelectItem>
-              )}
+              {getStatusOptions(formData.type).map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="createdBy">Created By</Label>
-        <Select
-          value={formData.createdBy}
-          onValueChange={(value) => handleSelectChange('createdBy', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select user" />
-          </SelectTrigger>
-          <SelectContent>
-            {users.map((user) => (
-              <SelectItem key={user.id} value={user.id}>
-                {user.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label htmlFor="comment">Comment</Label>
+        <Textarea
+          id="comment"
+          name="comment"
+          value={formData.comment}
+          onChange={handleChange}
+          placeholder="Add any additional details..."
+          rows={3}
+        />
       </div>
       
       <div className="flex justify-end space-x-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit">
-          {initialData ? 'Update' : 'Create'} Transaction
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Saving...' : (initialData ? 'Update' : 'Create')} Transaction
         </Button>
       </div>
     </form>

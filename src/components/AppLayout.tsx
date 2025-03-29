@@ -3,12 +3,15 @@ import React from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from './AppSidebar';
 import { CashflowProvider } from '@/context/CashflowContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+  const { user, profile } = useAuth();
+
   return (
     <CashflowProvider>
       <SidebarProvider defaultOpen={true}>

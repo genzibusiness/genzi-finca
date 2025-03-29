@@ -9,7 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          comment: string | null
+          created_at: string
+          currency: Database["public"]["Enums"]["currency_type"]
+          date: string
+          expense_type: Database["public"]["Enums"]["expense_type"] | null
+          id: string
+          status: Database["public"]["Enums"]["transaction_status"]
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          comment?: string | null
+          created_at?: string
+          currency: Database["public"]["Enums"]["currency_type"]
+          date: string
+          expense_type?: Database["public"]["Enums"]["expense_type"] | null
+          id?: string
+          status: Database["public"]["Enums"]["transaction_status"]
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          comment?: string | null
+          created_at?: string
+          currency?: Database["public"]["Enums"]["currency_type"]
+          date?: string
+          expense_type?: Database["public"]["Enums"]["expense_type"] | null
+          id?: string
+          status?: Database["public"]["Enums"]["transaction_status"]
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +83,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      currency_type: "SGD" | "INR" | "USD" | "EUR" | "GBP"
+      expense_type: "Salary" | "Marketing" | "Services" | "Software" | "Other"
+      transaction_status:
+        | "paid"
+        | "received"
+        | "yet_to_be_paid"
+        | "yet_to_be_received"
+      transaction_type: "income" | "expense"
+      user_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never

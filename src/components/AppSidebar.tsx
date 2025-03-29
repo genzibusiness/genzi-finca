@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BarChart3, PiggyBank, BadgeDollarSign, Settings, Users } from 'lucide-react';
+import { Home, BarChart3, PiggyBank, BadgeDollarSign, Settings, Users, LogOut } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -15,9 +15,12 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
 } from '@/components/ui/sidebar';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
 
 const AppSidebar = () => {
   const location = useLocation();
+  const { user, profile, signOut } = useAuth();
   
   const navItems = [
     { title: 'Dashboard', path: '/', icon: Home },
@@ -62,14 +65,21 @@ const AppSidebar = () => {
       </SidebarContent>
       
       <SidebarFooter className="px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-sidebar-primary flex items-center justify-center">
-            <span className="text-white font-medium">SS</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-sidebar-primary flex items-center justify-center">
+              <span className="text-white font-medium">
+                {profile?.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+              </span>
+            </div>
+            <div>
+              <p className="text-sm font-medium">{profile?.name || 'User'}</p>
+              <p className="text-xs text-sidebar-foreground/70">{user?.email}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium">Startup Solutions</p>
-            <p className="text-xs text-sidebar-foreground/70">Financial Admin</p>
-          </div>
+          <Button variant="ghost" size="icon" onClick={signOut} title="Sign Out">
+            <LogOut size={18} />
+          </Button>
         </div>
       </SidebarFooter>
     </Sidebar>
