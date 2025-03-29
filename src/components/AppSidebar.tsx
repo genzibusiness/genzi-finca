@@ -116,7 +116,7 @@ const AppSidebar = () => {
       <SidebarFooter className="border-t p-2">
         <Button
           variant="outline"
-          className="w-full gap-2 justify-start mb-2 bg-black text-white hover:bg-black/90"
+          className="w-full gap-2 justify-start mb-2 bg-black text-white hover:bg-black/90 hover:text-white"
           onClick={() => navigate('/transactions/new')}
         >
           <Plus className="h-4 w-4" />

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ExpenseType, TransactionType } from '@/types/cashflow';
@@ -63,11 +64,6 @@ export const useSummaryData = (
     }
   };
 
-  // Helper function to validate expense type
-  const isValidExpenseType = (value: string | null): value is ExpenseType => {
-    return value !== null;
-  };
-
   // Helper function to validate transaction type
   const isValidTransactionType = (value: string | null): value is TransactionType => {
     if (!value) return false;
@@ -103,7 +99,7 @@ export const useSummaryData = (
         query = query.eq('type', selectedType);
       }
       
-      if (selectedCategory && isValidExpenseType(selectedCategory)) {
+      if (selectedCategory) {
         query = query.eq('expense_type', selectedCategory);
       }
       

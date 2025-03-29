@@ -5,8 +5,8 @@ export type TransactionType = "income" | "expense";
 
 export type CurrencyType = "SGD" | "INR" | "USD" | "EUR" | "GBP";
 
-// Modify ExpenseType to allow any string value while maintaining backwards compatibility
-export type ExpenseType = "Salary" | "Marketing" | "Services" | "Software" | "Other" | string;
+// ExpenseType can be any string
+export type ExpenseType = string;
 
 export interface Category {
   id: string;

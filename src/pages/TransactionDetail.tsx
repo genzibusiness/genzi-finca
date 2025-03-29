@@ -8,6 +8,18 @@ import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import { toast } from 'sonner';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from 'lucide-react';
 
 const TransactionDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +27,7 @@ const TransactionDetail = () => {
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchTransactionData = async () => {
     try {
@@ -88,6 +101,29 @@ const TransactionDetail = () => {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      if (!id) return;
+      
+      setIsDeleting(true);
+      
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      toast.success('Transaction deleted successfully');
+      navigate('/transactions');
+    } catch (error: any) {
+      console.error('Error deleting transaction:', error);
+      toast.error('Failed to delete transaction. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleCancel = () => {
     navigate('/transactions');
   };
@@ -121,10 +157,42 @@ const TransactionDetail = () => {
             </Button>
           </div>
         ) : (
-          <TransactionForm 
-            transaction={transaction} 
-            onSave={handleSave}
-          />
+          <>
+            <div className="flex justify-end mb-4">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    Delete Transaction
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the 
+                      transaction and remove it from our database.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+            
+            <TransactionForm 
+              transaction={transaction} 
+              onSave={handleSave}
+            />
+          </>
         )}
       </div>
     </AppLayout>
