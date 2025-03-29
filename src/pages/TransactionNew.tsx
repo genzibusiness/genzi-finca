@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Transaction, CurrencyType, TransactionStatus } from '@/types/cashflow';
+import { Transaction, CurrencyType, TransactionStatus, ExpenseType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
