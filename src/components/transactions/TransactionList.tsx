@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -223,20 +224,23 @@ const TransactionList: React.FC<TransactionListProps> = ({
               query = query.eq(key, value as TransactionType);
               countQuery = countQuery.eq(key, value as TransactionType);
             } else {
-              query = query.filter(key, 'ilike', `%${value}%`);
-              countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
+              // Fix: Use ilike with template string instead of calling String object
+              query = query.ilike(key, `%${value}%`);
+              countQuery = countQuery.ilike(key, `%${value}%`);
             }
           } else if (key === 'status') {
             if (validTransactionStatuses.includes(value as TransactionStatus)) {
               query = query.eq(key, value as TransactionStatus);
               countQuery = countQuery.eq(key, value as TransactionStatus);
             } else {
-              query = query.filter(key, 'ilike', `%${value}%`);
-              countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
+              // Fix: Use ilike with template string instead of calling String object
+              query = query.ilike(key, `%${value}%`);
+              countQuery = countQuery.ilike(key, `%${value}%`);
             }
           } else {
-            query = query.filter(key, 'ilike', `%${value}%`);
-            countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
+            // Fix: Use ilike with template string for all other columns
+            query = query.ilike(key, `%${value}%`);
+            countQuery = countQuery.ilike(key, `%${value}%`);
           }
         }
       });
