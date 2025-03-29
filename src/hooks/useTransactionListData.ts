@@ -223,8 +223,8 @@ export const useTransactionListData = ({
               console.error("Expense type filter error:", error);
             }
           } else {
-            query = query.ilike(key, `%${value}%`);
-            countQuery = countQuery.ilike(key, `%${value}%`);
+            query = query.filter(key, 'ilike', `%${value}%`);
+            countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
           }
         }
       });
