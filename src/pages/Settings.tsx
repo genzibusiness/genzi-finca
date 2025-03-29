@@ -152,7 +152,7 @@ const Settings = () => {
               
               <div>
                 <h3 className="font-medium">Created By</h3>
-                <p className="text-sm text-muted-foreground">Cashflow App for Small Startups</p>
+                <p className="text-sm text-muted-foreground">Genzi Finca for Small Startups</p>
               </div>
               
               <div>
