@@ -174,10 +174,6 @@ const DashboardFilters = () => {
           </Button>
         )}
       </div>
-      
-      <div className="text-xs text-muted-foreground mt-4">
-        Genzi Finca © {new Date().getFullYear()} • Powered by Zimba 1.0
-      </div>
     </div>
   );
 };

@@ -134,25 +134,14 @@ const Transactions = () => {
                 </Select>
 
                 <Select
-                  value={selectedCategory || 'all-categories'}
-                  onValueChange={(value) => setSelectedCategory(value !== 'all-categories' ? value : null)}
-                >
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all-categories">All Categories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
                   value={selectedType || 'all-types'}
-                  onValueChange={(value) => setSelectedType(value !== 'all-types' ? value as TransactionType : null)}
+                  onValueChange={(value) => {
+                    setSelectedType(value !== 'all-types' ? value as TransactionType : null);
+                    // Reset category filter if switching away from expense type
+                    if (value !== 'expense' && selectedCategory) {
+                      setSelectedCategory(null);
+                    }
+                  }}
                 >
                   <SelectTrigger className="w-[130px]">
                     <SelectValue placeholder="Type" />
@@ -163,6 +152,26 @@ const Transactions = () => {
                     <SelectItem value="expense">Expense</SelectItem>
                   </SelectContent>
                 </Select>
+
+                {/* Only show categories filter when expense type is selected */}
+                {selectedType === 'expense' && (
+                  <Select
+                    value={selectedCategory || 'all-categories'}
+                    onValueChange={(value) => setSelectedCategory(value !== 'all-categories' ? value : null)}
+                  >
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all-categories">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {hasActiveFilters && (

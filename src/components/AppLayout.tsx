@@ -14,12 +14,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full bg-background relative">
+      <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <main className="flex-1 flex flex-col">
           {children}
+          <Copyright />
         </main>
-        <Copyright />
       </div>
     </SidebarProvider>
   );
