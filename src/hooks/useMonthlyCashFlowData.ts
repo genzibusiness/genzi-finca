@@ -99,7 +99,7 @@ export const useMonthlyCashFlowData = (
       }
       
       if (selectedCategory) {
-        // Pass the string directly without type casting
+        // Use the string directly since ExpenseType is now a string type
         query = query.eq('expense_type', selectedCategory);
       }
       

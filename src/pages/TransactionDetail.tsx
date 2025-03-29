@@ -74,7 +74,7 @@ const TransactionDetail = () => {
           date: updatedTransaction.date,
           type: updatedTransaction.type,
           currency: updatedTransaction.currency,
-          expense_type: updatedTransaction.expense_type as ExpenseType,
+          expense_type: updatedTransaction.expense_type,
           comment: updatedTransaction.comment,
           status: updatedTransaction.status,
           document_url: updatedTransaction.document_url,
