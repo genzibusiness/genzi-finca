@@ -13,7 +13,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  BarChart3,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -50,7 +49,7 @@ const AppSidebar = () => {
       <SidebarHeader className="border-b">
         <div className="flex items-center justify-between px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <Badge variant="outline" className="text-lg font-medium p-1 h-7">
+            <Badge variant="outline" className="text-lg font-bold text-black bg-white p-1 h-7 border-black">
               GF
             </Badge>
             <span className="font-bold">Genzi Finca</span>
@@ -117,7 +116,7 @@ const AppSidebar = () => {
       <SidebarFooter className="border-t p-2">
         <Button
           variant="outline"
-          className="w-full gap-2 justify-start mb-2"
+          className="w-full gap-2 justify-start mb-2 bg-black text-white hover:bg-black/90"
           onClick={() => navigate('/transactions/new')}
         >
           <Plus className="h-4 w-4" />

@@ -25,6 +25,24 @@ const DashboardSummary = () => {
 
   useEffect(() => {
     fetchDefaultCurrency();
+    // Set up subscription for transactions
+    const channel = supabase
+      .channel('public:transactions')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'transactions' 
+      }, () => {
+        calculateSummary();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
     calculateSummary();
   }, [filteredTransactions]);
 
@@ -49,16 +67,50 @@ const DashboardSummary = () => {
     }
   };
 
-  const calculateSummary = () => {
+  const calculateSummary = async () => {
     setLoading(true);
     
     try {
-      // Calculate totals from filtered transactions
-      const totalIncome = filteredTransactions
+      // Fetch transactions directly from the database to get real-time data
+      let query = supabase.from('transactions').select('*');
+      
+      // Apply filters if provided
+      if (selectedMonth) {
+        const year = selectedYear || new Date().getFullYear();
+        const startDate = `${year}-${selectedMonth}-01`;
+        
+        // Calculate end date based on month
+        const nextMonth = parseInt(selectedMonth) === 12 ? 1 : parseInt(selectedMonth) + 1;
+        const nextYear = parseInt(selectedMonth) === 12 ? parseInt(year.toString()) + 1 : year;
+        const endDate = `${nextYear}-${nextMonth.toString().padStart(2, '0')}-01`;
+        
+        query = query.gte('date', startDate).lt('date', endDate);
+      } else if (selectedYear) {
+        const startDate = `${selectedYear}-01-01`;
+        const endDate = `${selectedYear}-12-31`;
+        
+        query = query.gte('date', startDate).lte('date', endDate);
+      }
+      
+      if (selectedType) {
+        query = query.eq('type', selectedType);
+      }
+      
+      if (selectedCategory) {
+        query = query.eq('expense_type', selectedCategory);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      // Calculate totals from transactions
+      const transactions = data || [];
+      const totalIncome = transactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + Number(t.amount), 0);
         
-      const totalExpenses = filteredTransactions
+      const totalExpenses = transactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + Number(t.amount), 0);
       

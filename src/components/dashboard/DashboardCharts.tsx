@@ -6,7 +6,7 @@ import { BarChart, LineChart, ResponsiveContainer, Bar, XAxis, YAxis, Tooltip, C
 import { useCashflow } from '@/context/CashflowContext';
 
 const DashboardCharts = () => {
-  const { filteredTransactions } = useCashflow();
+  const { selectedMonth, selectedYear, selectedCategory, selectedType } = useCashflow();
   const [categoryData, setCategoryData] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,23 @@ const DashboardCharts = () => {
   useEffect(() => {
     fetchDefaultCurrency();
     processChartData();
-  }, [filteredTransactions]);
+    
+    // Set up subscription for real-time updates
+    const channel = supabase
+      .channel('public:transactions')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'transactions' 
+      }, () => {
+        processChartData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedMonth, selectedYear, selectedCategory, selectedType]);
 
   const fetchDefaultCurrency = async () => {
     try {
@@ -40,20 +56,53 @@ const DashboardCharts = () => {
     }
   };
 
-  const processChartData = () => {
+  const processChartData = async () => {
     try {
       setLoading(true);
       
-      // Process category data
+      // Build query with filters
+      let query = supabase.from('transactions').select('*');
+      
+      if (selectedYear) {
+        const startDate = `${selectedYear}-01-01`;
+        const endDate = `${selectedYear}-12-31`;
+        query = query.gte('date', startDate).lte('date', endDate);
+      }
+      
+      if (selectedMonth) {
+        const year = selectedYear || new Date().getFullYear();
+        const startDate = `${year}-${selectedMonth}-01`;
+        
+        // Calculate end date based on month
+        const nextMonth = parseInt(selectedMonth) === 12 ? 1 : parseInt(selectedMonth) + 1;
+        const nextYear = parseInt(selectedMonth) === 12 ? parseInt(year.toString()) + 1 : year;
+        const endDate = `${nextYear}-${nextMonth.toString().padStart(2, '0')}-01`;
+        
+        query = query.gte('date', startDate).lt('date', endDate);
+      }
+      
+      if (selectedType) {
+        query = query.eq('type', selectedType);
+      }
+      
+      if (selectedCategory) {
+        query = query.eq('expense_type', selectedCategory);
+      }
+      
+      const { data: transactions, error } = await query;
+      
+      if (error) throw error;
+      
+      // Process category data for expenses
       const categoryMap = new Map();
       
-      filteredTransactions.forEach(transaction => {
-        if (transaction.type === 'expense') {
+      (transactions || [])
+        .filter(transaction => transaction.type === 'expense')
+        .forEach(transaction => {
           const category = transaction.expense_type || 'Other';
           const existingAmount = categoryMap.get(category) || 0;
           categoryMap.set(category, existingAmount + Number(transaction.amount));
-        }
-      });
+        });
       
       const processedCategoryData = Array.from(categoryMap.entries())
         .map(([name, amount]) => ({
@@ -69,7 +118,7 @@ const DashboardCharts = () => {
       // Process monthly data
       const monthMap = new Map();
       
-      filteredTransactions.forEach(transaction => {
+      (transactions || []).forEach(transaction => {
         const month = transaction.date.substring(0, 7); // YYYY-MM format
         if (!monthMap.has(month)) {
           monthMap.set(month, { income: 0, expense: 0 });

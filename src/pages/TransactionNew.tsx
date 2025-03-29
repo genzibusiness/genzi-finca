@@ -74,7 +74,8 @@ const TransactionNew = () => {
       }
       
       toast.success('Transaction created successfully');
-      navigate(`/transactions/${data.id}`);
+      // Redirect to transactions page instead of transaction detail
+      navigate('/transactions');
     } catch (error: any) {
       console.error('Error creating transaction:', error);
       toast.error(error.message || 'Failed to create transaction');

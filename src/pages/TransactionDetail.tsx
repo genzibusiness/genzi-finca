@@ -8,16 +8,6 @@ import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import { toast } from 'sonner';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 const TransactionDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +15,6 @@ const TransactionDetail = () => {
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const fetchTransactionData = async () => {
     try {
@@ -84,6 +73,8 @@ const TransactionDetail = () => {
       if (error) throw error;
       
       toast.success('Transaction updated successfully');
+      // Navigate back to transactions list after successful update
+      navigate('/transactions');
     } catch (error: any) {
       console.error('Error updating transaction:', error);
       toast.error('Failed to update transaction. Please try again.');
@@ -96,24 +87,6 @@ const TransactionDetail = () => {
     navigate('/transactions');
   };
 
-  const handleDelete = async () => {
-    try {
-      setIsDeleteDialogOpen(false);
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast.success('Transaction deleted successfully');
-      navigate('/transactions');
-    } catch (error: any) {
-      console.error('Error deleting transaction:', error);
-      toast.error(error.message || 'Failed to delete transaction');
-    }
-  };
-
   return (
     <AppLayout>
       <div className="container max-w-4xl py-6">
@@ -121,7 +94,7 @@ const TransactionDetail = () => {
           title="Transaction Details"
           description="View and manage transaction information"
           action={{
-            label: "Cancel",
+            label: "Back to Transactions",
             onClick: handleCancel
           }}
         />
@@ -143,39 +116,11 @@ const TransactionDetail = () => {
             </Button>
           </div>
         ) : (
-          <>
-            <div className="mb-4 flex justify-end">
-              <Button 
-                variant="destructive" 
-                onClick={() => setIsDeleteDialogOpen(true)}
-                className="mr-2"
-              >
-                Delete
-              </Button>
-            </div>
-            <TransactionForm 
-              transaction={transaction} 
-              onSave={handleSave}
-            />
-          </>
+          <TransactionForm 
+            transaction={transaction} 
+            onSave={handleSave}
+          />
         )}
-
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Transaction?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete this transaction from our servers.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </AppLayout>
   );
