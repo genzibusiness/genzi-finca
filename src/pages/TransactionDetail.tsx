@@ -66,14 +66,16 @@ const TransactionDetail = () => {
       
       setTransaction({ ...transaction, ...updatedTransaction });
     
+      // Handle expense_type based on transaction type
       let validExpenseType = null;
-      if (updatedTransaction.expense_type) {
-        const validExpenseTypes: ExpenseType[] = ["Salary", "Marketing", "Services", "Software", "Other"];
-        validExpenseType = validExpenseTypes.includes(updatedTransaction.expense_type as ExpenseType) 
-          ? updatedTransaction.expense_type 
-          : null;
+      if (updatedTransaction.type === 'expense' && updatedTransaction.expense_type) {
+        validExpenseType = updatedTransaction.expense_type;
       }
     
+      // Handle payment_type_id and paid_by_user_id
+      const payment_type_id = updatedTransaction.payment_type_id === 'none' ? null : updatedTransaction.payment_type_id;
+      const paid_by_user_id = updatedTransaction.paid_by_user_id === 'none' ? null : updatedTransaction.paid_by_user_id;
+      
       const { error } = await supabase
         .from('transactions')
         .update({
@@ -86,8 +88,8 @@ const TransactionDetail = () => {
           status: updatedTransaction.status,
           document_url: updatedTransaction.document_url,
           includes_tax: updatedTransaction.includes_tax,
-          payment_type_id: updatedTransaction.payment_type_id || null,
-          paid_by_user_id: updatedTransaction.paid_by_user_id || null
+          payment_type_id: payment_type_id,
+          paid_by_user_id: paid_by_user_id
         })
         .eq('id', id);
         

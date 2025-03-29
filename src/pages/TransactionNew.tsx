@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Transaction, CurrencyType, TransactionStatus, ExpenseType } from '@/types/cashflow';
+import { Transaction, CurrencyType, TransactionStatus } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -13,7 +13,7 @@ const TransactionNew = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [defaultCurrency, setDefaultCurrency] = useState<CurrencyType>("INR");
-  const [loading, setLoading] = useState(false);
+  const [loading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchDefaultCurrency = async () => {
@@ -43,7 +43,7 @@ const TransactionNew = () => {
 
   const handleSave = async (transaction: Partial<Transaction>) => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       console.log('Attempting to save transaction:', transaction);
       
       if (!transaction.amount || !transaction.date || !transaction.currency || !transaction.status || !transaction.type) {
@@ -59,7 +59,7 @@ const TransactionNew = () => {
         ? transaction.status 
         : 'yet_to_be_paid';
       
-      // Validate expense_type - no need to cast to ExpenseTypeEnum
+      // Handle expense_type properly based on transaction type
       let validExpenseType = null;
       if (transaction.type === 'expense' && transaction.expense_type) {
         validExpenseType = transaction.expense_type;
@@ -76,7 +76,7 @@ const TransactionNew = () => {
         status: validStatus,
         type: transaction.type,
         user_id: user.id,
-        expense_type: validExpenseType,
+        expense_type: validExpenseType, // This ensures expense_type is null for income transactions
         comment: transaction.comment || null,
         document_url: transaction.document_url || null,
         includes_tax: transaction.includes_tax || false,
@@ -103,7 +103,7 @@ const TransactionNew = () => {
       console.error('Error creating transaction:', error);
       toast.error(error.message || 'Failed to create transaction');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -125,7 +125,8 @@ const TransactionNew = () => {
     document_url: '',
     includes_tax: false,
     payment_type_id: '',
-    paid_by_user_id: ''
+    paid_by_user_id: '',
+    expense_type: null // Initialize as null to be updated based on transaction type
   };
 
   return (

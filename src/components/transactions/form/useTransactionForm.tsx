@@ -12,7 +12,7 @@ const createTransactionFormSchema = () => {
     amount: z.coerce.number().positive({ message: 'Amount must be positive' }),
     date: z.date(),
     type: z.enum(['income', 'expense']),
-    expense_type: z.string().optional(),
+    expense_type: z.string().nullable().optional(),
     status: z.string(),
     currency: z.string(),
     comment: z.string().optional(),
@@ -41,6 +41,7 @@ export const useTransactionForm = (
           includes_tax: transaction.includes_tax || false,
           payment_type_id: transaction.payment_type_id || '',
           paid_by_user_id: transaction.paid_by_user_id || '',
+          expense_type: transaction.expense_type || null,
         }
       : {
           amount: 0,
@@ -53,6 +54,7 @@ export const useTransactionForm = (
           includes_tax: false,
           payment_type_id: '',
           paid_by_user_id: '',
+          expense_type: null,
         },
   });
 
@@ -88,16 +90,22 @@ export const useTransactionForm = (
     return false;
   };
   
-  // Watch for type changes to update status options
+  // Watch for type changes to update status options and expense type
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'type') {
+        // Update status based on transaction type
         const relevantStatuses = statuses.filter(
           (status) => !status.type || status.type === value.type
         );
         
         if (relevantStatuses.length > 0 && !relevantStatuses.find(s => s.name_normalized === form.getValues('status'))) {
           form.setValue('status', relevantStatuses[0].name_normalized);
+        }
+        
+        // If transaction type changes to income, set expense_type to null
+        if (value.type === 'income') {
+          form.setValue('expense_type', null);
         }
       }
       
@@ -129,15 +137,15 @@ export const useTransactionForm = (
     const payment_type_id = values.payment_type_id === 'none' ? null : values.payment_type_id || null;
     const paid_by_user_id = values.paid_by_user_id === 'none' ? null : values.paid_by_user_id || null;
     
+    // Prepare expense_type - ensure it's null for income transactions
+    const expense_type = values.type === 'income' ? null : values.expense_type;
+    
     // Prepare transaction data
     const transactionData = {
       ...values,
       date: formattedDate,
-      // If expense type is empty and type is income, set to null
-      expense_type: values.type === 'income' ? null : values.expense_type,
-      // Set payment_type_id to null if it's 'none' or empty
+      expense_type: expense_type,
       payment_type_id: payment_type_id,
-      // Set paid_by_user_id to null if it's 'none' or empty
       paid_by_user_id: paid_by_user_id,
     };
     
