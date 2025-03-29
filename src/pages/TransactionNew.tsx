@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Transaction, CurrencyType, TransactionStatus, ExpenseType } from '@/types/cashflow';
+import { Transaction, CurrencyType, TransactionStatus, ExpenseType, TransactionType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -50,6 +50,9 @@ const TransactionNew = () => {
         ? transaction.status 
         : 'yet_to_be_paid';
       
+      // Cast expense_type to ExpenseType to ensure type safety
+      const expenseType = transaction.expense_type as ExpenseType | null;
+      
       // Create transaction with all required fields
       const transactionData = {
         amount: transaction.amount,
@@ -58,7 +61,7 @@ const TransactionNew = () => {
         status: validStatus,
         type: transaction.type,
         user_id: userData.user.id,
-        expense_type: transaction.expense_type || null,
+        expense_type: expenseType,
         comment: transaction.comment || null,
         document_url: transaction.document_url || null,
         includes_tax: transaction.includes_tax || false

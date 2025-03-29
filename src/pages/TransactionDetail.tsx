@@ -53,8 +53,11 @@ const TransactionDetail = () => {
       // Ensure we have a transaction to update
       if (!transaction || !id) return;
       
+      // Cast expense_type to ExpenseType to ensure type safety
+      const expenseType = updatedTransaction.expense_type as ExpenseType | null;
+      
       // Optimistically update the transaction in the UI
-      setTransaction({ ...transaction, ...updatedTransaction });
+      setTransaction({ ...transaction, ...updatedTransaction, expense_type: expenseType });
     
       // Persist the changes to the database
       const { error } = await supabase
@@ -64,7 +67,7 @@ const TransactionDetail = () => {
           date: updatedTransaction.date,
           type: updatedTransaction.type,
           currency: updatedTransaction.currency,
-          expense_type: updatedTransaction.expense_type,
+          expense_type: expenseType,
           comment: updatedTransaction.comment,
           status: updatedTransaction.status,
           document_url: updatedTransaction.document_url,
