@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Transaction, TransactionType, ExpenseType } from '@/types/cashflow';
+import { Transaction, TransactionType, ExpenseType, TransactionStatus } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
 import TypeBadge from '@/components/TypeBadge';
@@ -151,10 +151,20 @@ const TransactionList: React.FC<TransactionListProps> = ({
               query = query.eq(key, numValue);
               countQuery = countQuery.eq(key, numValue);
             }
-          } else if (key === 'type' || key === 'status') {
-            // For enum fields, use exact match
-            query = query.eq(key, value);
-            countQuery = countQuery.eq(key, value);
+          } else if (key === 'type') {
+            // Validate type value against TransactionType
+            const validTypes: TransactionType[] = ["income", "expense"];
+            if (validTypes.includes(value as TransactionType)) {
+              query = query.eq(key, value as TransactionType);
+              countQuery = countQuery.eq(key, value as TransactionType);
+            }
+          } else if (key === 'status') {
+            // Validate status value against TransactionStatus
+            const validStatuses: TransactionStatus[] = ["paid", "received", "yet_to_be_paid", "yet_to_be_received"];
+            if (validStatuses.includes(value as TransactionStatus)) {
+              query = query.eq(key, value as TransactionStatus);
+              countQuery = countQuery.eq(key, value as TransactionStatus);
+            }
           } else if (key === 'expense_type') {
             // For expense_type, which is a nullable enum, use type-safe comparison
             query = query.ilike(key, `%${value}%`);
