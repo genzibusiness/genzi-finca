@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Transaction, CurrencyType } from '@/types/cashflow';
+import { Transaction, CurrencyType, TransactionStatus } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -46,7 +46,7 @@ const TransactionNew = () => {
       }
       
       // Ensure status value is lowercase to match enum values in database
-      const status = transaction.status.toLowerCase();
+      const status = transaction.status.toLowerCase() as TransactionStatus;
       
       // Create transaction with all required fields
       const transactionData = {

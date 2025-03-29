@@ -17,7 +17,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Transaction, CurrencyType, ExpenseType } from '@/types/cashflow';
+import { Transaction, CurrencyType, ExpenseType, TransactionStatus } from '@/types/cashflow';
 
 const formSchema = z.object({
   amount: z.coerce.number().positive({ message: 'Amount must be positive' }),
@@ -35,11 +35,19 @@ type TransactionFormProps = {
   isSubmitting?: boolean;
 };
 
+// Define an extended status interface that includes the normalized name
+interface TransactionStatusWithNormalized {
+  id: string;
+  name: string; 
+  type: string;
+  name_normalized: string;
+}
+
 const TransactionForm = ({ transaction, onSave, isSubmitting = false }: TransactionFormProps) => {
   const navigate = useNavigate();
   
   const [expenseTypes, setExpenseTypes] = useState<{id: string, name: string}[]>([]);
-  const [statuses, setStatuses] = useState<{id: string, name: string, type: string}[]>([]);
+  const [statuses, setStatuses] = useState<TransactionStatusWithNormalized[]>([]);
   const [currencies, setCurrencies] = useState<{id: string, code: string, name: string, symbol: string}[]>([]);
   const [defaultCurrency, setDefaultCurrency] = useState<string>('INR');
   
