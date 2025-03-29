@@ -81,6 +81,9 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
     navigate(-1);
   };
 
+  // Get current transaction type value
+  const transactionType = form.watch('type');
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -120,19 +123,21 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
               onCurrencyChange={applyConversionRate}
             />
             <StatusField form={form} statuses={filteredStatuses} />
-            {form.watch('type') === 'expense' && (
+            {transactionType === 'expense' && (
               <ExpenseTypeField form={form} expenseTypes={expenseTypes} />
             )}
           </FormRow>
           
-          {/* Third row: Payment Type, Paid By, Includes Tax */}
-          <FormRow>
-            <PaymentTypeField form={form} paymentTypes={paymentTypes} />
-            <PaidByField form={form} users={users} />
-            <div className="flex items-end">
-              <IncludesTaxField form={form} />
-            </div>
-          </FormRow>
+          {/* Third row: Payment Type, Paid By, Includes Tax (only for expense transaction type) */}
+          {transactionType === 'expense' && (
+            <FormRow>
+              <PaymentTypeField form={form} paymentTypes={paymentTypes} />
+              <PaidByField form={form} users={users} />
+              <div className="flex items-end">
+                <IncludesTaxField form={form} />
+              </div>
+            </FormRow>
+          )}
           
           {/* Fourth row: Document URL */}
           <FormRow columns={1}>

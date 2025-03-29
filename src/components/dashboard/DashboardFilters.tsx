@@ -123,7 +123,13 @@ const DashboardFilters = () => {
 
           <Select
             value={selectedType || 'all-types'}
-            onValueChange={(value) => setSelectedType(value !== 'all-types' ? value as TransactionType : null)}
+            onValueChange={(value) => {
+              setSelectedType(value !== 'all-types' ? value as TransactionType : null);
+              // Reset category filter if switching away from expense type
+              if (value !== 'expense' && selectedCategory) {
+                setSelectedCategory(null);
+              }
+            }}
           >
             <SelectTrigger className="w-[130px]">
               <SelectValue placeholder="Type" />
@@ -135,22 +141,25 @@ const DashboardFilters = () => {
             </SelectContent>
           </Select>
 
-          <Select
-            value={selectedCategory || 'all-categories'}
-            onValueChange={(value) => setSelectedCategory(value !== 'all-categories' ? value : null)}
-          >
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all-categories">All Categories</SelectItem>
-              {expenseCategories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Only show categories filter when expense type is selected */}
+          {(selectedType === 'expense') && (
+            <Select
+              value={selectedCategory || 'all-categories'}
+              onValueChange={(value) => setSelectedCategory(value !== 'all-categories' ? value : null)}
+            >
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all-categories">All Categories</SelectItem>
+                {expenseCategories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {hasActiveFilters && (
@@ -167,7 +176,7 @@ const DashboardFilters = () => {
       </div>
       
       <div className="text-xs text-muted-foreground mt-4">
-        Zimba 1.0 Copyright
+        Genzi Finca © {new Date().getFullYear()} • Powered by Zimba 1.0
       </div>
     </div>
   );
