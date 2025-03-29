@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ExpenseType } from '@/types/cashflow';
+import { ExpenseType, TransactionType } from '@/types/cashflow';
 
 interface MonthlyData {
   name: string;
@@ -70,6 +71,12 @@ export const useMonthlyCashFlowData = (
     return ['Salary', 'Marketing', 'Services', 'Software', 'Other'].includes(value as ExpenseType);
   };
 
+  // Helper function to validate transaction type
+  const isValidTransactionType = (value: string | null): value is TransactionType => {
+    if (!value) return false;
+    return ['income', 'expense'].includes(value as TransactionType);
+  };
+
   const processMonthlyData = async () => {
     try {
       setLoading(true);
@@ -95,7 +102,7 @@ export const useMonthlyCashFlowData = (
         query = query.gte('date', startDate).lt('date', endDate);
       }
       
-      if (selectedType) {
+      if (selectedType && isValidTransactionType(selectedType)) {
         query = query.eq('type', selectedType);
       }
       

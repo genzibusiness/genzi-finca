@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ExpenseType } from '@/types/cashflow';
+import { ExpenseType, TransactionType } from '@/types/cashflow';
 
 interface SummaryData {
   totalIncome: number;
@@ -71,6 +71,12 @@ export const useSummaryData = (
     return ['Salary', 'Marketing', 'Services', 'Software', 'Other'].includes(value as ExpenseType);
   };
 
+  // Helper function to validate transaction type
+  const isValidTransactionType = (value: string | null): value is TransactionType => {
+    if (!value) return false;
+    return ['income', 'expense'].includes(value as TransactionType);
+  };
+
   const calculateSummary = async () => {
     setLoading(true);
     
@@ -96,7 +102,7 @@ export const useSummaryData = (
         query = query.gte('date', startDate).lte('date', endDate);
       }
       
-      if (selectedType) {
+      if (selectedType && isValidTransactionType(selectedType)) {
         query = query.eq('type', selectedType);
       }
       
