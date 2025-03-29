@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Transaction } from '@/types/cashflow';
+import { Transaction, CurrencyType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -10,12 +10,31 @@ import { toast } from 'sonner';
 
 const TransactionNew = () => {
   const navigate = useNavigate();
+  const [defaultCurrency, setDefaultCurrency] = useState<CurrencyType>("INR");
+
+  // Fetch the default currency
+  useEffect(() => {
+    const fetchDefaultCurrency = async () => {
+      const { data } = await supabase
+        .from('currencies')
+        .select('code')
+        .eq('is_default', true)
+        .single();
+      
+      if (data) {
+        setDefaultCurrency(data.code as CurrencyType);
+      }
+    };
+    
+    fetchDefaultCurrency();
+  }, []);
 
   const handleSave = async (transaction: Partial<Transaction>) => {
     try {
+      // Ensure we're passing a single object, not an array
       const { data, error } = await supabase
         .from('transactions')
-        .insert([transaction])
+        .insert(transaction)
         .select('id')
         .single();
       
@@ -38,7 +57,8 @@ const TransactionNew = () => {
     type: 'expense',
     amount: 0,
     date: new Date().toISOString().split('T')[0],
-    status: 'pending',
+    status: 'yet_to_be_paid',
+    currency: defaultCurrency,
   };
 
   return (
@@ -47,6 +67,10 @@ const TransactionNew = () => {
         <PageHeader
           title="New Transaction"
           description="Create a new transaction record"
+          action={{
+            label: "Cancel",
+            onClick: handleCancel
+          }}
         />
         
         <TransactionForm 

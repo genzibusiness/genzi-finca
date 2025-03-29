@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -58,28 +59,29 @@ const TransactionDetail = () => {
     fetchTransactionData();
   }, [id]);
 
-  const handleSave = (updatedTransaction: Partial<Transaction>) => {
-    // Optimistically update the transaction in the UI
-    setTransaction((prevTransaction) => {
-      if (!prevTransaction) return prevTransaction;
-      return { ...prevTransaction, ...updatedTransaction };
-    });
-  
-    // Persist the changes to the database
-    supabase
-      .from('transactions')
-      .update(updatedTransaction)
-      .eq('id', id)
-      .then(({ error }) => {
-        if (error) {
-          console.error('Error updating transaction:', error);
-          toast.error('Failed to update transaction. Please try again.');
-          // Revert the optimistic update if the database update fails
-          fetchTransactionData();
-        } else {
-          toast.success('Transaction updated successfully');
-        }
-      });
+  const handleSave = async (updatedTransaction: Partial<Transaction>) => {
+    try {
+      // Ensure we have a transaction to update
+      if (!transaction) return;
+      
+      // Optimistically update the transaction in the UI
+      setTransaction({ ...transaction, ...updatedTransaction });
+    
+      // Persist the changes to the database
+      const { error } = await supabase
+        .from('transactions')
+        .update(updatedTransaction)
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      toast.success('Transaction updated successfully');
+    } catch (error: any) {
+      console.error('Error updating transaction:', error);
+      toast.error('Failed to update transaction. Please try again.');
+      // Revert the optimistic update if the database update fails
+      fetchTransactionData();
+    }
   };
 
   const handleCancel = () => {
@@ -110,17 +112,10 @@ const TransactionDetail = () => {
         <PageHeader
           title="Transaction Details"
           description="View and manage transaction information"
-          actions={
-            <div className="flex gap-2">
-              <Button 
-                variant="destructive" 
-                onClick={() => setIsDeleteDialogOpen(true)}
-              >
-                Delete
-              </Button>
-              <Button onClick={handleCancel}>Cancel</Button>
-            </div>
-          }
+          action={{
+            label: "Cancel",
+            onClick: handleCancel
+          }}
         />
 
         {isLoading ? (
@@ -140,10 +135,21 @@ const TransactionDetail = () => {
             </Button>
           </div>
         ) : (
-          <TransactionForm 
-            transaction={transaction} 
-            onSave={handleSave}
-          />
+          <>
+            <div className="mb-4 flex justify-end">
+              <Button 
+                variant="destructive" 
+                onClick={() => setIsDeleteDialogOpen(true)}
+                className="mr-2"
+              >
+                Delete
+              </Button>
+            </div>
+            <TransactionForm 
+              transaction={transaction} 
+              onSave={handleSave}
+            />
+          </>
         )}
 
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

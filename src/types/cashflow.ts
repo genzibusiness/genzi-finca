@@ -1,11 +1,10 @@
+export type TransactionStatus = "paid" | "received" | "yet_to_be_paid" | "yet_to_be_received";
 
-export type TransactionStatus = string;
+export type TransactionType = "income" | "expense";
 
-export type TransactionType = string;
+export type CurrencyType = "SGD" | "INR" | "USD" | "EUR" | "GBP";
 
-export type CurrencyType = string;
-
-export type ExpenseType = string;
+export type ExpenseType = "Salary" | "Marketing" | "Services" | "Software" | "Other";
 
 export interface Category {
   id: string;
