@@ -206,15 +206,21 @@ export const useTransactionListData = ({
             try {
               // Try to match against enum values
               const validExpenseTypes: ExpenseType[] = ["Salary", "Marketing", "Services", "Software", "Other"];
-              if (validExpenseTypes.includes(expenseValue as ExpenseType)) {
-                query = query.eq(key, expenseValue);
-                countQuery = countQuery.eq(key, expenseValue);
+              
+              // Check for exact match with type assertion
+              if (validExpenseTypes.includes(expenseValue as any)) {
+                // Safe to use strict equality since we've verified it's a valid enum value
+                const typedValue = expenseValue as ExpenseType;
+                query = query.eq(key, typedValue);
+                countQuery = countQuery.eq(key, typedValue);
               } else {
-                // Use eq_any for partial matches if exact match fails
+                // Use partial matching if exact match fails
                 const matches = validExpenseTypes.filter(t => 
                   t.toLowerCase().includes(expenseValue.toLowerCase())
                 );
+                
                 if (matches.length > 0) {
+                  // `in` operator expects an array of valid types
                   query = query.in(key, matches);
                   countQuery = countQuery.in(key, matches);
                 } else {
@@ -225,7 +231,7 @@ export const useTransactionListData = ({
               console.error("Expense type filter error:", error);
             }
           } else {
-            // Default case for other string fields
+            // Default case for other string fields - use template literals instead of String()
             query = query.ilike(key, `%${value}%`);
             countQuery = countQuery.ilike(key, `%${value}%`);
           }
