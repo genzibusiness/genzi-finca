@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.3";
 import * as puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts";
-import { Resend } from "npm:resend@1.5.0";
+import { Resend } from "npm:resend@2.1.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

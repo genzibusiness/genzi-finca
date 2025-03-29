@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Transaction, TransactionType, TransactionStatus, ExpenseType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';

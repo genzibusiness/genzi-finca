@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -14,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { TransactionType } from '@/types/cashflow';
+import { TransactionType, ExpenseType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   DropdownMenu,
@@ -109,7 +108,11 @@ const Transactions = () => {
       }
       
       if (selectedCategory) {
-        query = query.eq('expense_type', selectedCategory);
+        // Fix: Only set expense_type filter if selectedCategory is a valid ExpenseType
+        const validExpenseTypes: ExpenseType[] = ["Salary", "Marketing", "Services", "Software", "Other"];
+        if (validExpenseTypes.includes(selectedCategory as ExpenseType)) {
+          query = query.eq('expense_type', selectedCategory as ExpenseType);
+        }
       }
       
       // Fetch data
