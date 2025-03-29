@@ -31,8 +31,8 @@ serve(async (req) => {
     // Email confirmation flow
     if (type === 'signup' && token) {
       // The token will be automatically verified by Supabase when requested with this URL format
-      const redirectUrl = `${baseUrl}auth?confirmed=true`;
-      console.log(`Email confirmation successful. Redirecting to: ${redirectUrl}`);
+      const redirectUrl = `${baseUrl}confirm-signup#access_token=${token}`;
+      console.log(`Email confirmation requested. Redirecting to: ${redirectUrl}`);
       return new Response(null, {
         status: 302,
         headers: {
@@ -45,7 +45,7 @@ serve(async (req) => {
     // Password reset flow
     if (type === 'recovery' && token) {
       // Redirect to the password reset page with the token
-      const redirectUrl = `${baseUrl}reset-password?token=${token}`;
+      const redirectUrl = `${baseUrl}reset-password#access_token=${token}`;
       console.log(`Password reset requested. Redirecting to: ${redirectUrl}`);
       return new Response(null, {
         status: 302,

@@ -141,7 +141,7 @@ const Settings = () => {
               <CardTitle>About</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Moved About Finca to the top */}
+              {/* About Finca moved to the top */}
               <div>
                 <h3 className="font-medium">About Finca</h3>
                 <p className="text-sm text-muted-foreground">

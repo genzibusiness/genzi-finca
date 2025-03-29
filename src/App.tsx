@@ -17,6 +17,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import ConfirmSignup from "./pages/ConfirmSignup";
 import ConfigureMasterData from "./pages/ConfigureMasterData";
 import FincaChat from "./pages/FincaChat";
 
@@ -50,6 +51,7 @@ const App = () => {
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/confirm-signup" element={<ConfirmSignup />} />
                   
                   {/* Protected routes */}
                   <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />

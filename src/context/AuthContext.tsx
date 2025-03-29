@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Get the current URL for the redirect
       const origin = window.location.origin;
-      const redirectUrl = `${origin}/api/auth-redirect`;
+      const redirectUrl = `${origin}/confirm-signup`;
       
       const { error } = await supabase.auth.signUp({ 
         email, 
@@ -137,7 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Get the current URL for the redirect
       const origin = window.location.origin;
-      const redirectUrl = `${origin}/api/auth-redirect`;
+      const redirectUrl = `${origin}/reset-password`;
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
