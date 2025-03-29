@@ -6,7 +6,7 @@ const Copyright = () => {
   
   return (
     <div className="text-xs text-muted-foreground p-4 text-center border-t mt-auto">
-      © {year} Genzi Finca. All rights reserved. Powered by Zimba 1.0
+      © {year} Genzi Finca. All rights reserved. Powered by genzi.ai
     </div>
   );
 };
