@@ -57,7 +57,7 @@ const PaginationLink = ({
         size,
       }),
       disabled && "pointer-events-none opacity-50",
-      isActive && "bg-primary/10 hover:bg-primary/15 border-primary/40",
+      isActive && "bg-primary/10 hover:bg-primary/15 border-primary/40 font-semibold text-primary",
       className
     )}
     tabIndex={disabled ? -1 : 0}
@@ -73,7 +73,7 @@ const PaginationPrevious = ({
   <PaginationLink
     aria-label="Go to previous page"
     size="default"
-    className={cn("gap-1 pl-2.5", className)}
+    className={cn("gap-1 pl-2.5 transition-colors hover:bg-muted", className)}
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
@@ -89,7 +89,7 @@ const PaginationNext = ({
   <PaginationLink
     aria-label="Go to next page"
     size="default"
-    className={cn("gap-1 pr-2.5", className)}
+    className={cn("gap-1 pr-2.5 transition-colors hover:bg-muted", className)}
     {...props}
   >
     <span>Next</span>
