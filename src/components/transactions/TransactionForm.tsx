@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Transaction, CurrencyType, ExpenseType, TransactionStatus } from '@/types/cashflow';
+import { Transaction, CurrencyType, ExpenseType, TransactionStatus, User } from '@/types/cashflow';
 
 const formSchema = z.object({
   amount: z.coerce.number().positive({ message: 'Amount must be positive' }),
@@ -53,9 +53,10 @@ interface PaymentType {
   name: string;
 }
 
-interface User {
+// Define a ProfileUser interface that matches what comes from the profiles table
+interface ProfileUser {
   id: string;
-  email: string;
+  name: string;
 }
 
 const TransactionForm = ({ transaction, onSave, isSubmitting = false }: TransactionFormProps) => {
@@ -65,7 +66,7 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
   const [statuses, setStatuses] = useState<TransactionStatusWithNormalized[]>([]);
   const [currencies, setCurrencies] = useState<{id: string, code: string, name: string, symbol: string}[]>([]);
   const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<ProfileUser[]>([]);
   const [defaultCurrency, setDefaultCurrency] = useState<string>('INR');
   const [currencyRates, setCurrencyRates] = useState<{from_currency: string, to_currency: string, rate: number}[]>([]);
   
@@ -180,7 +181,7 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
           setPaymentTypes(paymentTypesData);
         }
         
-        // Fetch users
+        // Fetch users from profiles table instead of users
         const { data: usersData, error: usersError } = await supabase
           .from('profiles')
           .select('id, name');
