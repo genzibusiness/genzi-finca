@@ -224,7 +224,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
               query = query.eq(key, value as TransactionType);
               countQuery = countQuery.eq(key, value as TransactionType);
             } else {
-              // Fixed: Use ilike method directly instead of treating String as callable
+              // Fixed: Use ilike method correctly
               query = query.ilike(key, `%${value}%`);
               countQuery = countQuery.ilike(key, `%${value}%`);
             }
@@ -233,12 +233,12 @@ const TransactionList: React.FC<TransactionListProps> = ({
               query = query.eq(key, value as TransactionStatus);
               countQuery = countQuery.eq(key, value as TransactionStatus);
             } else {
-              // Fixed: Use ilike method directly instead of treating String as callable
+              // Fixed: Use ilike method correctly
               query = query.ilike(key, `%${value}%`);
               countQuery = countQuery.ilike(key, `%${value}%`);
             }
           } else {
-            // Fixed: Use ilike method directly instead of treating String as callable
+            // Fixed: Use ilike method correctly
             query = query.ilike(key, `%${value}%`);
             countQuery = countQuery.ilike(key, `%${value}%`);
           }
