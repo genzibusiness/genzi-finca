@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Transaction, TransactionType } from '@/types/cashflow';
+import { Transaction, TransactionType, ExpenseType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
 import TypeBadge from '@/components/TypeBadge';
@@ -24,6 +25,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationEllipsis,
 } from "@/components/ui/pagination";
 import {
   DropdownMenu,
@@ -127,8 +129,12 @@ const TransactionList: React.FC<TransactionListProps> = ({
       }
       
       if (selectedCategory) {
-        query = query.eq('expense_type', selectedCategory);
-        countQuery = countQuery.eq('expense_type', selectedCategory);
+        // Fix: Check if selectedCategory is a valid ExpenseType before using it
+        const validExpenseTypes: ExpenseType[] = ["Salary", "Marketing", "Services", "Software", "Other"];
+        if (validExpenseTypes.includes(selectedCategory as ExpenseType)) {
+          query = query.eq('expense_type', selectedCategory as ExpenseType);
+          countQuery = countQuery.eq('expense_type', selectedCategory as ExpenseType);
+        }
       }
       
       Object.entries(filters).forEach(([key, value]) => {
@@ -231,7 +237,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
         if (startPage > 2) {
           items.push(
             <PaginationItem key="ellipsis-start">
-              <PaginationLink disabled>...</PaginationLink>
+              {/* Fix: Use PaginationEllipsis instead of disabled PaginationLink */}
+              <PaginationEllipsis />
             </PaginationItem>
           );
         }
@@ -252,7 +259,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
         if (endPage < totalPages - 1) {
           items.push(
             <PaginationItem key="ellipsis-end">
-              <PaginationLink disabled>...</PaginationLink>
+              {/* Fix: Use PaginationEllipsis instead of disabled PaginationLink */}
+              <PaginationEllipsis />
             </PaginationItem>
           );
         }
