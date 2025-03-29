@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FileUpload, Upload, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Upload, Loader2, Check, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { UseFormReturn } from 'react-hook-form';
@@ -163,7 +163,7 @@ const ReceiptUploadField: React.FC<ReceiptUploadFieldProps> = ({ form, onExtract
                     className="w-full justify-start"
                     disabled={uploadStatus === 'uploading' || uploadStatus === 'processing'}
                   >
-                    <FileUpload className="h-4 w-4 mr-2" />
+                    <Upload className="h-4 w-4 mr-2" />
                     Upload Receipt or Invoice (PDF)
                   </Button>
                   {renderStatusComponent()}
