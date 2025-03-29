@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Transaction, TransactionType, TransactionStatus, ExpenseType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
@@ -187,16 +188,16 @@ export const useTransactionListData = ({
               query = query.eq(key, value as TransactionType);
               countQuery = countQuery.eq(key, value as TransactionType);
             } else {
-              query = query.ilike(key, `%${value}%`);
-              countQuery = countQuery.ilike(key, `%${value}%`);
+              query = query.filter(key, 'ilike', `%${value}%`);
+              countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
             }
           } else if (key === 'status') {
             if (validTransactionStatuses.includes(value as TransactionStatus)) {
               query = query.eq(key, value as TransactionStatus);
               countQuery = countQuery.eq(key, value as TransactionStatus);
             } else {
-              query = query.ilike(key, `%${value}%`);
-              countQuery = countQuery.ilike(key, `%${value}%`);
+              query = query.filter(key, 'ilike', `%${value}%`);
+              countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
             }
           } else if (key === 'expense_type') {
             const expenseValue = value.trim();
