@@ -19,7 +19,7 @@ const ExpenseTypeField: React.FC<ExpenseTypeFieldProps> = ({ form, expenseTypes 
           <FormLabel>Expense Category</FormLabel>
           <Select
             onValueChange={field.onChange}
-            value={field.value}
+            value={field.value || ""}
           >
             <FormControl>
               <SelectTrigger>

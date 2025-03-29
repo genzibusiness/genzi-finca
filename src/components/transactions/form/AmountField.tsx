@@ -23,10 +23,11 @@ const AmountField: React.FC<AmountFieldProps> = ({ form }) => {
               placeholder="0.00"
               {...field}
               onChange={(e) => {
-                const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                field.onChange(value);
+                // Ensure we're passing a number value to the form
+                const value = e.target.value === '' ? '0' : e.target.value;
+                field.onChange(parseFloat(value));
               }}
-              value={field.value || 0}
+              value={field.value ?? 0}
             />
           </FormControl>
           <FormMessage />
