@@ -16,18 +16,18 @@ const ExpenseTypeField: React.FC<ExpenseTypeFieldProps> = ({ form, expenseTypes 
       control={form.control}
       name="expense_type"
       render={({ field }) => (
-        <FormItem className="flex flex-col">
+        <FormItem className="flex flex-col w-full">
           <FormLabel>Expense Category</FormLabel>
           <Select
             onValueChange={field.onChange}
             value={field.value || (expenseTypes.length > 0 ? expenseTypes[0].name : "Other")}
           >
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select expense type" />
               </SelectTrigger>
             </FormControl>
-            <SelectContent>
+            <SelectContent position="popper" className="w-full bg-popover z-50">
               {expenseTypes.map((expenseType) => (
                 <SelectItem key={expenseType.id} value={expenseType.name}>
                   {expenseType.name}

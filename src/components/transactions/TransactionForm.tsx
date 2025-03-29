@@ -199,15 +199,22 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
           <AmountField form={form} />
         </FormSection>
         
+        {/* Fix the overlapping controls by adjusting the grid layout */}
         <FormSection className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <DateField form={form} />
-          <CurrencyField 
-            form={form} 
-            currencies={currencies} 
-            defaultCurrency={defaultCurrency}
-            onCurrencyChange={applyConversionRate}
-          />
-          <StatusField form={form} statuses={filteredStatuses} />
+          <div className="w-full">
+            <DateField form={form} />
+          </div>
+          <div className="w-full">
+            <CurrencyField 
+              form={form} 
+              currencies={currencies} 
+              defaultCurrency={defaultCurrency}
+              onCurrencyChange={applyConversionRate}
+            />
+          </div>
+          <div className="w-full">
+            <StatusField form={form} statuses={filteredStatuses} />
+          </div>
         </FormSection>
         
         <FormSection className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -222,8 +229,12 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
         )}
 
         <FormSection className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <DocumentUrlField form={form} />
-          <IncludesTaxField form={form} />
+          <div className="w-full">
+            <DocumentUrlField form={form} />
+          </div>
+          <div className="flex items-center h-full pt-6">
+            <IncludesTaxField form={form} />
+          </div>
         </FormSection>
         
         <FormSection>
