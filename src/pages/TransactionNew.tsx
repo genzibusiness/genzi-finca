@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Transaction, CurrencyType, TransactionStatus, ExpenseType, TransactionType } from '@/types/cashflow';
+import { Transaction, CurrencyType, TransactionStatus, ExpenseType, TransactionType, ExpenseTypeEnum } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -62,6 +62,11 @@ const TransactionNew = () => {
         ? transaction.status 
         : 'yet_to_be_paid';
       
+      // Cast expense_type to ExpenseTypeEnum if it's a valid type, otherwise null
+      const validExpenseType = transaction.expense_type && isValidExpenseType(transaction.expense_type) 
+        ? transaction.expense_type as ExpenseTypeEnum
+        : null;
+      
       const transactionData = {
         amount: transaction.amount,
         date: transaction.date,
@@ -69,7 +74,7 @@ const TransactionNew = () => {
         status: validStatus,
         type: transaction.type,
         user_id: userData.user.id,
-        expense_type: transaction.expense_type ? transaction.expense_type : null,
+        expense_type: validExpenseType,
         comment: transaction.comment || null,
         document_url: transaction.document_url || null,
         includes_tax: transaction.includes_tax || false,
@@ -100,8 +105,14 @@ const TransactionNew = () => {
     }
   };
 
+  // Helper function to validate transaction status
   const isValidTransactionStatus = (status: string): status is TransactionStatus => {
     return ['paid', 'received', 'yet_to_be_paid', 'yet_to_be_received'].includes(status as TransactionStatus);
+  };
+  
+  // Helper function to validate expense type
+  const isValidExpenseType = (type: string): type is ExpenseTypeEnum => {
+    return ['Salary', 'Marketing', 'Services', 'Software', 'Other'].includes(type as ExpenseTypeEnum);
   };
 
   const handleCancel = () => {
