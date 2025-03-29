@@ -51,7 +51,7 @@ const DashboardFilters = () => {
 
   return (
     <div className="mb-6">
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex flex-wrap gap-3 flex-1">
           <Select
             value={selectedYear || 'all-years'}
@@ -117,6 +117,10 @@ const DashboardFilters = () => {
               <SelectItem value="expense">Expense</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="text-xs text-muted-foreground">
+          Zimba 1.0 Copyright
         </div>
 
         {hasActiveFilters && (

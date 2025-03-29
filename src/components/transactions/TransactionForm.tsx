@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Link as LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Transaction, CurrencyType, ExpenseType, TransactionStatus } from '@/types/cashflow';
@@ -27,6 +28,8 @@ const formSchema = z.object({
   status: z.string(),
   currency: z.string(),
   comment: z.string().optional(),
+  document_url: z.string().optional(),
+  includes_tax: z.boolean().optional(),
 });
 
 type TransactionFormProps = {
@@ -58,6 +61,7 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
       ? {
           ...transaction,
           date: transaction.date ? new Date(transaction.date) : new Date(),
+          includes_tax: transaction.includes_tax || false,
         }
       : {
           amount: 0,
@@ -66,6 +70,8 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
           status: '',
           currency: '',
           comment: '',
+          document_url: '',
+          includes_tax: false,
         },
   });
 
@@ -390,6 +396,57 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
             )}
           />
         )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="document_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Document URL (Invoice/PO)</FormLabel>
+                <FormControl>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      placeholder="https://example.com/invoice.pdf"
+                      {...field}
+                      value={field.value || ''}
+                    />
+                    {field.value && (
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => window.open(field.value, '_blank')}
+                      >
+                        <LinkIcon className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="includes_tax"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-end space-x-2">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Amount includes tax</FormLabel>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         <FormField
           control={form.control}

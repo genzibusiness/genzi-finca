@@ -187,8 +187,10 @@ export type Database = {
           created_at: string
           currency: Database["public"]["Enums"]["currency_type"]
           date: string
+          document_url: string | null
           expense_type: Database["public"]["Enums"]["expense_type"] | null
           id: string
+          includes_tax: boolean | null
           status: Database["public"]["Enums"]["transaction_status"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
@@ -200,8 +202,10 @@ export type Database = {
           created_at?: string
           currency: Database["public"]["Enums"]["currency_type"]
           date: string
+          document_url?: string | null
           expense_type?: Database["public"]["Enums"]["expense_type"] | null
           id?: string
+          includes_tax?: boolean | null
           status: Database["public"]["Enums"]["transaction_status"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
@@ -213,8 +217,10 @@ export type Database = {
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_type"]
           date?: string
+          document_url?: string | null
           expense_type?: Database["public"]["Enums"]["expense_type"] | null
           id?: string
+          includes_tax?: boolean | null
           status?: Database["public"]["Enums"]["transaction_status"]
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string

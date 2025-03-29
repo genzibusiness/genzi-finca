@@ -59,7 +59,9 @@ const TransactionNew = () => {
         type: transaction.type,
         user_id: userData.user.id,
         expense_type: transaction.expense_type || null,
-        comment: transaction.comment || null
+        comment: transaction.comment || null,
+        document_url: transaction.document_url || null,
+        includes_tax: transaction.includes_tax || false
       };
       
       console.log('Saving transaction:', transactionData);
@@ -102,6 +104,8 @@ const TransactionNew = () => {
     date: new Date().toISOString().split('T')[0],
     status: 'yet_to_be_paid',
     currency: defaultCurrency,
+    document_url: '',
+    includes_tax: false
   };
 
   return (

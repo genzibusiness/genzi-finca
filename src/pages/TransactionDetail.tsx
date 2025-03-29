@@ -66,7 +66,9 @@ const TransactionDetail = () => {
           currency: updatedTransaction.currency,
           expense_type: updatedTransaction.expense_type,
           comment: updatedTransaction.comment,
-          status: updatedTransaction.status
+          status: updatedTransaction.status,
+          document_url: updatedTransaction.document_url,
+          includes_tax: updatedTransaction.includes_tax
         })
         .eq('id', id);
         

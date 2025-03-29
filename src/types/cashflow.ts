@@ -30,6 +30,8 @@ export interface Transaction {
   status: TransactionStatus;
   created_at: string;
   updated_at: string;
+  document_url?: string | null;
+  includes_tax?: boolean | null;
 }
 
 export interface User {
