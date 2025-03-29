@@ -1,8 +1,8 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Transaction, TransactionType, TransactionStatus, ExpenseType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { parse, isValid, format } from 'date-fns';
 
 interface UseTransactionListDataProps {
   selectedMonth: string | null;
@@ -151,15 +151,15 @@ export const useTransactionListData = ({
                     query = query.eq(key, parsedDate);
                     countQuery = countQuery.eq(key, parsedDate);
                   } else {
-                    query = query.ilike(`${key}`, `%${dateValue}%`);
-                    countQuery = countQuery.ilike(`${key}`, `%${dateValue}%`);
+                    query = query.ilike(key, `%${dateValue}%`);
+                    countQuery = countQuery.ilike(key, `%${dateValue}%`);
                   }
                 }
               }
             } catch (error) {
               console.error("Date filter error:", error);
-              query = query.ilike(`${key}`, `%${dateValue}%`);
-              countQuery = countQuery.ilike(`${key}`, `%${dateValue}%`);
+              query = query.ilike(key, `%${dateValue}%`);
+              countQuery = countQuery.ilike(key, `%${dateValue}%`);
             }
           } else if (key === 'amount') {
             const numValue = parseFloat(value);
@@ -179,8 +179,8 @@ export const useTransactionListData = ({
                 countQuery = countQuery.lt(key, thresh);
               }
             } else {
-              query = query.ilike(`${key}`, `%${value}%`);
-              countQuery = countQuery.ilike(`${key}`, `%${value}%`);
+              query = query.ilike(key, `%${value}%`);
+              countQuery = countQuery.ilike(key, `%${value}%`);
             }
           } else if (key === 'type') {
             if (validTransactionTypes.includes(value as TransactionType)) {
@@ -295,6 +295,3 @@ export const useTransactionListData = ({
     validTransactionStatuses
   };
 };
-
-// Fix: Add the missing import for parse and isValid functions
-import { parse, isValid, format } from 'date-fns';
