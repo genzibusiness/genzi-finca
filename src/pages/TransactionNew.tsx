@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Transaction, CurrencyType, TransactionStatus, ExpenseType, TransactionType, ExpenseTypeEnum } from '@/types/cashflow';
+import { Transaction, CurrencyType, TransactionStatus, ExpenseType, TransactionType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -15,14 +15,24 @@ const TransactionNew = () => {
 
   useEffect(() => {
     const fetchDefaultCurrency = async () => {
-      const { data } = await supabase
-        .from('currencies')
-        .select('code')
-        .eq('is_default', true)
-        .single();
-      
-      if (data) {
-        setDefaultCurrency(data.code as CurrencyType);
+      try {
+        const { data, error } = await supabase
+          .from('currencies')
+          .select('code')
+          .eq('is_default', true)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching default currency:', error);
+          return;
+        }
+        
+        if (data) {
+          console.log('Default currency fetched:', data.code);
+          setDefaultCurrency(data.code as CurrencyType);
+        }
+      } catch (err) {
+        console.error('Error in fetchDefaultCurrency:', err);
       }
     };
     
@@ -32,12 +42,18 @@ const TransactionNew = () => {
   const handleSave = async (transaction: Partial<Transaction>) => {
     try {
       setLoading(true);
+      console.log('Attempting to save transaction:', transaction);
       
       if (!transaction.amount || !transaction.date || !transaction.currency || !transaction.status || !transaction.type) {
         throw new Error('Missing required fields for transaction');
       }
       
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('Auth error:', userError);
+        throw new Error('User not authenticated');
+      }
+      
       if (!userData || !userData.user) {
         throw new Error('User not authenticated');
       }
@@ -53,7 +69,7 @@ const TransactionNew = () => {
         status: validStatus,
         type: transaction.type,
         user_id: userData.user.id,
-        expense_type: transaction.expense_type ? (transaction.expense_type as unknown as ExpenseTypeEnum) : null,
+        expense_type: transaction.expense_type ? transaction.expense_type : null,
         comment: transaction.comment || null,
         document_url: transaction.document_url || null,
         includes_tax: transaction.includes_tax || false,
