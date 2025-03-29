@@ -13,12 +13,15 @@ const STATUS_COLORS = {
     Pending: '#f59e0b', // amber-500
     Cancelled: '#ef4444', // red-500
     Planned: '#3b82f6', // blue-500
+    Received: '#059669', // emerald-600
+    yet_to_be_received: '#0d9488', // teal-600
   },
   expense: {
     Paid: '#ef4444', // red-500
     Pending: '#f59e0b', // amber-500
     Cancelled: '#10b981', // emerald-500
     Planned: '#3b82f6', // blue-500
+    yet_to_be_paid: '#f97316', // orange-500
   }
 };
 
@@ -73,7 +76,17 @@ const StatusBasedChart = () => {
         <CardTitle>Status Breakdown</CardTitle>
       </CardHeader>
       <CardContent className="h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
+        {/* Add headers at the top */}
+        <div className="flex justify-around text-sm font-medium mb-4">
+          <div className="text-center">
+            <p className="text-lg font-semibold text-green-600">Income by Status</p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-semibold text-red-500">Expense by Status</p>
+          </div>
+        </div>
+        
+        <ResponsiveContainer width="100%" height="80%">
           <PieChart>
             {statusData.income.length > 0 && (
               <Pie
@@ -128,14 +141,6 @@ const StatusBasedChart = () => {
             />
           </PieChart>
         </ResponsiveContainer>
-        <div className="flex justify-around text-sm text-center mt-4">
-          <div>
-            <p className="font-medium">Income by Status</p>
-          </div>
-          <div>
-            <p className="font-medium">Expense by Status</p>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );

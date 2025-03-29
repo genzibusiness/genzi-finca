@@ -27,6 +27,9 @@ import { ArrowUpDown, Edit, MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import CurrencyDisplay from '@/components/CurrencyDisplay';
+import TypeBadge from '@/components/TypeBadge';
+import StatusBadge from '@/components/StatusBadge';
 
 // Import the corrected hook
 import { useTransactionListData } from '@/hooks/useTransactionListData';
@@ -94,10 +97,22 @@ const TransactionList: React.FC<TransactionListProps> = ({
     {
       accessorKey: 'type',
       header: 'Type',
+      cell: ({ row }) => {
+        return <TypeBadge type={row.original.type} />;
+      },
     },
     {
       accessorKey: 'amount',
       header: 'Amount',
+      cell: ({ row }) => {
+        return (
+          <CurrencyDisplay 
+            amount={row.original.amount} 
+            currency={row.original.currency}
+            type={row.original.type}
+          />
+        );
+      },
     },
     {
       accessorKey: 'currency',
@@ -114,6 +129,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
     {
       accessorKey: 'status',
       header: 'Status',
+      cell: ({ row }) => {
+        return <StatusBadge status={row.original.status} />;
+      },
     },
     {
       id: 'actions',
@@ -223,6 +241,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     <TableRow
                       key={row.id}
                       data-row={JSON.stringify(row.original)}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/transactions/${row.original.id}`)}
                     >
                       {row.getVisibleCells().map((cell) => {
                         return (
