@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { CashflowProvider } from "@/context/CashflowContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import React from "react";
 
 import Index from "./pages/Index";
 import Transactions from "./pages/Transactions";
@@ -18,17 +19,21 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import ConfigureMasterData from "./pages/ConfigureMasterData";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
 const App = () => {
   console.log("App rendering");
+  
+  // Create a client inside the component
+  const [queryClient] = React.useState(
+    () => 
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: 1,
+            refetchOnWindowFocus: false,
+          },
+        },
+      })
+  );
   
   return (
     <QueryClientProvider client={queryClient}>
