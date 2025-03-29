@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,9 +68,11 @@ const DashboardCharts = () => {
           name: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
           income: data.income,
           expense: data.expense,
-          net: data.income - data.expense
+          net: data.income - data.expense,
+          // Keep the original month string for sorting
+          sortKey: month
         }))
-        .sort((a, b) => new Date(a.month) - new Date(b.month));
+        .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
       
       setMonthlyData(processedMonthlyData);
     } catch (error) {
@@ -116,14 +117,15 @@ const DashboardCharts = () => {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip 
-                formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']}
+                formatter={(value) => [`₹${value.toLocaleString()}`, 'Amount']}
                 labelFormatter={(label) => `Category: ${label}`}
               />
               <Legend />
               <Bar 
                 dataKey="amount" 
                 name="Amount" 
-                fillOpacity={0}
+                fillOpacity={0.8}
+                fill="#059669"
               />
             </BarChart>
           </ResponsiveContainer>
@@ -141,7 +143,7 @@ const DashboardCharts = () => {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip 
-                formatter={(value) => [`$${value.toLocaleString()}`, '']}
+                formatter={(value) => [`₹${value.toLocaleString()}`, '']}
               />
               <Legend />
               <Line 

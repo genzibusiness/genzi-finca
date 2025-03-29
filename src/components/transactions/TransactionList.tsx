@@ -86,7 +86,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
       
       // Apply filters to count query
       if (filterType) {
-        countQuery = countQuery.eq('type', filterType);
+        countQuery = countQuery.eq('type', filterType as any);
       }
       
       if (selectedMonth) {
@@ -98,7 +98,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
       }
       
       if (selectedCategory) {
-        countQuery = countQuery.eq('expense_type', selectedCategory);
+        countQuery = countQuery.eq('expense_type', selectedCategory as any);
       }
       
       const { count, error: countError } = await countQuery;
@@ -116,7 +116,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
       // Apply the same filters to main query
       if (filterType) {
-        query = query.eq('type', filterType);
+        query = query.eq('type', filterType as any);
       }
       
       if (selectedMonth) {
@@ -128,7 +128,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
       }
       
       if (selectedCategory) {
-        query = query.eq('expense_type', selectedCategory);
+        query = query.eq('expense_type', selectedCategory as any);
       }
 
       // Apply pagination
