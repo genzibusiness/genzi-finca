@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
+import { format, isValid, parse } from 'date-fns';
 import { Transaction, TransactionType, ExpenseType, TransactionStatus } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
@@ -68,6 +68,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
+  
+  // Define valid transaction types and statuses for validation
+  const validTransactionTypes: TransactionType[] = ["income", "expense"];
+  const validTransactionStatuses: TransactionStatus[] = ["paid", "received", "yet_to_be_paid", "yet_to_be_received"];
   
   useEffect(() => {
     fetchTransactions();
@@ -141,13 +145,70 @@ const TransactionList: React.FC<TransactionListProps> = ({
       Object.entries(filters).forEach(([key, value]) => {
         if (value && value.trim() !== '') {
           if (key === 'date') {
-            // For date column, convert to ISO format for compatibility
+            // Handle date filter differently - try to parse date or filter by string fragments
+            const dateValue = value.trim();
             try {
-              // First try to match date fragments
-              query = query.ilike(key, `%${value}%`);
-              countQuery = countQuery.ilike(key, `%${value}%`);
+              // First check if it's a valid date format yyyy-mm-dd
+              const dateMatch = dateValue.match(/^\d{4}-\d{2}-\d{2}$/);
+              if (dateMatch) {
+                query = query.eq(key, dateValue);
+                countQuery = countQuery.eq(key, dateValue);
+              } else {
+                // Check if it's a partial date like yyyy-mm or yyyy
+                if (dateValue.match(/^\d{4}-\d{2}$/)) {
+                  const yearMonth = dateValue.split('-');
+                  const year = yearMonth[0];
+                  const month = yearMonth[1];
+                  const startDate = `${year}-${month}-01`;
+                  
+                  // Calculate end date (next month)
+                  const nextMonth = parseInt(month) === 12 ? 1 : parseInt(month) + 1;
+                  const nextYear = parseInt(month) === 12 ? parseInt(year) + 1 : parseInt(year);
+                  const endDate = `${nextYear}-${nextMonth.toString().padStart(2, '0')}-01`;
+                  
+                  query = query.gte(key, startDate).lt(key, endDate);
+                  countQuery = countQuery.gte(key, startDate).lt(key, endDate);
+                } else if (dateValue.match(/^\d{4}$/)) {
+                  // Just a year
+                  const year = dateValue;
+                  const startDate = `${year}-01-01`;
+                  const endDate = `${year}-12-31`;
+                  
+                  query = query.gte(key, startDate).lte(key, endDate);
+                  countQuery = countQuery.gte(key, startDate).lte(key, endDate);
+                } else {
+                  // Try to parse using date-fns to support various formats
+                  const dateFormats = [
+                    'yyyy-MM-dd', 'MM/dd/yyyy', 'dd/MM/yyyy', 
+                    'MMM d, yyyy', 'MMMM d, yyyy', 'MMM yyyy', 'MMMM yyyy'
+                  ];
+                  
+                  let parsedDate = null;
+                  
+                  for (const format of dateFormats) {
+                    const attemptParse = parse(dateValue, format, new Date());
+                    if (isValid(attemptParse)) {
+                      parsedDate = format(attemptParse, 'yyyy-MM-dd');
+                      break;
+                    }
+                  }
+                  
+                  if (parsedDate) {
+                    query = query.eq(key, parsedDate);
+                    countQuery = countQuery.eq(key, parsedDate);
+                  } else {
+                    // Last resort: convert date column to text and use textual search
+                    // This needs to use the PostgreSQL-specific syntax
+                    query = query.filter(`${key}::text`, 'ilike', `%${dateValue}%`);
+                    countQuery = countQuery.filter(`${key}::text`, 'ilike', `%${dateValue}%`);
+                  }
+                }
+              }
             } catch (error) {
               console.error("Date filter error:", error);
+              // Fallback: search as text
+              query = query.filter(`${key}::text`, 'ilike', `%${dateValue}%`);
+              countQuery = countQuery.filter(`${key}::text`, 'ilike', `%${dateValue}%`);
             }
           } else if (key === 'amount') {
             // Try to parse as number for amount
@@ -155,29 +216,49 @@ const TransactionList: React.FC<TransactionListProps> = ({
             if (!isNaN(numValue)) {
               query = query.eq(key, numValue);
               countQuery = countQuery.eq(key, numValue);
+            } else if (value.includes('>')) {
+              // Handle greater than
+              const thresh = parseFloat(value.replace('>', '').trim());
+              if (!isNaN(thresh)) {
+                query = query.gt(key, thresh);
+                countQuery = countQuery.gt(key, thresh);
+              }
+            } else if (value.includes('<')) {
+              // Handle less than
+              const thresh = parseFloat(value.replace('<', '').trim());
+              if (!isNaN(thresh)) {
+                query = query.lt(key, thresh);
+                countQuery = countQuery.lt(key, thresh);
+              }
+            } else {
+              // Convert to string and search
+              query = query.filter(`${key}::text`, 'ilike', `%${value}%`);
+              countQuery = countQuery.filter(`${key}::text`, 'ilike', `%${value}%`);
             }
           } else if (key === 'type') {
             // Validate type value against TransactionType
-            const validTypes: TransactionType[] = ["income", "expense"];
-            if (validTypes.includes(value as TransactionType)) {
+            if (validTransactionTypes.includes(value as TransactionType)) {
               query = query.eq(key, value as TransactionType);
               countQuery = countQuery.eq(key, value as TransactionType);
+            } else {
+              // Use text search for partial matches
+              query = query.filter(key, 'ilike', `%${value}%`);
+              countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
             }
           } else if (key === 'status') {
             // Validate status value against TransactionStatus
-            const validStatuses: TransactionStatus[] = ["paid", "received", "yet_to_be_paid", "yet_to_be_received"];
-            if (validStatuses.includes(value as TransactionStatus)) {
+            if (validTransactionStatuses.includes(value as TransactionStatus)) {
               query = query.eq(key, value as TransactionStatus);
               countQuery = countQuery.eq(key, value as TransactionStatus);
+            } else {
+              // Use text search for partial matches
+              query = query.filter(key, 'ilike', `%${value}%`);
+              countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
             }
-          } else if (key === 'expense_type') {
-            // For expense_type, handle as text search
-            query = query.ilike(key, `%${value}%`);
-            countQuery = countQuery.ilike(key, `%${value}%`);
           } else {
             // For all other text fields use case-insensitive search
-            query = query.ilike(key, `%${value}%`);
-            countQuery = countQuery.ilike(key, `%${value}%`);
+            query = query.filter(key, 'ilike', `%${value}%`);
+            countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
           }
         }
       });
@@ -223,6 +304,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
     setCurrentPage(1);
   };
   
+  const clearFilter = (column: string) => {
+    setFilters(prev => {
+      const newFilters = { ...prev };
+      delete newFilters[column];
+      return newFilters;
+    });
+    setCurrentPage(1);
+  };
+  
   const handleRowClick = (id: string) => {
     navigate(`/transactions/${id}`);
   };
@@ -235,42 +325,45 @@ const TransactionList: React.FC<TransactionListProps> = ({
   
   const getPaginationItems = () => {
     const items = [];
-    const maxVisiblePages = 5;
     
     if (totalPages <= 1) {
       return [];
     }
     
-    // Always show first page
-    items.push(
-      <PaginationItem key={1}>
-        <PaginationLink
-          isActive={currentPage === 1}
-          onClick={() => handlePageChange(1)}
-        >
-          1
-        </PaginationLink>
-      </PaginationItem>
-    );
-    
-    // Determine range of pages to show
-    let startPage = Math.max(2, currentPage - 1);
-    let endPage = Math.min(totalPages - 1, currentPage + 1);
+    // Calculate range of pages to show
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, currentPage + 2);
     
     // Adjust range for edge cases
-    if (currentPage <= 3) {
-      endPage = Math.min(5, totalPages - 1);
-    } else if (currentPage >= totalPages - 2) {
-      startPage = Math.max(2, totalPages - 4);
+    if (endPage - startPage < 4) {
+      if (startPage === 1) {
+        endPage = Math.min(5, totalPages);
+      } else if (endPage === totalPages) {
+        startPage = Math.max(1, totalPages - 4);
+      }
     }
     
-    // Show ellipsis if needed before middle pages
-    if (startPage > 2) {
+    // Show first page if not included in range
+    if (startPage > 1) {
       items.push(
-        <PaginationItem key="ellipsis-start">
-          <PaginationEllipsis />
+        <PaginationItem key="1">
+          <PaginationLink
+            isActive={currentPage === 1}
+            onClick={() => handlePageChange(1)}
+          >
+            1
+          </PaginationLink>
         </PaginationItem>
       );
+      
+      // Show ellipsis if needed
+      if (startPage > 2) {
+        items.push(
+          <PaginationItem key="ellipsis-start">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
     }
     
     // Add middle pages
@@ -287,17 +380,17 @@ const TransactionList: React.FC<TransactionListProps> = ({
       );
     }
     
-    // Show ellipsis if needed after middle pages
-    if (endPage < totalPages - 1) {
-      items.push(
-        <PaginationItem key="ellipsis-end">
-          <PaginationEllipsis />
-        </PaginationItem>
-      );
-    }
-    
-    // Always show last page if there's more than one page
-    if (totalPages > 1) {
+    // Show last page if not included in range
+    if (endPage < totalPages) {
+      // Show ellipsis if needed
+      if (endPage < totalPages - 1) {
+        items.push(
+          <PaginationItem key="ellipsis-end">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+      
       items.push(
         <PaginationItem key={totalPages}>
           <PaginationLink
@@ -311,6 +404,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
     }
     
     return items;
+  };
+  
+  // Helper to determine if a column has an active filter
+  const hasActiveFilter = (column: string) => {
+    return filters[column] && filters[column].trim() !== '';
   };
   
   return (
@@ -353,18 +451,39 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button 
+                            variant={hasActiveFilter('date') ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="h-8 w-8 p-0 relative"
+                          >
                             <ChevronDown className="h-4 w-4" />
+                            {hasActiveFilter('date') && (
+                              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary"></span>
+                            )}
                             <span className="sr-only">Filter date</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-56 p-2">
-                          <Input
-                            placeholder="Filter by date..."
-                            value={filters.date || ''}
-                            onChange={(e) => handleFilter('date', e.target.value)}
-                            className="mb-2"
-                          />
+                        <DropdownMenuContent align="start" className="w-80 p-2">
+                          <div className="mb-2 text-sm text-muted-foreground">
+                            Enter date (YYYY-MM-DD), year (YYYY), or month (YYYY-MM)
+                          </div>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Filter by date..."
+                              value={filters.date || ''}
+                              onChange={(e) => handleFilter('date', e.target.value)}
+                              className="flex-1"
+                            />
+                            {hasActiveFilter('date') && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => clearFilter('date')}
+                              >
+                                Clear
+                              </Button>
+                            )}
+                          </div>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -385,13 +504,20 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button 
+                            variant={hasActiveFilter('type') ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="h-8 w-8 p-0 relative"
+                          >
                             <ChevronDown className="h-4 w-4" />
+                            {hasActiveFilter('type') && (
+                              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary"></span>
+                            )}
                             <span className="sr-only">Filter type</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-56 p-2">
-                          <DropdownMenuItem onClick={() => handleFilter('type', '')}>All</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => clearFilter('type')}>All</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleFilter('type', 'income')}>Income</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleFilter('type', 'expense')}>Expense</DropdownMenuItem>
                         </DropdownMenuContent>
@@ -416,18 +542,36 @@ const TransactionList: React.FC<TransactionListProps> = ({
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Button 
+                              variant={hasActiveFilter('expense_type') ? "secondary" : "ghost"} 
+                              size="sm" 
+                              className="h-8 w-8 p-0 relative"
+                            >
                               <ChevronDown className="h-4 w-4" />
+                              {hasActiveFilter('expense_type') && (
+                                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary"></span>
+                              )}
                               <span className="sr-only">Filter category</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start" className="w-56 p-2">
-                            <Input
-                              placeholder="Filter by category..."
-                              value={filters.expense_type || ''}
-                              onChange={(e) => handleFilter('expense_type', e.target.value)}
-                              className="mb-2"
-                            />
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Filter by category..."
+                                value={filters.expense_type || ''}
+                                onChange={(e) => handleFilter('expense_type', e.target.value)}
+                                className="flex-1"
+                              />
+                              {hasActiveFilter('expense_type') && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => clearFilter('expense_type')}
+                                >
+                                  Clear
+                                </Button>
+                              )}
+                            </div>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -450,19 +594,39 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button 
+                            variant={hasActiveFilter('amount') ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="h-8 w-8 p-0 relative"
+                          >
                             <ChevronDown className="h-4 w-4" />
+                            {hasActiveFilter('amount') && (
+                              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary"></span>
+                            )}
                             <span className="sr-only">Filter amount</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-56 p-2">
-                          <Input
-                            placeholder="Filter by amount..."
-                            value={filters.amount || ''}
-                            onChange={(e) => handleFilter('amount', e.target.value)}
-                            className="mb-2"
-                            type="number"
-                          />
+                          <div className="mb-2 text-sm text-muted-foreground">
+                            Enter exact value, or use &gt; or &lt; for ranges
+                          </div>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Filter by amount..."
+                              value={filters.amount || ''}
+                              onChange={(e) => handleFilter('amount', e.target.value)}
+                              className="flex-1"
+                            />
+                            {hasActiveFilter('amount') && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => clearFilter('amount')}
+                              >
+                                Clear
+                              </Button>
+                            )}
+                          </div>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -484,13 +648,20 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button 
+                            variant={hasActiveFilter('status') ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="h-8 w-8 p-0 relative"
+                          >
                             <ChevronDown className="h-4 w-4" />
+                            {hasActiveFilter('status') && (
+                              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary"></span>
+                            )}
                             <span className="sr-only">Filter status</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-56 p-2">
-                          <DropdownMenuItem onClick={() => handleFilter('status', '')}>All</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => clearFilter('status')}>All</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleFilter('status', 'paid')}>Paid</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleFilter('status', 'yet_to_be_paid')}>Yet to be paid</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleFilter('status', 'received')}>Received</DropdownMenuItem>
@@ -516,18 +687,36 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button 
+                            variant={hasActiveFilter('comment') ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="h-8 w-8 p-0 relative"
+                          >
                             <ChevronDown className="h-4 w-4" />
+                            {hasActiveFilter('comment') && (
+                              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary"></span>
+                            )}
                             <span className="sr-only">Filter comment</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-56 p-2">
-                          <Input
-                            placeholder="Filter by comment..."
-                            value={filters.comment || ''}
-                            onChange={(e) => handleFilter('comment', e.target.value)}
-                            className="mb-2"
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Filter by comment..."
+                              value={filters.comment || ''}
+                              onChange={(e) => handleFilter('comment', e.target.value)}
+                              className="flex-1"
+                            />
+                            {hasActiveFilter('comment') && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => clearFilter('comment')}
+                              >
+                                Clear
+                              </Button>
+                            )}
+                          </div>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

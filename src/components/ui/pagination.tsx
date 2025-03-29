@@ -57,8 +57,10 @@ const PaginationLink = ({
         size,
       }),
       disabled && "pointer-events-none opacity-50",
+      isActive && "bg-primary/10 hover:bg-primary/15 border-primary/40",
       className
     )}
+    tabIndex={disabled ? -1 : 0}
     {...props}
   />
 )

@@ -35,10 +35,19 @@ const DashboardFilters = () => {
 
   // Extract unique years from transactions
   useEffect(() => {
-    const uniqueYears = Array.from(
+    // Ensure we have at least the current year in the list
+    const currentYear = new Date().getFullYear().toString();
+    
+    // Get unique years from transactions
+    const transactionYears = Array.from(
       new Set(transactions.map((t) => t.date.split('-')[0]))
+    );
+    
+    // Combine current year with transaction years and remove duplicates
+    const uniqueYears = Array.from(
+      new Set([currentYear, ...transactionYears])
     ).sort((a, b) => b.localeCompare(a)); // Sort descending
-
+    
     setYears(uniqueYears);
 
     // Fetch expense categories from the database
