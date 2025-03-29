@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -63,13 +62,10 @@ const TransactionDetail = () => {
 
   const handleSave = async (updatedTransaction: Partial<Transaction>) => {
     try {
-      // Ensure we have a transaction to update
       if (!transaction || !id) return;
       
-      // Optimistically update the transaction in the UI
       setTransaction({ ...transaction, ...updatedTransaction });
     
-      // Persist the changes to the database
       const { error } = await supabase
         .from('transactions')
         .update({
@@ -90,12 +86,10 @@ const TransactionDetail = () => {
       if (error) throw error;
       
       toast.success('Transaction updated successfully');
-      // Navigate back to transactions list after successful update
       navigate('/transactions');
     } catch (error: any) {
       console.error('Error updating transaction:', error);
       toast.error('Failed to update transaction. Please try again.');
-      // Revert the optimistic update if the database update fails
       fetchTransactionData();
     }
   };

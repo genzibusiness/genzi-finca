@@ -1,10 +1,11 @@
+
 export type TransactionStatus = "paid" | "received" | "yet_to_be_paid" | "yet_to_be_received";
 
 export type TransactionType = "income" | "expense";
 
 export type CurrencyType = "SGD" | "INR" | "USD" | "EUR" | "GBP";
 
-// Define both types for compatibility - the specific enum values for Supabase
+// Define the specific enum values for Supabase that match the database enum type
 export type ExpenseTypeEnum = "Salary" | "Marketing" | "Services" | "Software" | "Other";
 // And the string type for our UI which can handle any string
 export type ExpenseType = string;

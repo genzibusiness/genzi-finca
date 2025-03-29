@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ExpenseType, ExpenseTypeEnum, TransactionType } from '@/types/cashflow';
+import { ExpenseType, TransactionType } from '@/types/cashflow';
 
 interface CategoryData {
   name: string;
@@ -61,7 +61,6 @@ export const useExpenseCategoriesData = (
     }
   };
 
-  // Helper function to validate transaction type
   const isValidTransactionType = (value: string | null): value is TransactionType => {
     if (!value) return false;
     return ['income', 'expense'].includes(value as TransactionType);
@@ -97,15 +96,13 @@ export const useExpenseCategoriesData = (
       }
       
       if (selectedCategory) {
-        // Cast the string to ExpenseTypeEnum for Supabase 
-        query = query.eq('expense_type', selectedCategory as unknown as ExpenseTypeEnum);
+        query = query.eq('expense_type', selectedCategory);
       }
       
       const { data: transactions, error } = await query;
       
       if (error) throw error;
       
-      // Process category data for expenses
       const categoryMap = new Map();
       
       (transactions || [])

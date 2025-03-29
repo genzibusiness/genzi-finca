@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Transaction, CurrencyType, TransactionStatus, ExpenseType } from '@/types/cashflow';
@@ -59,7 +58,7 @@ const TransactionNew = () => {
         ? transaction.status 
         : 'yet_to_be_paid';
       
-      // Validate expense_type against known expense types
+      // Validate expense_type - no need to cast to ExpenseTypeEnum
       let validExpenseType = null;
       if (transaction.type === 'expense' && transaction.expense_type) {
         validExpenseType = transaction.expense_type;

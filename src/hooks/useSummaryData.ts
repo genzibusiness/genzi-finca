@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ExpenseType, TransactionType } from '@/types/cashflow';
@@ -100,7 +99,7 @@ export const useSummaryData = (
       }
       
       if (selectedCategory) {
-        // Use the category string directly
+        // Just pass the string directly without casting to an enum type
         query = query.eq('expense_type', selectedCategory);
       }
       
