@@ -11,7 +11,7 @@ interface AppLayoutProps {
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
     <CashflowProvider>
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={true}>
         <div className="flex min-h-screen w-full bg-background">
           <AppSidebar />
           <main className="flex-1 flex flex-col">
