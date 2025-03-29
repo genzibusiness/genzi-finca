@@ -12,10 +12,32 @@ const DashboardSummary = () => {
     netCashflow: 0
   });
   const [loading, setLoading] = useState(true);
+  const [defaultCurrency, setDefaultCurrency] = useState('INR');
 
   useEffect(() => {
     fetchSummaryData();
+    fetchDefaultCurrency();
   }, []);
+
+  const fetchDefaultCurrency = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('currencies')
+        .select('code')
+        .eq('active', true)
+        .order('code', { ascending: true })
+        .limit(1)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        setDefaultCurrency(data.code);
+      }
+    } catch (error) {
+      console.error('Error fetching default currency:', error);
+    }
+  };
 
   const fetchSummaryData = async () => {
     try {
@@ -38,8 +60,8 @@ const DashboardSummary = () => {
       if (expenseError) throw expenseError;
       
       // Calculate totals
-      const totalIncome = incomeData.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
-      const totalExpenses = expenseData.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+      const totalIncome = incomeData?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) || 0;
+      const totalExpenses = expenseData?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) || 0;
       
       setSummary({
         totalIncome,
@@ -64,7 +86,11 @@ const DashboardSummary = () => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            <CurrencyDisplay amount={summary.totalIncome} type="income" />
+            {loading ? (
+              <div className="h-7 w-24 animate-pulse rounded bg-muted"></div>
+            ) : (
+              <CurrencyDisplay amount={summary.totalIncome} type="income" currency={defaultCurrency} />
+            )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             YTD Income
@@ -81,7 +107,11 @@ const DashboardSummary = () => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            <CurrencyDisplay amount={summary.totalExpenses} type="expense" />
+            {loading ? (
+              <div className="h-7 w-24 animate-pulse rounded bg-muted"></div>
+            ) : (
+              <CurrencyDisplay amount={summary.totalExpenses} type="expense" currency={defaultCurrency} />
+            )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             YTD Expenses
@@ -98,7 +128,11 @@ const DashboardSummary = () => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            <CurrencyDisplay amount={summary.netCashflow} />
+            {loading ? (
+              <div className="h-7 w-24 animate-pulse rounded bg-muted"></div>
+            ) : (
+              <CurrencyDisplay amount={summary.netCashflow} currency={defaultCurrency} />
+            )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             YTD Net

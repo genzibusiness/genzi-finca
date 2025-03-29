@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { TransactionType, CurrencyType } from '@/types/cashflow';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CurrencyDisplayProps {
   amount: number;
@@ -12,12 +13,35 @@ interface CurrencyDisplayProps {
 const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({ 
   amount, 
   type,
-  currency = 'USD',
+  currency = 'INR', // Default to INR instead of USD
   className = ""
 }) => {
-  const formattedAmount = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
+  const [currencySymbol, setCurrencySymbol] = useState<string>('₹'); // Default to ₹
+
+  useEffect(() => {
+    const fetchCurrencySymbol = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('currencies')
+          .select('symbol')
+          .eq('code', currency)
+          .single();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setCurrencySymbol(data.symbol);
+        }
+      } catch (error) {
+        console.error('Error fetching currency symbol:', error);
+      }
+    };
+    
+    fetchCurrencySymbol();
+  }, [currency]);
+
+  const formattedAmount = new Intl.NumberFormat('en-IN', {
+    style: 'decimal',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(Math.abs(amount));
@@ -36,7 +60,7 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   return (
     <span className={`font-medium ${getColorClass()} ${className}`}>
       {type === 'expense' && '-'}
-      {formattedAmount}
+      {currencySymbol}{formattedAmount}
     </span>
   );
 };

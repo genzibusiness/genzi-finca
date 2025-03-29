@@ -1,11 +1,11 @@
 
-export type TransactionStatus = 'paid' | 'received' | 'yet_to_be_paid' | 'yet_to_be_received';
+export type TransactionStatus = string;
 
-export type TransactionType = 'expense' | 'income';
+export type TransactionType = string;
 
-export type CurrencyType = 'SGD' | 'INR' | 'USD' | 'EUR' | 'GBP';
+export type CurrencyType = string;
 
-export type ExpenseType = 'Salary' | 'Marketing' | 'Services' | 'Software' | 'Other';
+export type ExpenseType = string;
 
 export interface Category {
   id: string;
@@ -53,4 +53,39 @@ export interface CashflowSummary {
     income: number;
     expense: number;
   }[];
+}
+
+export interface Currency {
+  id: string;
+  code: string;
+  name: string;
+  symbol: string;
+  active: boolean;
+}
+
+export interface ExpenseTypeItem {
+  id: string;
+  name: string;
+  active: boolean;
+}
+
+export interface TransactionTypeItem {
+  id: string;
+  name: string;
+  active: boolean;
+}
+
+export interface TransactionStatusItem {
+  id: string;
+  name: string;
+  type: string;
+  active: boolean;
+}
+
+export interface CurrencyRate {
+  id: string;
+  from_currency: string;
+  to_currency: string;
+  rate: number;
+  updated_at: string;
 }

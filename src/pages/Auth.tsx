@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BadgeDollarSign } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,6 +11,8 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -31,10 +32,18 @@ const forgotPasswordSchema = z.object({
 const Auth = () => {
   const { user, signIn, signUp, resetPassword } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('login');
+  const navigate = useNavigate();
 
-  // If already logged in, redirect to home
+  // If already logged in, redirect to dashboard
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
+  // If user directly navigates to this page and is already logged in, redirect
   if (user) {
-    return <Navigate to="/" />;
+    return <Navigate to="/dashboard" />;
   }
 
   return (
@@ -44,7 +53,7 @@ const Auth = () => {
           <div className="flex justify-center">
             <BadgeDollarSign size={40} className="text-primary" />
           </div>
-          <CardTitle className="text-2xl">Cashflow Tracker</CardTitle>
+          <CardTitle className="text-2xl">Genzi Finca</CardTitle>
           <CardDescription>Manage your finances with ease</CardDescription>
         </CardHeader>
         
@@ -93,8 +102,10 @@ const LoginForm = ({ onSubmit }: { onSubmit: (email: string, password: string) =
     setIsLoading(true);
     try {
       await onSubmit(values.email, values.password);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      toast.error(error.message || "Login failed");
+      form.setError("root", { message: error.message || "Login failed" });
     } finally {
       setIsLoading(false);
     }
@@ -130,6 +141,10 @@ const LoginForm = ({ onSubmit }: { onSubmit: (email: string, password: string) =
             </FormItem>
           )}
         />
+        
+        {form.formState.errors.root && (
+          <div className="text-sm text-destructive">{form.formState.errors.root.message}</div>
+        )}
         
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Logging in..." : "Log In"}

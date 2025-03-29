@@ -25,42 +25,31 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
-// Currency options
-const currencyOptions = [
-  { value: 'SGD', label: 'SGD - Singapore Dollar' },
-  { value: 'INR', label: 'INR - Indian Rupee' },
-  { value: 'USD', label: 'USD - US Dollar' },
-  { value: 'EUR', label: 'EUR - Euro' },
-  { value: 'GBP', label: 'GBP - British Pound' },
-];
-
-// Expense type options
-const expenseTypeOptions = [
-  { value: 'Salary', label: 'Salary' },
-  { value: 'Marketing', label: 'Marketing' },
-  { value: 'Services', label: 'Services' },
-  { value: 'Software', label: 'Software' },
-  { value: 'Other', label: 'Other' },
-];
-
-// Transaction status options based on type
-const getStatusOptions = (type: string) => {
-  if (type === 'income') {
-    return [
-      { value: 'received', label: 'Received' },
-      { value: 'yet_to_be_received', label: 'Yet to be received' },
-    ];
-  } else {
-    return [
-      { value: 'paid', label: 'Paid' },
-      { value: 'yet_to_be_paid', label: 'Yet to be paid' },
-    ];
-  }
-};
-
 interface TransactionFormProps {
   initialData?: Transaction;
   onCancel: () => void;
+}
+
+interface CurrencyOption {
+  code: string;
+  name: string;
+  symbol: string;
+}
+
+interface ExpenseTypeOption {
+  id: string;
+  name: string;
+}
+
+interface TransactionTypeOption {
+  id: string;
+  name: string;
+}
+
+interface StatusOption {
+  id: string;
+  name: string;
+  type: string;
 }
 
 const TransactionForm: React.FC<TransactionFormProps> = ({
@@ -70,34 +59,102 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   
+  // State for form data
   const [formData, setFormData] = useState({
     amount: initialData?.amount || '',
     date: initialData?.date || format(new Date(), 'yyyy-MM-dd'),
     type: initialData?.type || 'expense',
-    currency: initialData?.currency || 'SGD',
-    expense_type: initialData?.expense_type || 'Salary',
+    currency: initialData?.currency || 'INR',
+    expense_type: initialData?.expense_type || '',
     comment: initialData?.comment || '',
     status: initialData?.status || 'yet_to_be_paid',
   });
   
+  // State for the date picker
   const [date, setDate] = useState<Date | undefined>(
     initialData?.date ? new Date(initialData.date) : new Date()
   );
   
+  // State for master data options
+  const [currencyOptions, setCurrencyOptions] = useState<CurrencyOption[]>([]);
+  const [expenseTypeOptions, setExpenseTypeOptions] = useState<ExpenseTypeOption[]>([]);
+  const [transactionTypeOptions, setTransactionTypeOptions] = useState<TransactionTypeOption[]>([]);
+  const [statusOptions, setStatusOptions] = useState<StatusOption[]>([]);
+  
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Fetch master data options from Supabase
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      try {
+        // Fetch currencies
+        const { data: currencies, error: currenciesError } = await supabase
+          .from('currencies')
+          .select('*')
+          .eq('active', true);
+        
+        if (currenciesError) throw currenciesError;
+        setCurrencyOptions(currencies || []);
+        
+        // Fetch expense types
+        const { data: expenseTypes, error: expenseTypesError } = await supabase
+          .from('expense_types')
+          .select('*')
+          .eq('active', true);
+        
+        if (expenseTypesError) throw expenseTypesError;
+        setExpenseTypeOptions(expenseTypes || []);
+        
+        // Fetch transaction types
+        const { data: transactionTypes, error: transactionTypesError } = await supabase
+          .from('transaction_types')
+          .select('*')
+          .eq('active', true);
+        
+        if (transactionTypesError) throw transactionTypesError;
+        setTransactionTypeOptions(transactionTypes || []);
+        
+        // Fetch statuses
+        const { data: statuses, error: statusesError } = await supabase
+          .from('transaction_statuses')
+          .select('*')
+          .eq('active', true);
+        
+        if (statusesError) throw statusesError;
+        setStatusOptions(statuses || []);
+        
+        // If no initial data and we have default values, set them
+        if (!initialData && currencies?.length && transactionTypes?.length && expenseTypes?.length && statuses?.length) {
+          setFormData(prev => ({
+            ...prev,
+            currency: currencies[0].code,
+            type: transactionTypes[0].name,
+            expense_type: expenseTypes[0].name,
+            status: statuses.find(s => s.type === transactionTypes[0].name)?.name || statuses[0].name
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching master data:', error);
+        toast.error('Failed to load form options');
+      }
+    };
+    
+    fetchMasterData();
+  }, [initialData]);
   
   // Update status options when type changes
   useEffect(() => {
-    const statusOptions = getStatusOptions(formData.type);
-    // Reset status if it's not valid for the current type
-    const isValidStatus = statusOptions.some(option => option.value === formData.status);
-    if (!isValidStatus) {
+    // Filter status options based on the selected type
+    const filteredOptions = statusOptions.filter(option => option.type === formData.type);
+    
+    // If current status is not valid for the selected type, reset it
+    if (filteredOptions.length > 0 && !filteredOptions.some(o => o.name === formData.status)) {
       setFormData(prev => ({
         ...prev,
-        status: formData.type === 'income' ? 'yet_to_be_received' : 'yet_to_be_paid'
+        status: filteredOptions[0]?.name || ''
       }));
     }
-  }, [formData.type]);
+  }, [formData.type, statusOptions, formData.status]);
 
   const handleDateChange = (newDate: Date | undefined) => {
     if (newDate) {
@@ -190,7 +247,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       }
       
       toast.success(initialData?.id ? 'Transaction updated successfully' : 'Transaction created successfully');
-      setTimeout(() => navigate('/transactions'), 1000); // Added a short delay to ensure the toast is shown before navigation
+      setTimeout(() => navigate('/transactions'), 1000);
     } catch (error: any) {
       console.error('Error saving transaction:', error);
       toast.error(error.message || 'Failed to save transaction');
@@ -250,8 +307,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               <SelectValue placeholder="Select type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="income">Income</SelectItem>
-              <SelectItem value="expense">Expense</SelectItem>
+              {transactionTypeOptions.map((option) => (
+                <SelectItem key={option.id} value={option.name}>
+                  {option.name.charAt(0).toUpperCase() + option.name.slice(1)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -267,8 +327,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             </SelectTrigger>
             <SelectContent>
               {currencyOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+                <SelectItem key={option.code} value={option.code}>
+                  {option.code} - {option.name} ({option.symbol})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -289,8 +349,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {expenseTypeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                  <SelectItem key={option.id} value={option.name}>
+                    {option.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -308,11 +368,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
-              {getStatusOptions(formData.type).map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
+              {statusOptions
+                .filter(option => option.type === formData.type)
+                .map((option) => (
+                  <SelectItem key={option.id} value={option.name}>
+                    {option.name.replace(/_/g, ' ')}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>

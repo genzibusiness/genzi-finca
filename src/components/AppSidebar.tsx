@@ -1,83 +1,137 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Home, BadgeDollarSign, Settings, LogOut } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
+  SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { useAuth } from '@/context/AuthContext';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  BarChart3,
+  LayoutDashboard,
+  LogOut,
+  Plus,
+  Settings,
+  CreditCard,
+  Database
+} from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const AppSidebar = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
-  const { user, profile, signOut } = useAuth();
   
-  const navItems = [
-    { title: 'Dashboard', path: '/dashboard', icon: Home },
-    { title: 'Transactions', path: '/transactions', icon: BadgeDollarSign },
-    { title: 'Settings', path: '/settings', icon: Settings },
-  ];
-
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+  
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+  
+  if (!user) {
+    return null;
+  }
+  
   return (
     <Sidebar>
-      <SidebarHeader className="px-6 py-4">
-        <Link to="/dashboard" className="flex items-center gap-2">
-          <BadgeDollarSign size={30} className="text-sidebar-primary" />
-          <span className="text-xl font-bold tracking-tight">Genzi Finca</span>
-        </Link>
-        <SidebarTrigger className="md:hidden absolute right-2 top-4" />
+      <SidebarHeader className="border-b">
+        <div className="flex items-center justify-between px-4 py-3">
+          <Link to="/dashboard" className="flex items-center gap-2">
+            <Badge variant="outline" className="text-lg font-medium p-1 h-7">
+              GF
+            </Badge>
+            <span className="font-bold">Genzi Finca</span>
+          </Link>
+        </div>
       </SidebarHeader>
       
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild>
-                    <Link 
-                      to={item.path}
-                      className={`${location.pathname === item.path ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''}`}
-                    >
-                      <item.icon size={20} />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/dashboard')}
+              tooltip="Dashboard"
+            >
+              <Link to="/dashboard">
+                <LayoutDashboard className="h-5 w-5" />
+                <span>Dashboard</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/transactions') || location.pathname.startsWith('/transactions/')}
+              tooltip="Transactions"
+            >
+              <Link to="/transactions">
+                <CreditCard className="h-5 w-5" />
+                <span>Transactions</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/configure')}
+              tooltip="Configure"
+            >
+              <Link to="/configure">
+                <Database className="h-5 w-5" />
+                <span>Configure</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/settings')}
+              tooltip="Settings"
+            >
+              <Link to="/settings">
+                <Settings className="h-5 w-5" />
+                <span>Settings</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarContent>
       
-      <SidebarFooter className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-sidebar-primary flex items-center justify-center">
-              <span className="text-white font-medium">
-                {profile?.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
-              </span>
-            </div>
-            <div>
-              <p className="text-sm font-medium">{profile?.name || 'User'}</p>
-              <p className="text-xs text-sidebar-foreground/70">{user?.email}</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="icon" onClick={signOut} title="Sign Out">
-            <LogOut size={18} />
-          </Button>
-        </div>
+      <SidebarFooter className="border-t p-2">
+        <Button
+          variant="outline"
+          className="w-full gap-2 justify-start mb-2"
+          onClick={() => navigate('/transactions/new')}
+        >
+          <Plus className="h-4 w-4" />
+          New Transaction
+        </Button>
+        
+        <Button
+          variant="ghost"
+          className="w-full gap-2 justify-start text-destructive hover:text-destructive"
+          onClick={handleSignOut}
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );
