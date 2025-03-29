@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -194,25 +193,21 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Transaction Type and Amount - Top row */}
-        <FormSection className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* First row: Transaction Type, Amount, Date */}
+        <FormSection className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="w-full">
             <TransactionTypeField form={form} />
           </div>
           <div className="w-full">
             <AmountField form={form} />
           </div>
-        </FormSection>
-        
-        {/* Date field - Full row */}
-        <FormSection>
           <div className="w-full">
             <DateField form={form} />
           </div>
         </FormSection>
         
-        {/* Currency and Status - Two columns */}
-        <FormSection className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Second row: Currency, Status, Expense Type (conditional) */}
+        <FormSection className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="w-full">
             <CurrencyField 
               form={form} 
@@ -224,39 +219,39 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
           <div className="w-full">
             <StatusField form={form} statuses={filteredStatuses} />
           </div>
+          {form.watch('type') === 'expense' ? (
+            <div className="w-full">
+              <ExpenseTypeField form={form} expenseTypes={expenseTypes} />
+            </div>
+          ) : (
+            <div className="w-full"> {/* Empty div to maintain grid layout when expense type is not shown */}
+              <div className="invisible h-10">Placeholder</div>
+            </div>
+          )}
         </FormSection>
         
-        {/* Payment Type and Paid By User - Two columns */}
-        <FormSection className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Third row: Payment Type, Paid By, Includes Tax */}
+        <FormSection className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="w-full">
             <PaymentTypeField form={form} paymentTypes={paymentTypes} />
           </div>
           <div className="w-full">
             <PaidByField form={form} users={users} />
           </div>
-        </FormSection>
-        
-        {/* Expense Type - Only shown for expense transactions */}
-        {form.watch('type') === 'expense' && (
-          <FormSection>
-            <div className="w-full">
-              <ExpenseTypeField form={form} expenseTypes={expenseTypes} />
-            </div>
-          </FormSection>
-        )}
-
-        {/* Document URL and Includes Tax */}
-        <FormSection className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="w-full">
-            <DocumentUrlField form={form} />
-          </div>
-          <div className="flex items-center h-full pt-8">
+          <div className="w-full flex items-end">
             <IncludesTaxField form={form} />
           </div>
         </FormSection>
         
-        {/* Comment - Full width */}
-        <FormSection>
+        {/* Fourth row: Document URL only */}
+        <FormSection className="grid grid-cols-1 gap-4">
+          <div className="w-full">
+            <DocumentUrlField form={form} />
+          </div>
+        </FormSection>
+        
+        {/* Fifth row: Comment - Full width */}
+        <FormSection className="grid grid-cols-1 gap-4">
           <div className="w-full">
             <CommentField form={form} />
           </div>

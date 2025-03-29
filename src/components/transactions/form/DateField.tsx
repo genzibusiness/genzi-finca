@@ -19,7 +19,7 @@ const DateField: React.FC<DateFieldProps> = ({ form }) => {
       control={form.control}
       name="date"
       render={({ field }) => (
-        <FormItem className="flex flex-col w-full">
+        <FormItem className="w-full">
           <FormLabel>Date</FormLabel>
           <Popover>
             <PopoverTrigger asChild>
