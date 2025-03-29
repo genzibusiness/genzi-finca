@@ -129,7 +129,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
       }
       
       if (selectedCategory) {
-        // Fix: Check if selectedCategory is a valid ExpenseType before using it
+        // Check if selectedCategory is a valid ExpenseType before using it
         const validExpenseTypes: ExpenseType[] = ["Salary", "Marketing", "Services", "Software", "Other"];
         if (validExpenseTypes.includes(selectedCategory as ExpenseType)) {
           query = query.eq('expense_type', selectedCategory as ExpenseType);
@@ -137,18 +137,30 @@ const TransactionList: React.FC<TransactionListProps> = ({
         }
       }
       
+      // Apply custom filters
       Object.entries(filters).forEach(([key, value]) => {
         if (value && value.trim() !== '') {
           if (key === 'date') {
-            query = query.like(key, `%${value}%`);
-            countQuery = countQuery.like(key, `%${value}%`);
+            // For date column, use string pattern matching
+            query = query.ilike(key, `%${value}%`);
+            countQuery = countQuery.ilike(key, `%${value}%`);
           } else if (key === 'amount') {
+            // Try to parse as number for amount
             const numValue = parseFloat(value);
             if (!isNaN(numValue)) {
               query = query.eq(key, numValue);
               countQuery = countQuery.eq(key, numValue);
             }
+          } else if (key === 'type' || key === 'status') {
+            // For enum fields, use exact match
+            query = query.eq(key, value);
+            countQuery = countQuery.eq(key, value);
+          } else if (key === 'expense_type') {
+            // For expense_type, which is a nullable enum, use type-safe comparison
+            query = query.ilike(key, `%${value}%`);
+            countQuery = countQuery.ilike(key, `%${value}%`);
           } else {
+            // For all other text fields use case-insensitive search
             query = query.ilike(key, `%${value}%`);
             countQuery = countQuery.ilike(key, `%${value}%`);
           }
@@ -237,7 +249,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
         if (startPage > 2) {
           items.push(
             <PaginationItem key="ellipsis-start">
-              {/* Fix: Use PaginationEllipsis instead of disabled PaginationLink */}
               <PaginationEllipsis />
             </PaginationItem>
           );
@@ -259,7 +270,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
         if (endPage < totalPages - 1) {
           items.push(
             <PaginationItem key="ellipsis-end">
-              {/* Fix: Use PaginationEllipsis instead of disabled PaginationLink */}
               <PaginationEllipsis />
             </PaginationItem>
           );
