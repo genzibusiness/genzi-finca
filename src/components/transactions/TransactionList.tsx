@@ -6,6 +6,11 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  SortingState,
+  getSortedRowModel,
+  getPaginationRowModel,
+  ColumnFiltersState,
+  getFilteredRowModel,
 } from '@tanstack/react-table';
 import {
   Card,
@@ -23,13 +28,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ArrowUpDown, Edit, MoreHorizontal } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowUpDown, Edit, MoreHorizontal, Search } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
 import TypeBadge from '@/components/TypeBadge';
 import StatusBadge from '@/components/StatusBadge';
+import TablePagination from '@/components/transactions/table/TablePagination';
 
 // Import the corrected hook
 import { useTransactionListData } from '@/hooks/useTransactionListData';
@@ -73,6 +80,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
     filterType
   });
   const [data, setData] = useState<Transaction[]>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
 
   useEffect(() => {
     if (transactions) {
@@ -104,14 +114,35 @@ const TransactionList: React.FC<TransactionListProps> = ({
     },
     {
       accessorKey: 'type',
-      header: 'Type',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Type
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => {
         return <TypeBadge type={row.original.type} />;
       },
+      filterFn: 'equals',
     },
     {
       accessorKey: 'amount',
-      header: 'Amount',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Amount
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => {
         return (
           <CurrencyDisplay 
@@ -124,22 +155,64 @@ const TransactionList: React.FC<TransactionListProps> = ({
     },
     {
       accessorKey: 'currency',
-      header: 'Currency',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Currency
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
     },
     {
       accessorKey: 'expense_type',
-      header: 'Expense Type',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Expense Type
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+      filterFn: 'equals',
     },
     {
       accessorKey: 'comment',
-      header: 'Comment',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Comment
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
     },
     {
       accessorKey: 'status',
-      header: 'Status',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Status
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => {
         return <StatusBadge status={row.original.status} />;
       },
+      filterFn: 'equals',
     },
     {
       id: 'actions',
@@ -147,11 +220,13 @@ const TransactionList: React.FC<TransactionListProps> = ({
       cell: ({ row }) => {
         const transaction = row.original;
 
-        const handleEdit = () => {
+        const handleEdit = (e: React.MouseEvent) => {
+          e.stopPropagation();
           navigate(`/transactions/${transaction.id}`);
         };
 
-        const handleDelete = async () => {
+        const handleDelete = async (e: React.MouseEvent) => {
+          e.stopPropagation();
           try {
             await deleteTransaction(transaction.id);
             toast.success('Transaction deleted successfully');
@@ -161,23 +236,25 @@ const TransactionList: React.FC<TransactionListProps> = ({
         };
 
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={handleEdit}>
-                <Edit className="mr-2 h-4 w-4" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="text-red-500">
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={handleEdit}>
+                  <Edit className="mr-2 h-4 w-4" /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDelete} className="text-red-500">
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         );
       },
     },
@@ -187,7 +264,23 @@ const TransactionList: React.FC<TransactionListProps> = ({
     data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    state: {
+      sorting,
+      columnFilters,
+      globalFilter,
+    },
   });
+
+  // Set default page size
+  useEffect(() => {
+    table.setPageSize(10);
+  }, [table]);
 
   if (isLoading) {
     return <Card>
@@ -223,6 +316,18 @@ const TransactionList: React.FC<TransactionListProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 flex items-center gap-4">
+            <div className="relative w-full md:w-72">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search transactions..."
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+          
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -271,6 +376,16 @@ const TransactionList: React.FC<TransactionListProps> = ({
               </TableBody>
             </Table>
           </div>
+          
+          {table.getRowModel().rows?.length > 0 && (
+            <TablePagination
+              currentPage={table.getState().pagination.pageIndex + 1}
+              totalPages={table.getPageCount()}
+              totalCount={data.length}
+              pageSize={table.getState().pagination.pageSize}
+              onPageChange={(page) => table.setPageIndex(page - 1)}
+            />
+          )}
         </CardContent>
       </Card>
     </div>

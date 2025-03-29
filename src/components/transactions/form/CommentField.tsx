@@ -13,6 +13,20 @@ interface CommentFieldProps {
 
 const CommentField: React.FC<CommentFieldProps> = ({ form }) => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [currentComment, setCurrentComment] = useState('');
+  
+  // Initialize currentComment with the form value
+  useEffect(() => {
+    const formValue = form.getValues('comment');
+    if (formValue) {
+      setCurrentComment(formValue);
+    }
+  }, [form]);
+
+  // Update the form value when currentComment changes
+  useEffect(() => {
+    form.setValue('comment', currentComment, { shouldValidate: true, shouldDirty: true });
+  }, [currentComment, form]);
   
   const generateSuggestion = async () => {
     try {
@@ -27,22 +41,35 @@ const CommentField: React.FC<CommentFieldProps> = ({ form }) => {
         return;
       }
       
-      // Create prompt based on form values
-      const prompt = `Generate a brief, professional comment for a ${type} transaction of ${amount} ${currency} on ${date} ${expense_type ? `for ${expense_type}` : ''} that is ${status}.`;
+      // Get the current comment text to preserve it
+      const existingComment = currentComment.trim();
+      
+      // Create prompt based on form values and existing comment
+      const prompt = `Generate a brief, professional comment for a ${type} transaction of ${amount} ${currency} on ${date} ${expense_type ? `for ${expense_type}` : ''} that is ${status}. ${existingComment ? `Incorporate or expand on this existing comment: "${existingComment}"` : ''}`;
       
       // Mock AI response for now - in real implementation this would call an API
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Example generated comment based on transaction data
+      // Example generated comment based on transaction data and existing comment
       let generatedComment = '';
-      if (type === 'expense') {
-        generatedComment = `Payment of ${amount} ${currency} for ${expense_type || 'business expense'}. Status: ${status}.`;
+      
+      // Include existing comment in the suggested text instead of overwriting
+      if (existingComment) {
+        if (type === 'expense') {
+          generatedComment = `${existingComment} - Payment of ${amount} ${currency} for ${expense_type || 'business expense'}. Status: ${status}.`;
+        } else {
+          generatedComment = `${existingComment} - Received ${amount} ${currency} as income. Status: ${status}.`;
+        }
       } else {
-        generatedComment = `Received ${amount} ${currency} as income. Status: ${status}.`;
+        if (type === 'expense') {
+          generatedComment = `Payment of ${amount} ${currency} for ${expense_type || 'business expense'}. Status: ${status}.`;
+        } else {
+          generatedComment = `Received ${amount} ${currency} as income. Status: ${status}.`;
+        }
       }
       
-      // Set the generated value to the form
-      form.setValue('comment', generatedComment, { shouldValidate: true, shouldDirty: true });
+      // Set the generated value to the state
+      setCurrentComment(generatedComment);
       toast.success("AI suggestion applied");
     } catch (error) {
       console.error("Error generating suggestion:", error);
@@ -50,6 +77,10 @@ const CommentField: React.FC<CommentFieldProps> = ({ form }) => {
     } finally {
       setIsGenerating(false);
     }
+  };
+  
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCurrentComment(e.target.value);
   };
   
   return (
@@ -78,7 +109,11 @@ const CommentField: React.FC<CommentFieldProps> = ({ form }) => {
               className="resize-none"
               spellCheck={true}
               {...field}
-              value={field.value || ''}
+              value={currentComment || ''}
+              onChange={(e) => {
+                field.onChange(e);
+                handleChange(e);
+              }}
             />
           </FormControl>
           <FormMessage />
