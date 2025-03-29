@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Transaction, CurrencyType, TransactionStatus, ExpenseType } from '@/types/cashflow';
@@ -64,6 +65,10 @@ const TransactionNew = () => {
         validExpenseType = transaction.expense_type;
       }
       
+      // Handle payment_type_id and paid_by_user_id
+      const payment_type_id = transaction.payment_type_id === 'none' ? null : transaction.payment_type_id;
+      const paid_by_user_id = transaction.paid_by_user_id === 'none' ? null : transaction.paid_by_user_id;
+      
       const transactionData = {
         amount: transaction.amount,
         date: transaction.date,
@@ -75,8 +80,8 @@ const TransactionNew = () => {
         comment: transaction.comment || null,
         document_url: transaction.document_url || null,
         includes_tax: transaction.includes_tax || false,
-        payment_type_id: transaction.payment_type_id || null,
-        paid_by_user_id: transaction.paid_by_user_id || null
+        payment_type_id: payment_type_id,
+        paid_by_user_id: paid_by_user_id
       };
       
       console.log('Saving transaction:', transactionData);

@@ -141,16 +141,20 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
       // Format the date for database
       const formattedDate = format(values.date, 'yyyy-MM-dd');
       
+      // Handle the "none" value for payment_type_id and paid_by_user_id
+      const payment_type_id = values.payment_type_id === 'none' ? null : values.payment_type_id || null;
+      const paid_by_user_id = values.paid_by_user_id === 'none' ? null : values.paid_by_user_id || null;
+      
       // Prepare transaction data
       const transactionData = {
         ...values,
         date: formattedDate,
         // If expense type is empty and type is income, set to null
         expense_type: values.type === 'income' ? null : values.expense_type,
-        // Set payment_type_id to null if it's empty
-        payment_type_id: values.payment_type_id || null,
-        // Set paid_by_user_id to null if it's empty
-        paid_by_user_id: values.paid_by_user_id || null,
+        // Set payment_type_id to null if it's 'none' or empty
+        payment_type_id: payment_type_id,
+        // Set paid_by_user_id to null if it's 'none' or empty
+        paid_by_user_id: paid_by_user_id,
       };
       
       console.log('Submitting transaction:', transactionData);

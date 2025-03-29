@@ -24,7 +24,7 @@ const PaidByField: React.FC<PaidByFieldProps> = ({ form, users }) => {
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {users.map((user) => (
                 <SelectItem key={user.id} value={user.id}>
                   {user.name}

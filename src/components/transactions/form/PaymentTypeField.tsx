@@ -24,7 +24,7 @@ const PaymentTypeField: React.FC<PaymentTypeFieldProps> = ({ form, paymentTypes 
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {paymentTypes.map((paymentType) => (
                 <SelectItem key={paymentType.id} value={paymentType.id}>
                   {paymentType.name}
