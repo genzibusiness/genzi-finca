@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Transaction, TransactionType, TransactionStatus, ExpenseType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
@@ -198,7 +199,33 @@ export const useTransactionListData = ({
               query = query.ilike(key, `%${value}%`);
               countQuery = countQuery.ilike(key, `%${value}%`);
             }
+          } else if (key === 'expense_type') {
+            // Special handling for expense_type - ensure we're checking if it exists
+            // and handling casting appropriately
+            const expenseValue = value.trim();
+            try {
+              // Try to match against enum values
+              const validExpenseTypes: ExpenseType[] = ["Salary", "Marketing", "Services", "Software", "Other"];
+              if (validExpenseTypes.includes(expenseValue as ExpenseType)) {
+                query = query.eq(key, expenseValue);
+                countQuery = countQuery.eq(key, expenseValue);
+              } else {
+                // Use eq_any for partial matches if exact match fails
+                const matches = validExpenseTypes.filter(t => 
+                  t.toLowerCase().includes(expenseValue.toLowerCase())
+                );
+                if (matches.length > 0) {
+                  query = query.in(key, matches);
+                  countQuery = countQuery.in(key, matches);
+                } else {
+                  console.log("No matching expense types found for:", expenseValue);
+                }
+              }
+            } catch (error) {
+              console.error("Expense type filter error:", error);
+            }
           } else {
+            // Default case for other string fields
             query = query.ilike(key, `%${value}%`);
             countQuery = countQuery.ilike(key, `%${value}%`);
           }
