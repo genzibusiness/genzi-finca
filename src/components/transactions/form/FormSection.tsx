@@ -15,7 +15,7 @@ const FormSection: React.FC<FormSectionProps> = ({
   return (
     <div className={`space-y-2 ${className}`} data-testid="form-section">
       {title && <h3 className="text-lg font-medium">{title}</h3>}
-      <div className={className}>
+      <div className="w-full">
         {children}
       </div>
     </div>

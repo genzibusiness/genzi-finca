@@ -14,16 +14,16 @@ const IncludesTaxField: React.FC<IncludesTaxFieldProps> = ({ form }) => {
       control={form.control}
       name="includes_tax"
       render={({ field }) => (
-        <FormItem className="w-full flex flex-row items-center space-x-2 h-full pt-6">
-          <div className="space-y-0.5">
-            <FormLabel>Amount includes tax</FormLabel>
-          </div>
+        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-2">
           <FormControl>
             <Checkbox
               checked={field.value}
               onCheckedChange={field.onChange}
             />
           </FormControl>
+          <div className="space-y-1 leading-none">
+            <FormLabel>Amount includes tax</FormLabel>
+          </div>
           <FormMessage />
         </FormItem>
       )}
