@@ -21,7 +21,7 @@ import { Edit, Trash } from 'lucide-react';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
 import StatusBadge from '@/components/StatusBadge';
 import TypeBadge from '@/components/TypeBadge';
-import { Transaction } from '@/types/cashflow';
+import { Transaction, TransactionType } from '@/types/cashflow';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -40,12 +40,14 @@ interface TransactionListProps {
   showSubCategory?: boolean;
   showCreatedBy?: boolean;
   limit?: number;
+  filterType?: TransactionType;
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({
   showSubCategory = false,
   showCreatedBy = false,
   limit,
+  filterType,
 }) => {
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -55,7 +57,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
   useEffect(() => {
     fetchTransactions();
-  }, [limit]);
+  }, [limit, filterType]);
 
   const fetchTransactions = async () => {
     setIsLoading(true);
@@ -64,6 +66,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
         .from('transactions')
         .select('*, profiles(name)')
         .order('date', { ascending: false });
+
+      if (filterType) {
+        query = query.eq('type', filterType);
+      }
 
       if (limit) {
         query = query.limit(limit);

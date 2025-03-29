@@ -1,21 +1,23 @@
 
 import React from 'react';
-import { TransactionType } from '@/types/cashflow';
+import { TransactionType, CurrencyType } from '@/types/cashflow';
 
 interface CurrencyDisplayProps {
   amount: number;
   type?: TransactionType;
+  currency?: CurrencyType;
   className?: string;
 }
 
 const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({ 
   amount, 
   type,
+  currency = 'USD',
   className = ""
 }) => {
   const formattedAmount = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(Math.abs(amount));
