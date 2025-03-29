@@ -119,7 +119,7 @@ export const useTransactionListData = ({
                   const startDate = `${year}-${month}-01`;
                   
                   const nextMonth = parseInt(month) === 12 ? 1 : parseInt(month) + 1;
-                  const nextYear = parseInt(month) === 12 ? parseInt(year) + 1 : parseInt(year);
+                  const nextYear = parseInt(month) === 12 ? parseInt(year) + 1 : year;
                   const endDate = `${nextYear}-${nextMonth.toString().padStart(2, '0')}-01`;
                   
                   query = query.gte(key, startDate).lt(key, endDate);
