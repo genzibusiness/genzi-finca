@@ -45,15 +45,17 @@ const TransactionNew = () => {
         throw new Error('User not authenticated');
       }
       
-      // Ensure status value is lowercase to match enum values in database
-      const status = transaction.status.toLowerCase() as TransactionStatus;
+      // Ensure status value is a valid TransactionStatus enum value
+      const validStatus = isValidTransactionStatus(transaction.status) 
+        ? transaction.status 
+        : 'yet_to_be_paid';
       
       // Create transaction with all required fields
       const transactionData = {
         amount: transaction.amount,
         date: transaction.date,
         currency: transaction.currency,
-        status: status,
+        status: validStatus,
         type: transaction.type,
         user_id: userData.user.id,
         expense_type: transaction.expense_type || null,
@@ -82,6 +84,11 @@ const TransactionNew = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to validate transaction status
+  const isValidTransactionStatus = (status: string): status is TransactionStatus => {
+    return ['paid', 'received', 'yet_to_be_paid', 'yet_to_be_received'].includes(status as TransactionStatus);
   };
 
   const handleCancel = () => {

@@ -5,6 +5,7 @@ import CurrencyDisplay from '@/components/CurrencyDisplay';
 import { ArrowDown, ArrowUp, PiggyBank } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCashflow } from '@/context/CashflowContext';
+import { ExpenseType } from '@/types/cashflow';
 
 const DashboardSummary = () => {
   const [loading, setLoading] = useState(true);
@@ -67,6 +68,12 @@ const DashboardSummary = () => {
     }
   };
 
+  // Helper function to validate expense type
+  const isValidExpenseType = (value: string | null): value is ExpenseType => {
+    if (!value) return false;
+    return ['Salary', 'Marketing', 'Services', 'Software', 'Other'].includes(value as ExpenseType);
+  };
+
   const calculateSummary = async () => {
     setLoading(true);
     
@@ -96,7 +103,7 @@ const DashboardSummary = () => {
         query = query.eq('type', selectedType);
       }
       
-      if (selectedCategory) {
+      if (selectedCategory && isValidExpenseType(selectedCategory)) {
         query = query.eq('expense_type', selectedCategory);
       }
       

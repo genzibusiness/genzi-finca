@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, LineChart, ResponsiveContainer, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend, Line } from 'recharts';
 import { useCashflow } from '@/context/CashflowContext';
+import { ExpenseType } from '@/types/cashflow';
 
 const DashboardCharts = () => {
   const { selectedMonth, selectedYear, selectedCategory, selectedType } = useCashflow();
@@ -56,6 +57,12 @@ const DashboardCharts = () => {
     }
   };
 
+  // Helper function to validate expense type
+  const isValidExpenseType = (value: string | null): value is ExpenseType => {
+    if (!value) return false;
+    return ['Salary', 'Marketing', 'Services', 'Software', 'Other'].includes(value as ExpenseType);
+  };
+
   const processChartData = async () => {
     try {
       setLoading(true);
@@ -85,7 +92,7 @@ const DashboardCharts = () => {
         query = query.eq('type', selectedType);
       }
       
-      if (selectedCategory) {
+      if (selectedCategory && isValidExpenseType(selectedCategory)) {
         query = query.eq('expense_type', selectedCategory);
       }
       
