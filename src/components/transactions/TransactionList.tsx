@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -69,7 +68,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   
-  // Define valid transaction types and statuses for validation
   const validTransactionTypes: TransactionType[] = ["income", "expense"];
   const validTransactionStatuses: TransactionStatus[] = ["paid", "received", "yet_to_be_paid", "yet_to_be_received"];
   
@@ -133,7 +131,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
       }
       
       if (selectedCategory) {
-        // Check if selectedCategory is a valid ExpenseType before using it
         const validExpenseTypes: ExpenseType[] = ["Salary", "Marketing", "Services", "Software", "Other"];
         if (validExpenseTypes.includes(selectedCategory as ExpenseType)) {
           query = query.eq('expense_type', selectedCategory as ExpenseType);
@@ -141,27 +138,22 @@ const TransactionList: React.FC<TransactionListProps> = ({
         }
       }
       
-      // Apply custom filters
       Object.entries(filters).forEach(([key, value]) => {
         if (value && value.trim() !== '') {
           if (key === 'date') {
-            // Handle date filter differently - try to parse date or filter by string fragments
             const dateValue = value.trim();
             try {
-              // First check if it's a valid date format yyyy-mm-dd
               const dateMatch = dateValue.match(/^\d{4}-\d{2}-\d{2}$/);
               if (dateMatch) {
                 query = query.eq(key, dateValue);
                 countQuery = countQuery.eq(key, dateValue);
               } else {
-                // Check if it's a partial date like yyyy-mm or yyyy
                 if (dateValue.match(/^\d{4}-\d{2}$/)) {
                   const yearMonth = dateValue.split('-');
                   const year = yearMonth[0];
                   const month = yearMonth[1];
                   const startDate = `${year}-${month}-01`;
                   
-                  // Calculate end date (next month)
                   const nextMonth = parseInt(month) === 12 ? 1 : parseInt(month) + 1;
                   const nextYear = parseInt(month) === 12 ? parseInt(year) + 1 : parseInt(year);
                   const endDate = `${nextYear}-${nextMonth.toString().padStart(2, '0')}-01`;
@@ -169,7 +161,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   query = query.gte(key, startDate).lt(key, endDate);
                   countQuery = countQuery.gte(key, startDate).lt(key, endDate);
                 } else if (dateValue.match(/^\d{4}$/)) {
-                  // Just a year
                   const year = dateValue;
                   const startDate = `${year}-01-01`;
                   const endDate = `${year}-12-31`;
@@ -177,7 +168,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   query = query.gte(key, startDate).lte(key, endDate);
                   countQuery = countQuery.gte(key, startDate).lte(key, endDate);
                 } else {
-                  // Try to parse using date-fns to support various formats
                   const dateFormats = [
                     'yyyy-MM-dd', 'MM/dd/yyyy', 'dd/MM/yyyy', 
                     'MMM d, yyyy', 'MMMM d, yyyy', 'MMM yyyy', 'MMMM yyyy'
@@ -197,8 +187,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     query = query.eq(key, parsedDate);
                     countQuery = countQuery.eq(key, parsedDate);
                   } else {
-                    // Last resort: convert date column to text and use textual search
-                    // This needs to use the PostgreSQL-specific syntax
                     query = query.filter(`${key}::text`, 'ilike', `%${dateValue}%`);
                     countQuery = countQuery.filter(`${key}::text`, 'ilike', `%${dateValue}%`);
                   }
@@ -206,57 +194,47 @@ const TransactionList: React.FC<TransactionListProps> = ({
               }
             } catch (error) {
               console.error("Date filter error:", error);
-              // Fallback: search as text
               query = query.filter(`${key}::text`, 'ilike', `%${dateValue}%`);
               countQuery = countQuery.filter(`${key}::text`, 'ilike', `%${dateValue}%`);
             }
           } else if (key === 'amount') {
-            // Try to parse as number for amount
             const numValue = parseFloat(value);
             if (!isNaN(numValue)) {
               query = query.eq(key, numValue);
               countQuery = countQuery.eq(key, numValue);
             } else if (value.includes('>')) {
-              // Handle greater than
               const thresh = parseFloat(value.replace('>', '').trim());
               if (!isNaN(thresh)) {
                 query = query.gt(key, thresh);
                 countQuery = countQuery.gt(key, thresh);
               }
             } else if (value.includes('<')) {
-              // Handle less than
               const thresh = parseFloat(value.replace('<', '').trim());
               if (!isNaN(thresh)) {
                 query = query.lt(key, thresh);
                 countQuery = countQuery.lt(key, thresh);
               }
             } else {
-              // Convert to string and search
               query = query.filter(`${key}::text`, 'ilike', `%${value}%`);
               countQuery = countQuery.filter(`${key}::text`, 'ilike', `%${value}%`);
             }
           } else if (key === 'type') {
-            // Validate type value against TransactionType
             if (validTransactionTypes.includes(value as TransactionType)) {
               query = query.eq(key, value as TransactionType);
               countQuery = countQuery.eq(key, value as TransactionType);
             } else {
-              // Use text search for partial matches
               query = query.filter(key, 'ilike', `%${value}%`);
               countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
             }
           } else if (key === 'status') {
-            // Validate status value against TransactionStatus
             if (validTransactionStatuses.includes(value as TransactionStatus)) {
               query = query.eq(key, value as TransactionStatus);
               countQuery = countQuery.eq(key, value as TransactionStatus);
             } else {
-              // Use text search for partial matches
               query = query.filter(key, 'ilike', `%${value}%`);
               countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
             }
           } else {
-            // For all other text fields use case-insensitive search
             query = query.filter(key, 'ilike', `%${value}%`);
             countQuery = countQuery.filter(key, 'ilike', `%${value}%`);
           }
@@ -330,11 +308,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
       return [];
     }
     
-    // Calculate range of pages to show
     let startPage = Math.max(1, currentPage - 2);
     let endPage = Math.min(totalPages, currentPage + 2);
     
-    // Adjust range for edge cases
     if (endPage - startPage < 4) {
       if (startPage === 1) {
         endPage = Math.min(5, totalPages);
@@ -343,7 +319,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
       }
     }
     
-    // Show first page if not included in range
     if (startPage > 1) {
       items.push(
         <PaginationItem key="1">
@@ -356,7 +331,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
         </PaginationItem>
       );
       
-      // Show ellipsis if needed
       if (startPage > 2) {
         items.push(
           <PaginationItem key="ellipsis-start">
@@ -366,7 +340,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
       }
     }
     
-    // Add middle pages
     for (let i = startPage; i <= endPage; i++) {
       items.push(
         <PaginationItem key={i}>
@@ -380,9 +353,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
       );
     }
     
-    // Show last page if not included in range
     if (endPage < totalPages) {
-      // Show ellipsis if needed
       if (endPage < totalPages - 1) {
         items.push(
           <PaginationItem key="ellipsis-end">
@@ -406,7 +377,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
     return items;
   };
   
-  // Helper to determine if a column has an active filter
   const hasActiveFilter = (column: string) => {
     return filters[column] && filters[column].trim() !== '';
   };
@@ -488,42 +458,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       </DropdownMenu>
                     </div>
                   </TableHead>
-                  <TableHead>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        Type
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => handleSort('type')}
-                        >
-                          <ArrowUpDown className="h-4 w-4" />
-                          <span className="sr-only">Sort by type</span>
-                        </Button>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant={hasActiveFilter('type') ? "secondary" : "ghost"} 
-                            size="sm" 
-                            className="h-8 w-8 p-0 relative"
-                          >
-                            <ChevronDown className="h-4 w-4" />
-                            {hasActiveFilter('type') && (
-                              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary"></span>
-                            )}
-                            <span className="sr-only">Filter type</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-56 p-2">
-                          <DropdownMenuItem onClick={() => clearFilter('type')}>All</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleFilter('type', 'income')}>Income</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleFilter('type', 'expense')}>Expense</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableHead>
                   
                   {showSubCategory && (
                     <TableHead>
@@ -577,6 +511,43 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       </div>
                     </TableHead>
                   )}
+                  
+                  <TableHead>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        Type
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleSort('type')}
+                        >
+                          <ArrowUpDown className="h-4 w-4" />
+                          <span className="sr-only">Sort by type</span>
+                        </Button>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant={hasActiveFilter('type') ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="h-8 w-8 p-0 relative"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                            {hasActiveFilter('type') && (
+                              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary"></span>
+                            )}
+                            <span className="sr-only">Filter type</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-56 p-2">
+                          <DropdownMenuItem onClick={() => clearFilter('type')}>All</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleFilter('type', 'income')}>Income</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleFilter('type', 'expense')}>Expense</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableHead>
                   
                   <TableHead>
                     <div className="flex items-center justify-between">
