@@ -20,6 +20,8 @@ import ResetPassword from "./pages/ResetPassword";
 import ConfirmSignup from "./pages/ConfirmSignup";
 import ConfigureMasterData from "./pages/ConfigureMasterData";
 import FincaChat from "./pages/FincaChat";
+import Expenses from "./pages/Expenses";
+import Income from "./pages/Income";
 
 const App = () => {
   console.log("App rendering");
@@ -56,6 +58,8 @@ const App = () => {
                   {/* Protected routes */}
                   <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                   <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+                  <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
+                  <Route path="/income" element={<ProtectedRoute><Income /></ProtectedRoute>} />
                   <Route path="/transactions/new" element={<ProtectedRoute><TransactionNew /></ProtectedRoute>} />
                   <Route path="/transactions/:id" element={<ProtectedRoute><TransactionDetail /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

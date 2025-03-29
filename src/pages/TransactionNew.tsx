@@ -69,8 +69,9 @@ const TransactionNew = () => {
       const payment_type_id = transaction.payment_type_id === 'none' ? null : transaction.payment_type_id;
       const paid_by_user_id = transaction.paid_by_user_id === 'none' ? null : transaction.paid_by_user_id;
       
-      // Ensure document_url and comment are properly handled as null if empty
+      // Ensure document_url, receipt_url and comment are properly handled as null if empty
       const document_url = transaction.document_url || null;
+      const receipt_url = transaction.receipt_url || null;
       const comment = transaction.comment || null;
       
       const transactionData = {
@@ -83,6 +84,7 @@ const TransactionNew = () => {
         expense_type: validExpenseType,
         comment: comment,
         document_url: document_url,
+        receipt_url: receipt_url,
         includes_tax: transaction.includes_tax || false,
         payment_type_id: payment_type_id,
         paid_by_user_id: paid_by_user_id
@@ -127,6 +129,7 @@ const TransactionNew = () => {
     status: 'yet_to_be_paid',
     currency: defaultCurrency,
     document_url: '',
+    receipt_url: '',
     includes_tax: false,
     payment_type_id: '',
     paid_by_user_id: '',

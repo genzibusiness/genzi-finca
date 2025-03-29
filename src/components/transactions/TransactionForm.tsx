@@ -26,6 +26,7 @@ import ExpenseTypeField from './form/ExpenseTypeField';
 import DocumentUrlField from './form/DocumentUrlField';
 import IncludesTaxField from './form/IncludesTaxField';
 import CommentField from './form/CommentField';
+import ReceiptUploadField from './form/ReceiptUploadField';
 
 type TransactionFormProps = {
   transaction: Partial<Transaction>;
@@ -81,6 +82,12 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
     navigate(-1);
   };
 
+  // Handle extracted data from receipt upload
+  const handleExtractedData = (data: any) => {
+    console.log('Extracted data from receipt:', data);
+    toast.info('Receipt data extracted. Please review the form.');
+  };
+
   // Get current transaction type value
   const transactionType = form.watch('type');
 
@@ -107,6 +114,14 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormLayout>
+          {/* Receipt Upload Field */}
+          <FormRow columns={1}>
+            <ReceiptUploadField 
+              form={form} 
+              onExtractedData={handleExtractedData} 
+            />
+          </FormRow>
+          
           {/* First row: Transaction Type, Amount, Date */}
           <FormRow>
             <TransactionTypeField form={form} />

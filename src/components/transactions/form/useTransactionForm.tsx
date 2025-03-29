@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,6 +16,7 @@ const createTransactionFormSchema = () => {
     currency: z.string(),
     comment: z.string().nullable().optional(),
     document_url: z.string().nullable().optional(),
+    receipt_url: z.string().nullable().optional(),
     includes_tax: z.boolean().optional(),
     payment_type_id: z.string().optional(),
     paid_by_user_id: z.string().optional(),
@@ -44,6 +44,7 @@ export const useTransactionForm = (
           expense_type: transaction.expense_type || null,
           document_url: transaction.document_url || null,
           comment: transaction.comment || null,
+          receipt_url: transaction.receipt_url || null,
         }
       : {
           amount: 0,
@@ -53,6 +54,7 @@ export const useTransactionForm = (
           currency: defaultCurrency,
           comment: null,
           document_url: null,
+          receipt_url: null,
           includes_tax: false,
           payment_type_id: '',
           paid_by_user_id: '',
@@ -145,6 +147,7 @@ export const useTransactionForm = (
     // Handle empty strings for nullable text fields
     const document_url = values.document_url || null;
     const comment = values.comment || null;
+    const receipt_url = values.receipt_url || null;
     
     // Prepare transaction data
     const transactionData = {
@@ -155,6 +158,7 @@ export const useTransactionForm = (
       paid_by_user_id: paid_by_user_id,
       document_url: document_url,
       comment: comment,
+      receipt_url: receipt_url,
     };
     
     return transactionData;

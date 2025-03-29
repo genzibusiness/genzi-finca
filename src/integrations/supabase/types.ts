@@ -217,6 +217,7 @@ export type Database = {
           includes_tax: boolean | null
           paid_by_user_id: string | null
           payment_type_id: string | null
+          receipt_url: string | null
           status: Database["public"]["Enums"]["transaction_status"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
@@ -234,6 +235,7 @@ export type Database = {
           includes_tax?: boolean | null
           paid_by_user_id?: string | null
           payment_type_id?: string | null
+          receipt_url?: string | null
           status: Database["public"]["Enums"]["transaction_status"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
@@ -251,6 +253,7 @@ export type Database = {
           includes_tax?: boolean | null
           paid_by_user_id?: string | null
           payment_type_id?: string | null
+          receipt_url?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string

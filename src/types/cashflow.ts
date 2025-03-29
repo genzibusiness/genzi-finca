@@ -1,3 +1,4 @@
+
 export type TransactionStatus = "paid" | "received" | "yet_to_be_paid" | "yet_to_be_received";
 
 export type TransactionType = "income" | "expense";
@@ -31,6 +32,7 @@ export interface Transaction {
   created_at: string;
   updated_at: string;
   document_url?: string | null;
+  receipt_url?: string | null;
   includes_tax?: boolean | null;
   payment_type_id?: string | null;
   paid_by_user_id?: string | null;
