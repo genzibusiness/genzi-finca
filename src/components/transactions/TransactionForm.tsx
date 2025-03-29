@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useCashflow } from '@/context/CashflowContext';
 import { Transaction, TransactionStatus, TransactionType } from '@/types/cashflow';
@@ -61,11 +60,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     getSubCategoriesForCategory(formData.categoryId)
   );
   
-  // Update sub-categories when category changes
   useEffect(() => {
     setAvailableSubCategories(getSubCategoriesForCategory(formData.categoryId));
     
-    // Reset subcategory if it doesn't belong to the current category
     if (formData.categoryId && formData.subCategoryId) {
       const validSubCategories = getSubCategoriesForCategory(formData.categoryId);
       if (!validSubCategories.some(sc => sc.id === formData.subCategoryId)) {
@@ -77,7 +74,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     }
   }, [formData.categoryId, getSubCategoriesForCategory]);
   
-  // Handle date change
   const handleDateChange = (newDate: Date | undefined) => {
     if (newDate) {
       setDate(newDate);
@@ -88,7 +84,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     }
   };
   
-  // Handle form field changes
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -99,7 +94,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     }));
   };
   
-  // Handle select field changes
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -238,11 +232,15 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               <SelectValue placeholder="Select sub-category" />
             </SelectTrigger>
             <SelectContent>
-              {availableSubCategories.map((subCategory) => (
-                <SelectItem key={subCategory.id} value={subCategory.id}>
-                  {subCategory.name}
-                </SelectItem>
-              ))}
+              {availableSubCategories.length > 0 ? (
+                availableSubCategories.map((subCategory) => (
+                  <SelectItem key={subCategory.id} value={subCategory.id}>
+                    {subCategory.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-subcategories">No subcategories available</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>

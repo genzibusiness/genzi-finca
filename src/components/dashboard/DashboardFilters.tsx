@@ -54,14 +54,14 @@ const DashboardFilters = () => {
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         <div className="flex flex-wrap gap-3 flex-1">
           <Select
-            value={selectedYear || ''}
-            onValueChange={(value) => setSelectedYear(value !== '' ? value : null)}
+            value={selectedYear || 'all-years'}
+            onValueChange={(value) => setSelectedYear(value !== 'all-years' ? value : null)}
           >
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Year" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Years</SelectItem>
+              <SelectItem value="all-years">All Years</SelectItem>
               {uniqueYears.map((year) => (
                 <SelectItem key={year} value={year}>
                   {year}
@@ -71,14 +71,14 @@ const DashboardFilters = () => {
           </Select>
 
           <Select
-            value={selectedMonth || ''}
-            onValueChange={(value) => setSelectedMonth(value !== '' ? value : null)}
+            value={selectedMonth || 'all-months'}
+            onValueChange={(value) => setSelectedMonth(value !== 'all-months' ? value : null)}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Month" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Months</SelectItem>
+              <SelectItem value="all-months">All Months</SelectItem>
               {uniqueMonths.map((month) => (
                 <SelectItem key={month} value={month}>
                   {monthNames[parseInt(month) - 1]}
@@ -88,14 +88,14 @@ const DashboardFilters = () => {
           </Select>
 
           <Select
-            value={selectedCategory || ''}
-            onValueChange={(value) => setSelectedCategory(value !== '' ? value : null)}
+            value={selectedCategory || 'all-categories'}
+            onValueChange={(value) => setSelectedCategory(value !== 'all-categories' ? value : null)}
           >
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all-categories">All Categories</SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
                   {category.name}
@@ -105,14 +105,14 @@ const DashboardFilters = () => {
           </Select>
 
           <Select
-            value={selectedType || ''}
-            onValueChange={(value) => setSelectedType(value !== '' ? value as any : null)}
+            value={selectedType || 'all-types'}
+            onValueChange={(value) => setSelectedType(value !== 'all-types' ? value as any : null)}
           >
             <SelectTrigger className="w-[130px]">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="all-types">All Types</SelectItem>
               <SelectItem value="income">Income</SelectItem>
               <SelectItem value="expense">Expense</SelectItem>
             </SelectContent>
