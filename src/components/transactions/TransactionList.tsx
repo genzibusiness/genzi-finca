@@ -141,9 +141,14 @@ const TransactionList: React.FC<TransactionListProps> = ({
       Object.entries(filters).forEach(([key, value]) => {
         if (value && value.trim() !== '') {
           if (key === 'date') {
-            // For date column, use string pattern matching
-            query = query.ilike(key, `%${value}%`);
-            countQuery = countQuery.ilike(key, `%${value}%`);
+            // For date column, convert to ISO format for compatibility
+            try {
+              // First try to match date fragments
+              query = query.ilike(key, `%${value}%`);
+              countQuery = countQuery.ilike(key, `%${value}%`);
+            } catch (error) {
+              console.error("Date filter error:", error);
+            }
           } else if (key === 'amount') {
             // Try to parse as number for amount
             const numValue = parseFloat(value);
@@ -166,7 +171,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
               countQuery = countQuery.eq(key, value as TransactionStatus);
             }
           } else if (key === 'expense_type') {
-            // For expense_type, which is a nullable enum, use type-safe comparison
+            // For expense_type, handle as text search
             query = query.ilike(key, `%${value}%`);
             countQuery = countQuery.ilike(key, `%${value}%`);
           } else {
@@ -232,72 +237,77 @@ const TransactionList: React.FC<TransactionListProps> = ({
     const items = [];
     const maxVisiblePages = 5;
     
+    if (totalPages <= 1) {
+      return [];
+    }
+    
+    // Always show first page
+    items.push(
+      <PaginationItem key={1}>
+        <PaginationLink
+          isActive={currentPage === 1}
+          onClick={() => handlePageChange(1)}
+        >
+          1
+        </PaginationLink>
+      </PaginationItem>
+    );
+    
+    // Determine range of pages to show
+    let startPage = Math.max(2, currentPage - 1);
+    let endPage = Math.min(totalPages - 1, currentPage + 1);
+    
+    // Adjust range for edge cases
+    if (currentPage <= 3) {
+      endPage = Math.min(5, totalPages - 1);
+    } else if (currentPage >= totalPages - 2) {
+      startPage = Math.max(2, totalPages - 4);
+    }
+    
+    // Show ellipsis if needed before middle pages
+    if (startPage > 2) {
+      items.push(
+        <PaginationItem key="ellipsis-start">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    }
+    
+    // Add middle pages
+    for (let i = startPage; i <= endPage; i++) {
+      items.push(
+        <PaginationItem key={i}>
+          <PaginationLink
+            isActive={currentPage === i}
+            onClick={() => handlePageChange(i)}
+          >
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+    
+    // Show ellipsis if needed after middle pages
+    if (endPage < totalPages - 1) {
+      items.push(
+        <PaginationItem key="ellipsis-end">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    }
+    
+    // Always show last page if there's more than one page
     if (totalPages > 1) {
-      if (totalPages <= maxVisiblePages) {
-        for (let i = 2; i <= totalPages; i++) {
-          items.push(
-            <PaginationItem key={i}>
-              <PaginationLink
-                isActive={currentPage === i}
-                onClick={() => handlePageChange(i)}
-              >
-                {i}
-              </PaginationLink>
-            </PaginationItem>
-          );
-        }
-      } else {
-        let startPage = Math.max(2, currentPage - 1);
-        let endPage = Math.min(totalPages - 1, currentPage + 1);
-        
-        if (currentPage <= 2) {
-          endPage = 3;
-        } else if (currentPage >= totalPages - 1) {
-          startPage = totalPages - 2;
-        }
-        
-        if (startPage > 2) {
-          items.push(
-            <PaginationItem key="ellipsis-start">
-              <PaginationEllipsis />
-            </PaginationItem>
-          );
-        }
-        
-        for (let i = startPage; i <= endPage; i++) {
-          items.push(
-            <PaginationItem key={i}>
-              <PaginationLink
-                isActive={currentPage === i}
-                onClick={() => handlePageChange(i)}
-              >
-                {i}
-              </PaginationLink>
-            </PaginationItem>
-          );
-        }
-        
-        if (endPage < totalPages - 1) {
-          items.push(
-            <PaginationItem key="ellipsis-end">
-              <PaginationEllipsis />
-            </PaginationItem>
-          );
-        }
-        
-        if (totalPages > 1) {
-          items.push(
-            <PaginationItem key="last">
-              <PaginationLink
-                isActive={currentPage === totalPages}
-                onClick={() => handlePageChange(totalPages)}
-              >
-                {totalPages}
-              </PaginationLink>
-            </PaginationItem>
-          );
-        }
-      }
+      items.push(
+        <PaginationItem key={totalPages}>
+          <PaginationLink
+            isActive={currentPage === totalPages}
+            onClick={() => handlePageChange(totalPages)}
+          >
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
     }
     
     return items;
@@ -562,17 +572,18 @@ const TransactionList: React.FC<TransactionListProps> = ({
           </div>
           
           {totalPages > 1 && (
-            <div className="flex items-center justify-between py-4">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex flex-col md:flex-row items-center justify-between py-4 gap-4">
+              <div className="text-sm text-muted-foreground order-2 md:order-1">
                 Showing {Math.min((currentPage - 1) * pageSize + 1, totalCount)} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} entries
               </div>
               
-              <Pagination>
-                <PaginationContent>
+              <Pagination className="order-1 md:order-2">
+                <PaginationContent className="flex-wrap">
                   <PaginationItem>
                     <PaginationPrevious 
                       onClick={() => handlePageChange(currentPage - 1)}
                       className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                      aria-disabled={currentPage === 1}
                     />
                   </PaginationItem>
                   
@@ -582,6 +593,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     <PaginationNext 
                       onClick={() => handlePageChange(currentPage + 1)}
                       className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                      aria-disabled={currentPage === totalPages}
                     />
                   </PaginationItem>
                 </PaginationContent>

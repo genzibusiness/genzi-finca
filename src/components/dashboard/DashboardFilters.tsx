@@ -28,21 +28,18 @@ const DashboardFilters = () => {
   } = useCashflow();
 
   const [years, setYears] = useState<string[]>([]);
-  const [months, setMonths] = useState<string[]>([]);
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
 
-  // Extract unique years and months from transactions
+  // Generate all months regardless of data
+  const months = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+
+  // Extract unique years from transactions
   useEffect(() => {
     const uniqueYears = Array.from(
       new Set(transactions.map((t) => t.date.split('-')[0]))
     ).sort((a, b) => b.localeCompare(a)); // Sort descending
 
-    const uniqueMonths = Array.from(
-      new Set(transactions.map((t) => t.date.split('-')[1]))
-    ).sort();
-
     setYears(uniqueYears);
-    setMonths(uniqueMonths);
 
     // Fetch expense categories from the database
     fetchExpenseCategories();

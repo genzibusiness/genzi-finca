@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
 import TransactionList from '@/components/transactions/TransactionList';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { X } from 'lucide-react';
 import { TransactionType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,9 +25,11 @@ const Transactions = () => {
   const [selectedType, setSelectedType] = useState<TransactionType | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [years, setYears] = useState<string[]>([]);
-  const [months, setMonths] = useState<string[]>([]);
   
-  React.useEffect(() => {
+  // Generate all months regardless of data
+  const months = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+  
+  useEffect(() => {
     fetchFilterOptions();
   }, []);
   
@@ -46,7 +47,7 @@ const Transactions = () => {
         setCategories(uniqueCategories);
       }
       
-      // Fetch date ranges for year and month filters
+      // Fetch date ranges for year filter
       const { data: dateData } = await supabase
         .from('transactions')
         .select('date')
@@ -57,11 +58,6 @@ const Transactions = () => {
         const uniqueYears = Array.from(new Set(dateData.map(item => item.date.split('-')[0])))
           .sort((a, b) => b.localeCompare(a)); // Newest first
         setYears(uniqueYears);
-        
-        // Extract unique months (1-12)
-        const uniqueMonths = Array.from(new Set(dateData.map(item => item.date.split('-')[1])))
-          .sort();
-        setMonths(uniqueMonths);
       }
     } catch (error) {
       console.error('Error fetching filter options:', error);
