@@ -68,7 +68,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
         
         // Calculate end date based on month
         const nextMonth = parseInt(selectedMonth) === 12 ? 1 : parseInt(selectedMonth) + 1;
-        const nextYear = parseInt(selectedMonth) === 12 ? parseInt(year) + 1 : year;
+        const nextYear = parseInt(selectedMonth) === 12 ? parseInt(year.toString()) + 1 : year;
         const endDate = `${nextYear}-${nextMonth.toString().padStart(2, '0')}-01`;
         
         query = query.gte('date', startDate).lt('date', endDate);

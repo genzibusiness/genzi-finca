@@ -20,6 +20,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({ transaction }) =>
             <div>
               <CurrencyDisplay 
                 amount={transaction.amount} 
+                currency={transaction.currency}
                 type={transaction.type} 
                 className="text-xl"
               />
