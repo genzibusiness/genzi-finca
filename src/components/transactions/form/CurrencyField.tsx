@@ -35,7 +35,7 @@ const CurrencyField: React.FC<CurrencyFieldProps> = ({
       control={form.control}
       name="currency"
       render={({ field }) => (
-        <FormItem>
+        <FormItem className="w-full">
           <FormLabel>Currency</FormLabel>
           <Select 
             onValueChange={handleValueChange}
@@ -48,7 +48,7 @@ const CurrencyField: React.FC<CurrencyFieldProps> = ({
                 </SelectValue>
               </SelectTrigger>
             </FormControl>
-            <SelectContent>
+            <SelectContent position="popper" className="w-full bg-popover z-50">
               {currencies.map((currency) => (
                 <SelectItem key={currency.code} value={currency.code}>
                   {currency.code} - {currency.symbol}

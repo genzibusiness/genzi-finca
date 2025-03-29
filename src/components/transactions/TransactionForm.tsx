@@ -194,16 +194,25 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Transaction Type and Amount - Top row */}
         <FormSection className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <TransactionTypeField form={form} />
-          <AmountField form={form} />
+          <div className="w-full">
+            <TransactionTypeField form={form} />
+          </div>
+          <div className="w-full">
+            <AmountField form={form} />
+          </div>
         </FormSection>
         
-        {/* Fix the overlapping controls by adjusting the grid layout */}
-        <FormSection className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Date field - Full row */}
+        <FormSection>
           <div className="w-full">
             <DateField form={form} />
           </div>
+        </FormSection>
+        
+        {/* Currency and Status - Two columns */}
+        <FormSection className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="w-full">
             <CurrencyField 
               form={form} 
@@ -217,31 +226,44 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
           </div>
         </FormSection>
         
+        {/* Payment Type and Paid By User - Two columns */}
         <FormSection className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <PaymentTypeField form={form} paymentTypes={paymentTypes} />
-          <PaidByField form={form} users={users} />
+          <div className="w-full">
+            <PaymentTypeField form={form} paymentTypes={paymentTypes} />
+          </div>
+          <div className="w-full">
+            <PaidByField form={form} users={users} />
+          </div>
         </FormSection>
         
+        {/* Expense Type - Only shown for expense transactions */}
         {form.watch('type') === 'expense' && (
           <FormSection>
-            <ExpenseTypeField form={form} expenseTypes={expenseTypes} />
+            <div className="w-full">
+              <ExpenseTypeField form={form} expenseTypes={expenseTypes} />
+            </div>
           </FormSection>
         )}
 
+        {/* Document URL and Includes Tax */}
         <FormSection className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="w-full">
             <DocumentUrlField form={form} />
           </div>
-          <div className="flex items-center h-full pt-6">
+          <div className="flex items-center h-full pt-8">
             <IncludesTaxField form={form} />
           </div>
         </FormSection>
         
+        {/* Comment - Full width */}
         <FormSection>
-          <CommentField form={form} />
+          <div className="w-full">
+            <CommentField form={form} />
+          </div>
         </FormSection>
         
-        <div className="flex justify-end space-x-2">
+        {/* Action buttons */}
+        <div className="flex justify-end space-x-2 pt-4">
           <Button variant="outline" onClick={handleCancel} type="button">
             Cancel
           </Button>

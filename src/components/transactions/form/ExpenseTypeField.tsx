@@ -27,7 +27,7 @@ const ExpenseTypeField: React.FC<ExpenseTypeFieldProps> = ({ form, expenseTypes 
                 <SelectValue placeholder="Select expense type" />
               </SelectTrigger>
             </FormControl>
-            <SelectContent position="popper" className="w-full bg-popover z-50">
+            <SelectContent position="popper" className="w-full bg-popover z-50 max-h-[300px]">
               {expenseTypes.map((expenseType) => (
                 <SelectItem key={expenseType.id} value={expenseType.name}>
                   {expenseType.name}

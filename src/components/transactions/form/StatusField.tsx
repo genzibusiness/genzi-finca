@@ -21,7 +21,7 @@ const StatusField: React.FC<StatusFieldProps> = ({ form, statuses }) => {
       control={form.control}
       name="status"
       render={({ field }) => (
-        <FormItem>
+        <FormItem className="w-full">
           <FormLabel>Status</FormLabel>
           <Select onValueChange={field.onChange} value={field.value}>
             <FormControl>
@@ -31,7 +31,7 @@ const StatusField: React.FC<StatusFieldProps> = ({ form, statuses }) => {
                 </SelectValue>
               </SelectTrigger>
             </FormControl>
-            <SelectContent>
+            <SelectContent position="popper" className="w-full bg-popover z-50">
               {statuses.map((status) => (
                 <SelectItem key={status.id} value={status.name_normalized}>
                   {status.name}
