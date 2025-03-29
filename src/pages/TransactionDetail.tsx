@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Transaction } from '@/types/cashflow';
+import { Transaction, ExpenseType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -73,7 +74,7 @@ const TransactionDetail = () => {
           date: updatedTransaction.date,
           type: updatedTransaction.type,
           currency: updatedTransaction.currency,
-          expense_type: updatedTransaction.expense_type,
+          expense_type: updatedTransaction.expense_type as ExpenseType,
           comment: updatedTransaction.comment,
           status: updatedTransaction.status,
           document_url: updatedTransaction.document_url,

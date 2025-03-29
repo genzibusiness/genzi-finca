@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ExpenseType, TransactionType } from '@/types/cashflow';
@@ -96,6 +97,7 @@ export const useExpenseCategoriesData = (
       }
       
       if (selectedCategory) {
+        // Pass the string directly without type casting
         query = query.eq('expense_type', selectedCategory);
       }
       
