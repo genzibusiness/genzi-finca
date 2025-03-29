@@ -4,7 +4,7 @@ import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
 import TransactionList from '@/components/transactions/TransactionList';
 import { useNavigate } from 'react-router-dom';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, FileDown, FileText, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -16,6 +16,14 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { TransactionType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { exportToExcel, exportToCsv } from '@/utils/exportUtils';
+import { toast } from 'sonner';
 
 const Transactions = () => {
   const navigate = useNavigate();
@@ -25,6 +33,7 @@ const Transactions = () => {
   const [selectedType, setSelectedType] = useState<TransactionType | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [years, setYears] = useState<string[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   
   // Generate all months regardless of data
   const months = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
@@ -71,6 +80,80 @@ const Transactions = () => {
     setSelectedType(null);
   };
   
+  const handleExportData = async (type: 'excel' | 'csv') => {
+    try {
+      toast.loading(`Preparing ${type.toUpperCase()} export...`);
+      
+      // Build the query with all filters
+      let query = supabase.from('transactions').select('*');
+      
+      if (selectedYear) {
+        const startDate = `${selectedYear}-01-01`;
+        const endDate = `${selectedYear}-12-31`;
+        query = query.gte('date', startDate).lte('date', endDate);
+      }
+      
+      if (selectedMonth) {
+        const year = selectedYear || new Date().getFullYear();
+        const startDate = `${year}-${selectedMonth}-01`;
+        
+        const nextMonth = parseInt(selectedMonth) === 12 ? 1 : parseInt(selectedMonth) + 1;
+        const nextYear = parseInt(selectedMonth) === 12 ? parseInt(year.toString()) + 1 : year;
+        const endDate = `${nextYear}-${nextMonth.toString().padStart(2, '0')}-01`;
+        
+        query = query.gte('date', startDate).lt('date', endDate);
+      }
+      
+      if (selectedType) {
+        query = query.eq('type', selectedType);
+      }
+      
+      if (selectedCategory) {
+        query = query.eq('expense_type', selectedCategory);
+      }
+      
+      // Fetch data
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        toast.dismiss();
+        toast.error('No data available for export');
+        return;
+      }
+      
+      // Process data for export
+      const exportData = data.map(item => ({
+        Date: item.date,
+        Type: item.type,
+        Category: item.expense_type || '-',
+        Amount: item.amount,
+        Currency: item.currency,
+        Status: item.status,
+        Comment: item.comment || '-'
+      }));
+      
+      // Export based on type
+      if (type === 'excel') {
+        exportToExcel(exportData, `finca-transactions-${new Date().toISOString().slice(0, 10)}`);
+      } else {
+        exportToCsv(exportData, `finca-transactions-${new Date().toISOString().slice(0, 10)}`);
+      }
+      
+      toast.dismiss();
+      toast.success(`${type.toUpperCase()} file exported successfully`);
+    } catch (error) {
+      toast.dismiss();
+      console.error(`Error exporting ${type}:`, error);
+      toast.error(`Failed to export ${type}`);
+    }
+  };
+  
+  const handleEmailReport = () => {
+    navigate('/email-report');
+  };
+  
   const hasActiveFilters = selectedMonth || selectedYear || selectedCategory || selectedType;
   
   const monthNames = [
@@ -90,6 +173,32 @@ const Transactions = () => {
             onClick: () => navigate('/transactions/new')
           }}
         />
+        
+        <div className="flex justify-end mb-6 gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <FileDown className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleExportData('excel')}>
+                <FileText className="h-4 w-4 mr-2" />
+                Export to Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExportData('csv')}>
+                <FileText className="h-4 w-4 mr-2" />
+                Export to CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button variant="outline" onClick={handleEmailReport}>
+            <Send className="h-4 w-4 mr-2" />
+            Email Report
+          </Button>
+        </div>
         
         <Card className="mb-6">
           <CardContent className="pt-6">
