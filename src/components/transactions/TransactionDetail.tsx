@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useCashflow } from '@/context/CashflowContext';
 import { Transaction } from '@/types/cashflow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
@@ -12,10 +11,6 @@ interface TransactionDetailProps {
 }
 
 const TransactionDetail: React.FC<TransactionDetailProps> = ({ transaction }) => {
-  const { getUserById } = useCashflow();
-  
-  const user = getUserById(transaction.user_id);
-  
   return (
     <div>
       <Card>
@@ -79,11 +74,6 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({ transaction }) =>
                 <p className="mt-1">{transaction.comment}</p>
               </div>
             )}
-            
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Created By</h3>
-              <p className="mt-1">{user?.name || 'Unknown'}</p>
-            </div>
             
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Created At</h3>
