@@ -35,6 +35,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, default
         onChange={(e) => setMessage(e.target.value)}
         className="flex-1 min-h-[80px] resize-none"
         disabled={isLoading}
+        spellCheck={true}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();

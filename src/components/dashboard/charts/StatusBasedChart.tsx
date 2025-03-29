@@ -1,48 +1,67 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useStatusBasedData } from '@/hooks/useStatusBasedData';
 import CurrencyDisplay from '@/components/CurrencyDisplay';
-import { getSubtitleText } from '@/utils/dashboardUtils';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface StatusBasedChartProps {
-  selectedMonth: string | null;
-  selectedYear: string | null;
-  selectedCategory: string | null;
-  selectedType: string | null;
-}
+// Define custom colors for different statuses
+const STATUS_COLORS = {
+  income: {
+    Paid: '#4ade80', // green-400
+    Pending: '#facc15', // yellow-400
+    Cancelled: '#f87171', // red-400
+    Planned: '#60a5fa', // blue-400
+  },
+  expense: {
+    Paid: '#f87171', // red-400
+    Pending: '#facc15', // yellow-400
+    Cancelled: '#4ade80', // green-400
+    Planned: '#60a5fa', // blue-400
+  }
+};
 
-const StatusBasedChart = ({ 
-  selectedMonth, 
-  selectedYear,
-  selectedCategory,
-  selectedType
-}: StatusBasedChartProps) => {
-  const { statusData, loading, defaultCurrency, defaultSymbol } = useStatusBasedData(
-    selectedMonth,
-    selectedYear,
-    selectedCategory,
-    selectedType
-  );
+// Custom tooltip content
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white p-2 rounded shadow-md border">
+        <p className="font-medium">{data.status}</p>
+        <p className="text-sm">
+          <CurrencyDisplay amount={data.value} currency={data.currency} />
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
-  const subtitle = getSubtitleText(selectedYear, selectedMonth, selectedCategory, selectedType);
-
-  if (loading) {
+const StatusBasedChart = () => {
+  const { statusData, isLoading, error } = useStatusBasedData();
+  
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>
-            <Skeleton className="h-6 w-1/2" />
-          </CardTitle>
-          <CardDescription>
-            <Skeleton className="h-4 w-1/3" />
-          </CardDescription>
+          <CardTitle>Status Breakdown</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[300px] w-full" />
+        <CardContent className="h-[300px] flex items-center justify-center">
+          <Skeleton className="h-[250px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Status Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[300px] flex items-center justify-center">
+          <p className="text-destructive">Failed to load data</p>
         </CardContent>
       </Card>
     );
@@ -51,50 +70,72 @@ const StatusBasedChart = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Income & Expenses by Status</CardTitle>
-        <CardDescription>{subtitle}</CardDescription>
+        <CardTitle>Status Breakdown</CardTitle>
       </CardHeader>
-      <CardContent>
-        {statusData.length === 0 ? (
-          <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-            No data available for the selected period
-          </div>
-        ) : (
-          <ChartContainer 
-            config={{ 
-              income: { color: '#10b981' }, 
-              expense: { color: '#ef4444' } 
-            }}
-          >
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart 
-                data={statusData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+      <CardContent className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            {statusData.income.length > 0 && (
+              <Pie
+                data={statusData.income}
+                cx="30%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={2}
+                dataKey="value"
+                nameKey="status"
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip 
-                  content={(props) => (
-                    <ChartTooltipContent 
-                      {...props} 
-                      formatter={(value, name) => (
-                        <CurrencyDisplay 
-                          amount={value as number} 
-                          currency={defaultCurrency}
-                          symbol={defaultSymbol}
-                        />
-                      )}
-                    />
-                  )}
-                />
-                <Legend />
-                <Bar dataKey="income" name="Income" fill="#10b981" />
-                <Bar dataKey="expense" name="Expense" fill="#ef4444" />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        )}
+                {statusData.income.map((entry, index) => (
+                  <Cell 
+                    key={`income-cell-${index}`} 
+                    fill={STATUS_COLORS.income[entry.status] || '#CBD5E1'} 
+                  />
+                ))}
+              </Pie>
+            )}
+            
+            {statusData.expense.length > 0 && (
+              <Pie
+                data={statusData.expense}
+                cx="70%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={2}
+                dataKey="value"
+                nameKey="status"
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+              >
+                {statusData.expense.map((entry, index) => (
+                  <Cell 
+                    key={`expense-cell-${index}`} 
+                    fill={STATUS_COLORS.expense[entry.status] || '#CBD5E1'} 
+                  />
+                ))}
+              </Pie>
+            )}
+            
+            <Tooltip content={<CustomTooltip />} />
+            <Legend 
+              layout="horizontal" 
+              verticalAlign="bottom" 
+              align="center"
+              formatter={(value) => (
+                <span className="text-sm">{value}</span>
+              )}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="flex justify-around text-sm text-center mt-4">
+          <div>
+            <p className="font-medium">Income by Status</p>
+          </div>
+          <div>
+            <p className="font-medium">Expense by Status</p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

@@ -16,21 +16,21 @@ const FincaChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [audioQueue, setAudioQueue] = useState<HTMLAudioElement[]>([]);
   
   useEffect(() => {
     // Initialize speech recognition if supported
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognitionInstance = new SpeechRecognition();
+    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognitionAPI();
       
-      recognitionInstance.continuous = true;
-      recognitionInstance.interimResults = true;
-      recognitionInstance.lang = 'en-US';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
       
-      recognitionInstance.onresult = (event) => {
+      recognition.onresult = (event) => {
         const currentTranscript = Array.from(event.results)
           .map(result => result[0])
           .map(result => result.transcript)
@@ -39,19 +39,19 @@ const FincaChat = () => {
         setTranscript(currentTranscript);
       };
       
-      recognitionInstance.onerror = (event) => {
+      recognition.onerror = (event) => {
         console.error('Speech recognition error', event.error);
         setIsListening(false);
         toast.error(`Microphone error: ${event.error}`);
       };
       
-      setRecognition(recognitionInstance);
+      setRecognitionInstance(recognition);
     }
     
     // Clean up
     return () => {
-      if (recognition) {
-        recognition.stop();
+      if (recognitionInstance) {
+        recognitionInstance.stop();
       }
     };
   }, []);
@@ -82,19 +82,19 @@ const FincaChat = () => {
   }, [audioQueue, isPlayingAudio]);
   
   const toggleListening = () => {
-    if (!recognition) {
+    if (!recognitionInstance) {
       toast.error('Speech recognition is not supported in your browser');
       return;
     }
     
     if (isListening) {
-      recognition.stop();
+      recognitionInstance.stop();
       if (transcript.trim()) {
         sendMessage(transcript);
       }
       setTranscript('');
     } else {
-      recognition.start();
+      recognitionInstance.start();
     }
     
     setIsListening(prevState => !prevState);
@@ -117,7 +117,7 @@ const FincaChat = () => {
       }
     } catch (error) {
       console.error('Error in text-to-speech:', error);
-      toast.error('Failed to generate speech');
+      toast.error('Failed to generate speech. Please make sure OPENAI_API_KEY is set in Supabase Edge Function secrets.');
     }
   };
   
