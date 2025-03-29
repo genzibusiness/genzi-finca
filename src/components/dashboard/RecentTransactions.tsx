@@ -15,7 +15,7 @@ import TypeBadge from '@/components/TypeBadge';
 import { useNavigate } from 'react-router-dom';
 
 const RecentTransactions = () => {
-  const { transactions, getCategoryById } = useCashflow();
+  const { transactions, getUserById } = useCashflow();
   const navigate = useNavigate();
   
   // Get the 5 most recent transactions
@@ -34,10 +34,9 @@ const RecentTransactions = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Details</TableHead>
               <TableHead>Type</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">Amount</TableHead>
             </TableRow>
           </TableHeader>
@@ -54,15 +53,12 @@ const RecentTransactions = () => {
                     day: 'numeric'
                   })}
                 </TableCell>
-                <TableCell className="font-medium">{transaction.description}</TableCell>
+                <TableCell className="font-medium">{transaction.comment || 'Transaction'}</TableCell>
                 <TableCell>
-                  {getCategoryById(transaction.categoryId)?.name || 'Unknown'}
+                  <TypeBadge type={transaction.type} />
                 </TableCell>
                 <TableCell>
                   <StatusBadge status={transaction.status} />
-                </TableCell>
-                <TableCell>
-                  <TypeBadge type={transaction.type} />
                 </TableCell>
                 <TableCell className="text-right">
                   <CurrencyDisplay amount={transaction.amount} type={transaction.type} />

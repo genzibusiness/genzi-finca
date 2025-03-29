@@ -10,14 +10,14 @@ interface StatusBadgeProps {
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const getStatusProps = (status: TransactionStatus) => {
     switch (status) {
-      case 'done':
-        return { className: 'bg-green-100 text-green-800 hover:bg-green-100', label: 'Completed' };
-      case 'pending':
-        return { className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100', label: 'Pending' };
-      case 'cancelled':
-        return { className: 'bg-red-100 text-red-800 hover:bg-red-100', label: 'Cancelled' };
-      case 'recurring':
-        return { className: 'bg-blue-100 text-blue-800 hover:bg-blue-100', label: 'Recurring' };
+      case 'paid':
+        return { className: 'bg-green-100 text-green-800 hover:bg-green-100', label: 'Paid' };
+      case 'received':
+        return { className: 'bg-green-100 text-green-800 hover:bg-green-100', label: 'Received' };
+      case 'yet_to_be_paid':
+        return { className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100', label: 'Yet to be paid' };
+      case 'yet_to_be_received':
+        return { className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100', label: 'Yet to be received' };
       default:
         return { className: 'bg-gray-100 text-gray-800 hover:bg-gray-100', label: status };
     }

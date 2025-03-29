@@ -3,11 +3,11 @@ import { Category, SubCategory, Transaction, User, TransactionStatus } from "@/t
 
 // Mock users
 export const mockUsers: User[] = [
-  { id: 'user1', name: 'Alex Johnson' },
-  { id: 'user2', name: 'Sam Taylor' },
-  { id: 'user3', name: 'Jordan Lee' },
-  { id: 'user4', name: 'Morgan Smith' },
-  { id: 'user5', name: 'Casey Brown' },
+  { id: 'user1', name: 'Alex Johnson', email: 'alex@example.com' },
+  { id: 'user2', name: 'Sam Taylor', email: 'sam@example.com' },
+  { id: 'user3', name: 'Jordan Lee', email: 'jordan@example.com' },
+  { id: 'user4', name: 'Morgan Smith', email: 'morgan@example.com' },
+  { id: 'user5', name: 'Casey Brown', email: 'casey@example.com' },
 ];
 
 // Categories
@@ -88,97 +88,34 @@ export const generateMockTransactions = (count: number): Transaction[] => {
   for (let i = 0; i < count; i++) {
     const isExpense = Math.random() > 0.3; // 70% chance of being an expense
     
-    // Select appropriate categories based on transaction type
-    let categoryId: string;
-    let subCategoryId: string;
-    
-    if (isExpense) {
-      // For expenses, use categories 3-9
-      const expenseCatIds = mockCategories
-        .filter(cat => ['cat3', 'cat4', 'cat5', 'cat6', 'cat7', 'cat8', 'cat9'].includes(cat.id))
-        .map(cat => cat.id);
-      categoryId = expenseCatIds[Math.floor(Math.random() * expenseCatIds.length)];
-    } else {
-      // For income, use categories 1-2
-      const incomeCatIds = mockCategories
-        .filter(cat => ['cat1', 'cat2'].includes(cat.id))
-        .map(cat => cat.id);
-      categoryId = incomeCatIds[Math.floor(Math.random() * incomeCatIds.length)];
-    }
-    
-    // Get valid subcategories for the selected category
-    const validSubCategories = mockSubCategories.filter(subCat => subCat.categoryId === categoryId);
-    subCategoryId = validSubCategories[Math.floor(Math.random() * validSubCategories.length)].id;
-    
-    // Generate random amount (larger for income, smaller for expenses)
+    // Random amount (larger for income, smaller for expenses)
     const amount = isExpense 
       ? Math.floor(Math.random() * 5000) + 50 // Expenses: $50 to $5,050
       : Math.floor(Math.random() * 15000) + 5000; // Income: $5,000 to $20,000
     
-    // Random descriptions based on subcategory
-    const subCategoryName = mockSubCategories.find(sc => sc.id === subCategoryId)?.name;
-    const descriptions = {
-      'Regular Salary': ['Monthly Salary', 'Salary Payment', 'Regular Compensation'],
-      'Bonus': ['Quarterly Bonus', 'Performance Bonus', 'Year-end Bonus'],
-      'Interest': ['Interest Income', 'Savings Interest', 'Investment Interest'],
-      'Returns': ['Dividend Payment', 'Investment Return', 'Capital Gain'],
-      'Stationery': ['Office Supplies', 'Paper, Pens, etc.', 'Notebooks and Planners'],
-      'Furniture': ['Office Chairs', 'Desks Purchase', 'Filing Cabinets'],
-      'Equipment': ['Computer Hardware', 'Office Equipment', 'Tech Gadgets'],
-      'SaaS Subscriptions': ['Slack Subscription', 'Zoom Annual Plan', 'Adobe Creative Cloud'],
-      'Development Tools': ['Development Software', 'GitHub Pro', 'Code Editors'],
-      'Hosting': ['AWS Monthly', 'Google Cloud Services', 'Server Costs'],
-      'Digital Ads': ['Google Ads Campaign', 'Social Media Advertising', 'LinkedIn Ads'],
-      'Content Creation': ['Blog Writing', 'Video Production', 'Graphic Design'],
-      'Events': ['Conference Sponsorship', 'Networking Event', 'Industry Meetup'],
-      'Airfare': ['Flight Tickets', 'Business Trip Airfare', 'Team Travel'],
-      'Accommodation': ['Hotel Stay', 'Airbnb for Business Trip', 'Lodging Expenses'],
-      'Local Transport': ['Taxi Services', 'Uber/Lyft', 'Car Rental'],
-      'Meals': ['Business Lunch', 'Team Dinner', 'Client Meeting Refreshments'],
-      'Electricity': ['Monthly Electricity Bill', 'Power Utilities', 'Energy Costs'],
-      'Internet': ['Broadband Subscription', 'Internet Service', 'WiFi Costs'],
-      'Phone': ['Office Phone Lines', 'Mobile Plan', 'Telecom Services'],
-      'Office Space': ['Monthly Office Rent', 'Workspace Lease', 'Office Rental'],
-      'Meeting Rooms': ['Conference Room Booking', 'Event Space Rental', 'Co-working Day Pass'],
-      'Team Building': ['Team Lunch', 'Company Retreat', 'Office Celebration'],
-      'Professional Services': ['Legal Consultation', 'Accounting Services', 'HR Support'],
-      'Other': ['Miscellaneous Expense', 'Unplanned Purchase', 'Petty Cash Spending']
-    };
-    
-    // Default description if subcategory description isn't defined
-    const defaultDescriptions = ['Business Expense', 'Company Purchase', 'Operational Cost'];
-    const descriptionOptions = descriptions[subCategoryName as keyof typeof descriptions] || defaultDescriptions;
-    const description = descriptionOptions[Math.floor(Math.random() * descriptionOptions.length)];
-    
     // Random status with weighted probabilities
-    const statuses: TransactionStatus[] = ['pending', 'done', 'cancelled', 'recurring'];
-    const statusWeights = [0.1, 0.7, 0.05, 0.15]; // 10% pending, 70% done, 5% cancelled, 15% recurring
-    
-    let statusIndex = 0;
-    const randomValue = Math.random();
-    let cumulativeWeight = 0;
-    
-    for (let i = 0; i < statusWeights.length; i++) {
-      cumulativeWeight += statusWeights[i];
-      if (randomValue <= cumulativeWeight) {
-        statusIndex = i;
-        break;
-      }
-    }
+    const statuses: TransactionStatus[] = ['yet_to_be_paid', 'paid', 'yet_to_be_received', 'received'];
+    const statusIndex = Math.floor(Math.random() * statuses.length);
     
     // Random user who created the transaction
-    const createdBy = mockUsers[Math.floor(Math.random() * mockUsers.length)].id;
+    const userId = mockUsers[Math.floor(Math.random() * mockUsers.length)].id;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
     transactions.push({
       id: `trans${i + 1}`,
       amount,
-      description,
       date: getRandomDate(),
       type: isExpense ? 'expense' : 'income',
-      categoryId,
-      subCategoryId,
-      status: statuses[statusIndex],
-      createdBy
+      currency: 'USD', // Default currency
+      expense_type: isExpense ? 'Salary' : null,
+      comment: `Sample transaction ${i + 1}`,
+      user_id: userId,
+      status: isExpense ? (Math.random() > 0.5 ? 'paid' : 'yet_to_be_paid') : 
+                          (Math.random() > 0.5 ? 'received' : 'yet_to_be_received'),
+      created_at: today.toISOString(),
+      updated_at: today.toISOString()
     });
   }
   

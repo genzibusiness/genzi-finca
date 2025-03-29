@@ -30,10 +30,7 @@ interface CashflowContextType {
   updateTransaction: (transaction: Transaction) => void;
   deleteTransaction: (id: string) => void;
   getTransactionById: (id: string) => Transaction | undefined;
-  getCategoryById: (id: string) => Category | undefined;
-  getSubCategoryById: (id: string) => SubCategory | undefined;
   getUserById: (id: string) => User | undefined;
-  getSubCategoriesForCategory: (categoryId: string) => SubCategory[];
   filterTransactions: () => void;
   calculateSummary: () => void;
 }
@@ -128,7 +125,7 @@ export const CashflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     if (selectedCategory) {
       filtered = filtered.filter(transaction => 
-        transaction.categoryId === selectedCategory
+        transaction.expense_type === selectedCategory
       );
     }
     
@@ -153,48 +150,39 @@ export const CashflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    // Summarize by category
-    const categoryMap = new Map<string, {amount: number, type: TransactionType}>();
+    // Summarize by expense type
+    const byCategory = [];
     
-    transactionsToAnalyze.forEach(transaction => {
-      const existing = categoryMap.get(transaction.categoryId);
-      
-      if (existing) {
-        if (transaction.type === existing.type) {
-          existing.amount += transaction.amount;
-        } else {
-          // If we have mixed types in the same category, we shouldn't combine them
-          const key = `${transaction.categoryId}_${transaction.type}`;
-          const existingMixed = categoryMap.get(key);
-          
-          if (existingMixed) {
-            existingMixed.amount += transaction.amount;
-          } else {
-            categoryMap.set(key, {
-              amount: transaction.amount,
-              type: transaction.type
-            });
-          }
-        }
-      } else {
-        categoryMap.set(transaction.categoryId, {
-          amount: transaction.amount,
-          type: transaction.type
-        });
-      }
-    });
+    // Group income transactions
+    const totalIncomeByType = {
+      categoryId: 'income',
+      categoryName: 'Income',
+      amount: totalIncome,
+      type: 'income' as TransactionType
+    };
     
-    const byCategory = Array.from(categoryMap.entries()).map(([key, value]) => {
-      const isCompositeKey = key.includes('_');
-      const categoryId = isCompositeKey ? key.split('_')[0] : key;
-      const category = categories.find(c => c.id === categoryId);
-      
-      return {
-        categoryId,
-        categoryName: category ? category.name : 'Unknown',
-        amount: value.amount,
-        type: value.type
-      };
+    if (totalIncome > 0) {
+      byCategory.push(totalIncomeByType);
+    }
+    
+    // Group expense transactions by expense_type
+    const expenseTypeMap = new Map<string, number>();
+    
+    transactionsToAnalyze
+      .filter(t => t.type === 'expense' && t.expense_type)
+      .forEach(transaction => {
+        const expenseType = transaction.expense_type || 'Other';
+        const currentAmount = expenseTypeMap.get(expenseType) || 0;
+        expenseTypeMap.set(expenseType, currentAmount + transaction.amount);
+      });
+    
+    expenseTypeMap.forEach((amount, expenseType) => {
+      byCategory.push({
+        categoryId: expenseType,
+        categoryName: expenseType,
+        amount,
+        type: 'expense' as TransactionType
+      });
     });
 
     // Summarize by month
@@ -235,6 +223,8 @@ export const CashflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const newTransaction: Transaction = {
       ...transaction,
       id: `trans${Date.now()}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     
     setTransactions(prev => [newTransaction, ...prev]);
@@ -243,7 +233,10 @@ export const CashflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const updateTransaction = (transaction: Transaction) => {
     setTransactions(prev => 
-      prev.map(t => t.id === transaction.id ? transaction : t)
+      prev.map(t => t.id === transaction.id ? {
+        ...transaction,
+        updated_at: new Date().toISOString()
+      } : t)
     );
     toast.success('Transaction updated successfully');
   };
@@ -257,17 +250,8 @@ export const CashflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const getTransactionById = (id: string) => 
     transactions.find(t => t.id === id);
 
-  const getCategoryById = (id: string) => 
-    categories.find(c => c.id === id);
-
-  const getSubCategoryById = (id: string) => 
-    subCategories.find(sc => sc.id === id);
-
   const getUserById = (id: string) => 
     users.find(u => u.id === id);
-
-  const getSubCategoriesForCategory = (categoryId: string) => 
-    subCategories.filter(sc => sc.categoryId === categoryId);
 
   const contextValue: CashflowContextType = {
     transactions,
@@ -288,10 +272,7 @@ export const CashflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     updateTransaction,
     deleteTransaction,
     getTransactionById,
-    getCategoryById,
-    getSubCategoryById,
     getUserById,
-    getSubCategoriesForCategory,
     filterTransactions,
     calculateSummary
   };

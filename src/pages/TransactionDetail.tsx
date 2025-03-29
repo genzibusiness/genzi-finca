@@ -75,7 +75,6 @@ const TransactionDetailPage = () => {
         {isEditing ? (
           <TransactionForm 
             initialData={transaction}
-            onSubmit={handleUpdate}
             onCancel={() => setIsEditing(false)}
           />
         ) : (

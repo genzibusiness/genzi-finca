@@ -12,18 +12,16 @@ interface TransactionDetailProps {
 }
 
 const TransactionDetail: React.FC<TransactionDetailProps> = ({ transaction }) => {
-  const { getCategoryById, getSubCategoryById, getUserById } = useCashflow();
+  const { getUserById } = useCashflow();
   
-  const category = getCategoryById(transaction.categoryId);
-  const subCategory = getSubCategoryById(transaction.subCategoryId);
-  const user = getUserById(transaction.createdBy);
+  const user = getUserById(transaction.user_id);
   
   return (
     <div>
       <Card>
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
-            <div>{transaction.description}</div>
+            <div>{transaction.comment || 'Transaction'}</div>
             <div>
               <CurrencyDisplay 
                 amount={transaction.amount} 
@@ -60,22 +58,42 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({ transaction }) =>
                 })}
               </p>
             </div>
+            
+            {transaction.expense_type && (
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Expense Type</h3>
+                <p className="mt-1">{transaction.expense_type}</p>
+              </div>
+            )}
           </div>
           
           <div className="space-y-3">
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Category</h3>
-              <p className="mt-1">{category?.name || 'Unknown'}</p>
+              <h3 className="text-sm font-medium text-muted-foreground">Currency</h3>
+              <p className="mt-1">{transaction.currency}</p>
             </div>
             
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Sub-Category</h3>
-              <p className="mt-1">{subCategory?.name || 'Unknown'}</p>
-            </div>
+            {transaction.comment && (
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Comment</h3>
+                <p className="mt-1">{transaction.comment}</p>
+              </div>
+            )}
             
             <div>
               <h3 className="text-sm font-medium text-muted-foreground">Created By</h3>
               <p className="mt-1">{user?.name || 'Unknown'}</p>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground">Created At</h3>
+              <p className="mt-1">
+                {new Date(transaction.created_at).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
             </div>
           </div>
         </CardContent>

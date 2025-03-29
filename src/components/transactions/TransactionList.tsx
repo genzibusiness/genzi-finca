@@ -23,8 +23,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
 }) => {
   const { 
     filteredTransactions, 
-    getCategoryById, 
-    getSubCategoryById,
     getUserById,
   } = useCashflow();
   const navigate = useNavigate();
@@ -40,9 +38,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              {showCategory && <TableHead>Category</TableHead>}
-              {showSubCategory && <TableHead>Sub-Category</TableHead>}
+              <TableHead>Details</TableHead>
+              {showCategory && <TableHead>Type</TableHead>}
               <TableHead>Status</TableHead>
               {!filterType && <TableHead>Type</TableHead>}
               {showCreatedBy && <TableHead>Created By</TableHead>}
@@ -63,15 +60,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     day: 'numeric'
                   })}
                 </TableCell>
-                <TableCell className="font-medium">{transaction.description}</TableCell>
+                <TableCell className="font-medium">{transaction.comment || 'Transaction'}</TableCell>
                 {showCategory && (
                   <TableCell>
-                    {getCategoryById(transaction.categoryId)?.name || 'Unknown'}
-                  </TableCell>
-                )}
-                {showSubCategory && (
-                  <TableCell>
-                    {getSubCategoryById(transaction.subCategoryId)?.name || 'Unknown'}
+                    {transaction.expense_type || 'N/A'}
                   </TableCell>
                 )}
                 <TableCell>
@@ -84,7 +76,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 )}
                 {showCreatedBy && (
                   <TableCell>
-                    {getUserById(transaction.createdBy)?.name || 'Unknown'}
+                    {getUserById(transaction.user_id)?.name || 'Unknown'}
                   </TableCell>
                 )}
                 <TableCell className="text-right">

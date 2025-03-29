@@ -12,7 +12,7 @@ const Team = () => {
   
   // Calculate statistics for each user
   const userStats = users.map(user => {
-    const userTransactions = transactions.filter(t => t.createdBy === user.id);
+    const userTransactions = transactions.filter(t => t.user_id === user.id);
     const totalTransactions = userTransactions.length;
     
     const incomeTransactions = userTransactions.filter(t => t.type === 'income');
