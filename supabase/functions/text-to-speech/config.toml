@@ -1,0 +1,3 @@
+
+# Whether the function should be invokable from the browser.
+no_api_key = true

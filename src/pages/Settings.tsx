@@ -1,4 +1,3 @@
-
 import React from 'react';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -47,12 +46,10 @@ const Settings = () => {
         try {
           const data = JSON.parse(event.target?.result as string);
           
-          // Validate the imported data structure
           if (!data.transactions || !data.categories || !data.subCategories || !data.users) {
             throw new Error('Invalid data format');
           }
           
-          // Save to localStorage
           localStorage.setItem('cashflow-data', JSON.stringify({
             transactions: data.transactions,
             categories: data.categories,
@@ -88,6 +85,55 @@ const Settings = () => {
         />
         
         <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>About Finca</CardTitle>
+              <CardDescription>
+                Information about the Finca application
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="font-medium">Version</h3>
+                <p className="text-sm text-muted-foreground">1.0.0</p>
+              </div>
+              
+              <div>
+                <h3 className="font-medium">Created By</h3>
+                <p className="text-sm text-muted-foreground">Genzi Finca for Small Startups</p>
+              </div>
+              
+              <div>
+                <h3 className="font-medium">About Finca</h3>
+                <p className="text-sm text-muted-foreground">
+                  Finca is a comprehensive financial management application designed specifically for small and medium businesses. 
+                  It enables businesses to efficiently track income and expenses, monitor cashflow, generate financial reports, 
+                  and gain valuable insights into their financial health. With Finca, businesses can make data-driven decisions, 
+                  identify spending patterns, forecast future financial needs, and maintain better control over their finances.
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="font-medium">Key Features</h3>
+                <ul className="text-sm text-muted-foreground list-disc ml-5 mt-2">
+                  <li>Comprehensive income and expense tracking</li>
+                  <li>Real-time cashflow monitoring</li>
+                  <li>Financial reporting and data export</li>
+                  <li>AI-powered financial analysis and predictions</li>
+                  <li>Multi-currency support</li>
+                  <li>Expense categorization</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-medium">Data Storage</h3>
+                <p className="text-sm text-muted-foreground">
+                  All data is currently stored in tables thru Supabase connectivity.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          
           <Card>
             <CardHeader>
               <CardTitle>Data Management</CardTitle>
@@ -135,61 +181,6 @@ const Settings = () => {
                 </Button>
               </div>
             </CardFooter>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>About</CardTitle>
-              <CardDescription>
-                Information about the cashflow application
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="font-medium">Version</h3>
-                <p className="text-sm text-muted-foreground">1.0.0</p>
-              </div>
-              
-              <div>
-                <h3 className="font-medium">Created By</h3>
-                <p className="text-sm text-muted-foreground">Genzi Finca for Small Startups</p>
-              </div>
-              
-              <div>
-                <h3 className="font-medium">About Finca</h3>
-                <p className="text-sm text-muted-foreground">
-                  Finca is a comprehensive financial management application designed specifically for small and medium businesses. 
-                  It enables businesses to efficiently track income and expenses, monitor cashflow, generate financial reports, 
-                  and gain valuable insights into their financial health. With Finca, businesses can make data-driven decisions, 
-                  identify spending patterns, forecast future financial needs, and maintain better control over their finances.
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="font-medium">Key Features</h3>
-                <ul className="text-sm text-muted-foreground list-disc ml-5 mt-2">
-                  <li>Comprehensive income and expense tracking</li>
-                  <li>Real-time cashflow monitoring</li>
-                  <li>Financial reporting and data export</li>
-                  <li>AI-powered financial analysis and predictions</li>
-                  <li>Multi-currency support</li>
-                  <li>Expense categorization</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h3 className="font-medium">Data Storage</h3>
-                <p className="text-sm text-muted-foreground">
-                  All data is currently stored in tables thru Supabase connectivity.
-                </p>
-              </div>
-              
-              <div className="pt-2">
-                <p className="text-sm">
-                  Powered by <a href="https://genzi.ai" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">genzi.ai</a>
-                </p>
-              </div>
-            </CardContent>
           </Card>
         </div>
       </div>

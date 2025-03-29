@@ -1,5 +1,5 @@
 
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send } from 'lucide-react';
@@ -7,10 +7,17 @@ import { Send } from 'lucide-react';
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  defaultValue?: string;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, defaultValue = '' }) => {
   const [message, setMessage] = useState('');
+  
+  useEffect(() => {
+    if (defaultValue) {
+      setMessage(defaultValue);
+    }
+  }, [defaultValue]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();

@@ -97,7 +97,7 @@ const AppSidebar = () => {
               <Link to="/chat">
                 <MessageCircle className="h-5 w-5" />
                 <span>Finca Chat</span>
-                <Badge variant="outline" className="ml-auto">New</Badge>
+                <Badge variant="outline" className="ml-auto bg-primary text-white border-primary">New</Badge>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
