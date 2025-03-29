@@ -5,7 +5,9 @@ export type TransactionType = "income" | "expense";
 
 export type CurrencyType = "SGD" | "INR" | "USD" | "EUR" | "GBP";
 
-// Update ExpenseType to be any string instead of a specific union of values
+// Define both types for compatibility - the specific enum values for Supabase
+export type ExpenseTypeEnum = "Salary" | "Marketing" | "Services" | "Software" | "Other";
+// And the string type for our UI which can handle any string
 export type ExpenseType = string;
 
 export interface Category {

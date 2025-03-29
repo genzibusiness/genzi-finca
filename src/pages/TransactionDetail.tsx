@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Transaction } from '@/types/cashflow';
+import { Transaction, ExpenseTypeEnum } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -65,7 +66,11 @@ const TransactionDetail = () => {
       // Ensure we have a transaction to update
       if (!transaction || !id) return;
       
-      // Since ExpenseType is now just string, we don't need to cast it
+      // Cast expense_type to ExpenseTypeEnum for database compatibility
+      const processedTransaction = {
+        ...updatedTransaction,
+        expense_type: updatedTransaction.expense_type as unknown as ExpenseTypeEnum
+      };
       
       // Optimistically update the transaction in the UI
       setTransaction({ ...transaction, ...updatedTransaction });
@@ -74,15 +79,15 @@ const TransactionDetail = () => {
       const { error } = await supabase
         .from('transactions')
         .update({
-          amount: updatedTransaction.amount,
-          date: updatedTransaction.date,
-          type: updatedTransaction.type,
-          currency: updatedTransaction.currency,
-          expense_type: updatedTransaction.expense_type,
-          comment: updatedTransaction.comment,
-          status: updatedTransaction.status,
-          document_url: updatedTransaction.document_url,
-          includes_tax: updatedTransaction.includes_tax
+          amount: processedTransaction.amount,
+          date: processedTransaction.date,
+          type: processedTransaction.type,
+          currency: processedTransaction.currency,
+          expense_type: processedTransaction.expense_type,
+          comment: processedTransaction.comment,
+          status: processedTransaction.status,
+          document_url: processedTransaction.document_url,
+          includes_tax: processedTransaction.includes_tax
         })
         .eq('id', id);
         

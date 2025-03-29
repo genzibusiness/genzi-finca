@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ExpenseType, TransactionType } from '@/types/cashflow';
+import { ExpenseType, ExpenseTypeEnum, TransactionType } from '@/types/cashflow';
 
 interface SummaryData {
   totalIncome: number;
@@ -100,8 +99,8 @@ export const useSummaryData = (
       }
       
       if (selectedCategory) {
-        // We can directly use the string value now
-        query = query.eq('expense_type', selectedCategory);
+        // Cast the string to ExpenseTypeEnum for Supabase
+        query = query.eq('expense_type', selectedCategory as unknown as ExpenseTypeEnum);
       }
       
       const { data, error } = await query;
