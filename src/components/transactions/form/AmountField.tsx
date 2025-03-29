@@ -22,6 +22,11 @@ const AmountField: React.FC<AmountFieldProps> = ({ form }) => {
               step="0.01"
               placeholder="0.00"
               {...field}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                field.onChange(value);
+              }}
+              value={field.value || 0}
             />
           </FormControl>
           <FormMessage />

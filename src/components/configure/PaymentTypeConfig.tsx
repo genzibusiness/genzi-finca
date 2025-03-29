@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface PaymentType {
   id: string;
@@ -37,11 +38,13 @@ const PaymentTypeConfig = () => {
     active: true,
   });
   const [isEditMode, setIsEditMode] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch payment types
   const fetchPaymentTypes = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const { data, error } = await supabase
         .from('payment_types')
         .select('*')
@@ -65,8 +68,9 @@ const PaymentTypeConfig = () => {
   // Add new payment type
   const handleAddPaymentType = async () => {
     try {
+      setError(null);
       if (!currentPaymentType.name) {
-        toast.error('Name is required');
+        setError('Name is required');
         return;
       }
 
@@ -86,6 +90,7 @@ const PaymentTypeConfig = () => {
       toast.success('Payment type added successfully');
     } catch (error: any) {
       console.error('Error adding payment type:', error);
+      setError(error.message || 'Failed to add payment type');
       toast.error('Failed to add payment type');
     }
   };
@@ -93,8 +98,9 @@ const PaymentTypeConfig = () => {
   // Update existing payment type
   const handleUpdatePaymentType = async () => {
     try {
+      setError(null);
       if (!currentPaymentType.id || !currentPaymentType.name) {
-        toast.error('Invalid payment type data');
+        setError('Invalid payment type data');
         return;
       }
 
@@ -120,6 +126,7 @@ const PaymentTypeConfig = () => {
       toast.success('Payment type updated successfully');
     } catch (error: any) {
       console.error('Error updating payment type:', error);
+      setError(error.message || 'Failed to update payment type');
       toast.error('Failed to update payment type');
     }
   };
@@ -152,6 +159,7 @@ const PaymentTypeConfig = () => {
     setCurrentPaymentType(paymentType);
     setIsEditMode(true);
     setIsDialogOpen(true);
+    setError(null);
   };
 
   // Add new payment type (open dialog)
@@ -159,6 +167,7 @@ const PaymentTypeConfig = () => {
     resetForm();
     setIsEditMode(false);
     setIsDialogOpen(true);
+    setError(null);
   };
 
   // Reset form
@@ -166,6 +175,7 @@ const PaymentTypeConfig = () => {
     setCurrentPaymentType({ name: '', active: true });
     setIsEditMode(false);
     setIsDialogOpen(false);
+    setError(null);
   };
 
   // Handle save
@@ -241,6 +251,11 @@ const PaymentTypeConfig = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium">
                 Name

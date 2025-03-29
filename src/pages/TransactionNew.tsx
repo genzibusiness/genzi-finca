@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Transaction, CurrencyType, TransactionStatus, ExpenseType, TransactionType, ExpenseTypeEnum } from '@/types/cashflow';
+import { Transaction, CurrencyType, TransactionStatus, ExpenseTypeEnum } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -22,14 +22,14 @@ const TransactionNew = () => {
           .from('currencies')
           .select('code')
           .eq('is_default', true)
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error('Error fetching default currency:', error);
           return;
         }
         
-        if (data) {
+        if (data && data.code) {
           console.log('Default currency fetched:', data.code);
           setDefaultCurrency(data.code as CurrencyType);
         }
@@ -50,7 +50,7 @@ const TransactionNew = () => {
         throw new Error('Missing required fields for transaction');
       }
       
-      // Use the user from Auth context instead of fetching it again
+      // Use the user from Auth context
       if (!user) {
         throw new Error('User not authenticated');
       }
@@ -59,10 +59,13 @@ const TransactionNew = () => {
         ? transaction.status 
         : 'yet_to_be_paid';
       
-      // Cast expense_type to ExpenseTypeEnum if it's a valid type, otherwise null
-      const validExpenseType = transaction.expense_type && isValidExpenseType(transaction.expense_type) 
-        ? transaction.expense_type as ExpenseTypeEnum
-        : null;
+      // Validate expense_type against enum
+      let validExpenseType = null;
+      if (transaction.type === 'expense' && transaction.expense_type) {
+        validExpenseType = isValidExpenseType(transaction.expense_type) 
+          ? transaction.expense_type
+          : null;
+      }
       
       const transactionData = {
         amount: transaction.amount,
@@ -109,7 +112,7 @@ const TransactionNew = () => {
   
   // Helper function to validate expense type
   const isValidExpenseType = (type: string): type is ExpenseTypeEnum => {
-    return ['Salary', 'Marketing', 'Services', 'Software', 'Other'].includes(type as ExpenseTypeEnum);
+    return Object.values(ExpenseTypeEnum).includes(type as ExpenseTypeEnum);
   };
 
   const handleCancel = () => {
