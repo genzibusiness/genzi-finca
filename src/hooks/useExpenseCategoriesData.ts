@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ExpenseType, TransactionType } from '@/types/cashflow';
@@ -97,8 +96,11 @@ export const useExpenseCategoriesData = (
       }
       
       if (selectedCategory) {
-        // Use the string directly since ExpenseType is now a string type
-        query = query.eq('expense_type', selectedCategory);
+        // Check if selectedCategory is a valid ExpenseType
+        const validExpenseTypes: ExpenseType[] = ["Salary", "Marketing", "Services", "Software", "Other"];
+        if (validExpenseTypes.includes(selectedCategory as ExpenseType)) {
+          query = query.eq('expense_type', selectedCategory as ExpenseType);
+        }
       }
       
       const { data: transactions, error } = await query;

@@ -4,8 +4,8 @@ export type TransactionType = "income" | "expense";
 
 export type CurrencyType = "SGD" | "INR" | "USD" | "EUR" | "GBP";
 
-// Define expense types as string for more flexibility
-export type ExpenseType = string;
+// Update ExpenseType to be a union of specific string literals to match the database enum
+export type ExpenseType = "Salary" | "Marketing" | "Services" | "Software" | "Other";
 
 export interface Category {
   id: string;

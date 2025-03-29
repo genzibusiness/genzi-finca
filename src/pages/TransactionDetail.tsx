@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -67,6 +66,14 @@ const TransactionDetail = () => {
       
       setTransaction({ ...transaction, ...updatedTransaction });
     
+      let validExpenseType = null;
+      if (updatedTransaction.expense_type) {
+        const validExpenseTypes: ExpenseType[] = ["Salary", "Marketing", "Services", "Software", "Other"];
+        validExpenseType = validExpenseTypes.includes(updatedTransaction.expense_type as ExpenseType) 
+          ? updatedTransaction.expense_type 
+          : null;
+      }
+    
       const { error } = await supabase
         .from('transactions')
         .update({
@@ -74,7 +81,7 @@ const TransactionDetail = () => {
           date: updatedTransaction.date,
           type: updatedTransaction.type,
           currency: updatedTransaction.currency,
-          expense_type: updatedTransaction.expense_type,
+          expense_type: validExpenseType,
           comment: updatedTransaction.comment,
           status: updatedTransaction.status,
           document_url: updatedTransaction.document_url,
