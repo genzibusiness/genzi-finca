@@ -17,7 +17,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Transaction, CurrencyType, ExpenseType } from '@/types/cashflow';
 
 const formSchema = z.object({
   amount: z.coerce.number().positive({ message: 'Amount must be positive' }),
@@ -37,7 +37,6 @@ const TransactionForm = ({ transaction, onSave }) => {
   const [currencies, setCurrencies] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [defaultCurrency, setDefaultCurrency] = useState('INR');
-  const [open, setOpen] = useState(false);
   
   // Initialize form with transaction data or defaults
   const form = useForm({
@@ -317,53 +316,23 @@ const TransactionForm = ({ transaction, onSave }) => {
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Expense Category</FormLabel>
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={open}
-                        className="w-full justify-between"
-                      >
-                        {field.value
-                          ? expenseTypes.find(
-                              (expenseType) => expenseType.name === field.value
-                            )?.name
-                          : "Select category"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput placeholder="Search category..." />
-                      <CommandEmpty>No category found.</CommandEmpty>
-                      <CommandGroup>
-                        {expenseTypes.map((expenseType) => (
-                          <CommandItem
-                            key={expenseType.id}
-                            value={expenseType.name}
-                            onSelect={() => {
-                              form.setValue("expense_type", expenseType.name);
-                              setOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                field.value === expenseType.name
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
-                            {expenseType.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select expense type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {expenseTypes.map((expenseType) => (
+                      <SelectItem key={expenseType.id} value={expenseType.name}>
+                        {expenseType.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

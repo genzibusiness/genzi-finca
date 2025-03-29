@@ -29,6 +29,7 @@ const RecentTransactions = () => {
 
   const fetchRecentTransactions = async () => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
