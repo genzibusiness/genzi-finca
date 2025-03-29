@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCashflow } from '@/context/CashflowContext';
 import {
   Select,
@@ -10,6 +10,8 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { ExpenseType, TransactionType } from '@/types/cashflow';
 
 const DashboardFilters = () => {
   const {
@@ -25,14 +27,46 @@ const DashboardFilters = () => {
     transactions,
   } = useCashflow();
 
-  // Extract unique years and months from transactions
-  const uniqueYears = Array.from(
-    new Set(transactions.map((t) => t.date.split('-')[0]))
-  ).sort((a, b) => b.localeCompare(a)); // Sort descending
+  const [years, setYears] = useState<string[]>([]);
+  const [months, setMonths] = useState<string[]>([]);
+  const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
 
-  const uniqueMonths = Array.from(
-    new Set(transactions.map((t) => t.date.split('-')[1]))
-  ).sort();
+  // Extract unique years and months from transactions
+  useEffect(() => {
+    const uniqueYears = Array.from(
+      new Set(transactions.map((t) => t.date.split('-')[0]))
+    ).sort((a, b) => b.localeCompare(a)); // Sort descending
+
+    const uniqueMonths = Array.from(
+      new Set(transactions.map((t) => t.date.split('-')[1]))
+    ).sort();
+
+    setYears(uniqueYears);
+    setMonths(uniqueMonths);
+
+    // Fetch expense categories from the database
+    fetchExpenseCategories();
+  }, [transactions]);
+
+  const fetchExpenseCategories = async () => {
+    try {
+      // Fetch unique categories from transactions
+      const { data: categoryData } = await supabase
+        .from('transactions')
+        .select('expense_type')
+        .not('expense_type', 'is', null);
+      
+      if (categoryData) {
+        const uniqueCategories = Array.from(
+          new Set(categoryData.map(item => item.expense_type))
+        ).filter(Boolean) as string[];
+        
+        setExpenseCategories(uniqueCategories);
+      }
+    } catch (error) {
+      console.error('Error fetching expense categories:', error);
+    }
+  };
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -62,7 +96,7 @@ const DashboardFilters = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all-years">All Years</SelectItem>
-              {uniqueYears.map((year) => (
+              {years.map((year) => (
                 <SelectItem key={year} value={year}>
                   {year}
                 </SelectItem>
@@ -79,11 +113,25 @@ const DashboardFilters = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all-months">All Months</SelectItem>
-              {uniqueMonths.map((month) => (
+              {months.map((month) => (
                 <SelectItem key={month} value={month}>
                   {monthNames[parseInt(month) - 1]}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={selectedType || 'all-types'}
+            onValueChange={(value) => setSelectedType(value !== 'all-types' ? value as TransactionType : null)}
+          >
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all-types">All Types</SelectItem>
+              <SelectItem value="income">Income</SelectItem>
+              <SelectItem value="expense">Expense</SelectItem>
             </SelectContent>
           </Select>
 
@@ -96,31 +144,13 @@ const DashboardFilters = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all-categories">All Categories</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
+              {expenseCategories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-
-          <Select
-            value={selectedType || 'all-types'}
-            onValueChange={(value) => setSelectedType(value !== 'all-types' ? value as any : null)}
-          >
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all-types">All Types</SelectItem>
-              <SelectItem value="income">Income</SelectItem>
-              <SelectItem value="expense">Expense</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="text-xs text-muted-foreground">
-          Zimba 1.0 Copyright
         </div>
 
         {hasActiveFilters && (
@@ -134,6 +164,10 @@ const DashboardFilters = () => {
             Clear Filters
           </Button>
         )}
+      </div>
+      
+      <div className="text-xs text-muted-foreground mt-4">
+        Zimba 1.0 Copyright
       </div>
     </div>
   );

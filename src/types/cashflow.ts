@@ -5,7 +5,7 @@ export type TransactionType = "income" | "expense";
 
 export type CurrencyType = "SGD" | "INR" | "USD" | "EUR" | "GBP";
 
-export type ExpenseType = "Salary" | "Marketing" | "Services" | "Software" | "Other";
+export type ExpenseType = "Salary" | "Marketing" | "Services" | "Software" | "Other" | string;
 
 export interface Category {
   id: string;
