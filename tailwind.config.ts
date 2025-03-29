@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Custom cashflow app color palette
+				cashflow: {
+					primary: '#0A4C70',
+					secondary: '#007E9B',
+					accent: '#00B9AE',
+					light: '#E5F6F3',
+					dark: '#053246',
 				}
 			},
 			borderRadius: {

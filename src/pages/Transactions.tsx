@@ -2,22 +2,20 @@
 import React from 'react';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
-import DashboardSummary from '@/components/dashboard/DashboardSummary';
-import DashboardCharts from '@/components/dashboard/DashboardCharts';
-import RecentTransactions from '@/components/dashboard/RecentTransactions';
+import TransactionList from '@/components/transactions/TransactionList';
 import DashboardFilters from '@/components/dashboard/DashboardFilters';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 
-const Index = () => {
+const Transactions = () => {
   const navigate = useNavigate();
   
   return (
     <AppLayout>
       <div className="container max-w-7xl py-6">
         <PageHeader 
-          title="Dashboard" 
-          description="Overview of your organization's finances"
+          title="Transactions" 
+          description="View and manage all transactions"
           action={{
             label: "Add Transaction",
             icon: <Plus className="h-4 w-4 mr-2" />,
@@ -26,12 +24,10 @@ const Index = () => {
         />
         
         <DashboardFilters />
-        <DashboardSummary />
-        <DashboardCharts />
-        <RecentTransactions />
+        <TransactionList showSubCategory showCreatedBy />
       </div>
     </AppLayout>
   );
 };
 
-export default Index;
+export default Transactions;
