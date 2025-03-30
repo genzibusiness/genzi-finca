@@ -140,18 +140,18 @@ const Auth = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md mx-auto">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Genzi Finca</CardTitle>
-          <CardDescription className="text-center">
+          <CardTitle className="text-xl sm:text-2xl text-center">Genzi Finca</CardTitle>
+          <CardDescription className="text-center text-sm sm:text-base">
             Manage your finances with ease
           </CardDescription>
         </CardHeader>
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            <TabsTrigger value="reset">Reset</TabsTrigger>
+            <TabsTrigger value="signin" className="text-xs sm:text-sm">Sign In</TabsTrigger>
+            <TabsTrigger value="signup" className="text-xs sm:text-sm">Sign Up</TabsTrigger>
+            <TabsTrigger value="reset" className="text-xs sm:text-sm">Reset</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
@@ -163,16 +163,17 @@ const Auth = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-sm sm:text-base">Email</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="email"
                             placeholder="you@example.com"
                             autoComplete="email"
+                            className="text-sm sm:text-base h-9 sm:h-10"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-xs sm:text-sm" />
                       </FormItem>
                     )}
                   />
@@ -183,7 +184,7 @@ const Auth = () => {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel className="text-sm sm:text-base">Password</FormLabel>
                         </div>
                         <FormControl>
                           <Input
@@ -191,9 +192,10 @@ const Auth = () => {
                             type="password"
                             placeholder="••••••••"
                             autoComplete="current-password"
+                            className="text-sm sm:text-base h-9 sm:h-10"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-xs sm:text-sm" />
                       </FormItem>
                     )}
                   />
@@ -201,7 +203,7 @@ const Auth = () => {
                 <CardFooter className="flex flex-col">
                   <Button 
                     type="submit" 
-                    className="w-full" 
+                    className="w-full text-sm sm:text-base py-2 sm:py-2.5" 
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? 'Signing in...' : 'Sign In'}
@@ -220,15 +222,16 @@ const Auth = () => {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel className="text-sm sm:text-base">Full Name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             placeholder="John Doe"
                             autoComplete="name"
+                            className="text-sm sm:text-base h-9 sm:h-10"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-xs sm:text-sm" />
                       </FormItem>
                     )}
                   />
@@ -238,16 +241,17 @@ const Auth = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-sm sm:text-base">Email</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="email"
                             placeholder="you@example.com"
                             autoComplete="email"
+                            className="text-sm sm:text-base h-9 sm:h-10"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-xs sm:text-sm" />
                       </FormItem>
                     )}
                   />
@@ -257,16 +261,17 @@ const Auth = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel className="text-sm sm:text-base">Password</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="password"
                             placeholder="••••••••"
                             autoComplete="new-password"
+                            className="text-sm sm:text-base h-9 sm:h-10"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-xs sm:text-sm" />
                       </FormItem>
                     )}
                   />
@@ -276,16 +281,17 @@ const Auth = () => {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
+                        <FormLabel className="text-sm sm:text-base">Confirm Password</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="password"
                             placeholder="••••••••"
                             autoComplete="new-password"
+                            className="text-sm sm:text-base h-9 sm:h-10"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-xs sm:text-sm" />
                       </FormItem>
                     )}
                   />
@@ -302,11 +308,11 @@ const Auth = () => {
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel className="text-sm font-normal">
+                          <FormLabel className="text-xs sm:text-sm font-normal">
                             I accept the terms and conditions
                           </FormLabel>
                         </div>
-                        <FormMessage />
+                        <FormMessage className="text-xs sm:text-sm" />
                       </FormItem>
                     )}
                   />
@@ -314,7 +320,7 @@ const Auth = () => {
                 <CardFooter>
                   <Button 
                     type="submit" 
-                    className="w-full" 
+                    className="w-full text-sm sm:text-base py-2 sm:py-2.5" 
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? 'Creating account...' : 'Create account'}
@@ -333,16 +339,17 @@ const Auth = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-sm sm:text-base">Email</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="email"
                             placeholder="you@example.com"
                             autoComplete="email"
+                            className="text-sm sm:text-base h-9 sm:h-10"
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-xs sm:text-sm" />
                       </FormItem>
                     )}
                   />
@@ -350,7 +357,7 @@ const Auth = () => {
                 <CardFooter>
                   <Button 
                     type="submit" 
-                    className="w-full" 
+                    className="w-full text-sm sm:text-base py-2 sm:py-2.5" 
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? 'Sending reset link...' : 'Send reset link'}

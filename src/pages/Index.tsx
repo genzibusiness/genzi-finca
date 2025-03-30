@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
 import DashboardSummary from '@/components/dashboard/DashboardSummary';
@@ -38,7 +38,7 @@ const Index = () => {
 
   return (
     <AppLayout>
-      <div className="container max-w-7xl py-6">
+      <div className="container px-4 sm:px-6 max-w-7xl py-4 sm:py-6">
         <PageHeader 
           title="Dashboard" 
           description="Overview of your organization's finances"

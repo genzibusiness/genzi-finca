@@ -138,11 +138,11 @@ const ReceiptUploadField: React.FC<ReceiptUploadFieldProps> = ({ form, onExtract
     switch (uploadStatus) {
       case 'uploading':
       case 'processing':
-        return <Loader2 className="h-4 w-4 animate-spin" />;
+        return <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />;
       case 'success':
-        return <Check className="h-4 w-4 text-green-500" />;
+        return <Check className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />;
       case 'error':
-        return <AlertCircle className="h-4 w-4 text-destructive" />;
+        return <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-destructive" />;
       default:
         return null;
     }
@@ -154,7 +154,7 @@ const ReceiptUploadField: React.FC<ReceiptUploadFieldProps> = ({ form, onExtract
       name="receipt_url"
       render={({ field }) => (
         <FormItem className="w-full">
-          <FormLabel>Upload Receipt/Invoice</FormLabel>
+          <FormLabel className="text-xs sm:text-sm">Upload Receipt/Invoice</FormLabel>
           <div className="space-y-2">
             <FormControl>
               <div className="flex flex-col gap-2">
@@ -163,10 +163,10 @@ const ReceiptUploadField: React.FC<ReceiptUploadFieldProps> = ({ form, onExtract
                     type="button"
                     variant="outline"
                     onClick={() => document.getElementById('receipt-upload')?.click()}
-                    className={`${isMobile ? 'w-full' : 'flex-1'} justify-start text-xs sm:text-sm`}
+                    className={`${isMobile ? 'w-full' : 'flex-1'} justify-start text-xs sm:text-sm h-8 sm:h-10`}
                     disabled={uploadStatus === 'uploading' || uploadStatus === 'processing'}
                   >
-                    <Upload className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <Upload className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">Upload Receipt or Invoice (PDF)</span>
                   </Button>
                   <div className="flex-shrink-0 ml-auto sm:ml-0">
@@ -183,20 +183,20 @@ const ReceiptUploadField: React.FC<ReceiptUploadFieldProps> = ({ form, onExtract
                 />
                 
                 {fileName && (
-                  <div className="text-xs sm:text-sm break-all bg-muted p-2 rounded">
+                  <div className="text-xs sm:text-sm break-all bg-muted p-1.5 sm:p-2 rounded">
                     <span className="font-medium">File: </span> 
                     {fileName}
                   </div>
                 )}
                 
                 {statusMessage && (
-                  <div className={`text-xs sm:text-sm ${uploadStatus === 'error' ? 'text-destructive' : 'text-muted-foreground'} p-2 bg-muted/50 rounded`}>
+                  <div className={`text-xs sm:text-sm ${uploadStatus === 'error' ? 'text-destructive' : 'text-muted-foreground'} p-1.5 sm:p-2 bg-muted/50 rounded`}>
                     {statusMessage}
                   </div>
                 )}
               </div>
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs sm:text-sm" />
           </div>
         </FormItem>
       )}
