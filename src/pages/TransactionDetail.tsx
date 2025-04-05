@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -75,7 +76,15 @@ const TransactionDetail = () => {
     try {
       if (!transaction || !id) return;
       
-      setTransaction({ ...transaction, ...updatedTransaction } as Transaction);
+      // Type assertion to ensure the merged transaction has the correct types
+      const mergedTransaction = { 
+        ...transaction, 
+        ...updatedTransaction,
+        // Ensure original_currency is properly typed as CurrencyType
+        original_currency: (updatedTransaction.original_currency || updatedTransaction.currency) as CurrencyType
+      } as Transaction;
+      
+      setTransaction(mergedTransaction);
     
       let validExpenseType = null;
       if (updatedTransaction.type === 'expense' && updatedTransaction.expense_type) {
@@ -130,7 +139,7 @@ const TransactionDetail = () => {
           payment_type_id: payment_type_id,
           paid_by_user_id: paid_by_user_id,
           original_amount: originalAmount,
-          original_currency: originalCurrency as CurrencyType,
+          original_currency: originalCurrency as CurrencyType, // Type assertion here as well
           sgd_amount: sgdAmount
         })
         .eq('id', id);
