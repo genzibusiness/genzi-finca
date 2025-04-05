@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ExpenseType, TransactionType } from '@/types/cashflow';
+import { ExpenseType, TransactionType, Transaction, CurrencyRate } from '@/types/cashflow';
 import { convertCurrency } from '@/utils/currencyUtils';
 
 // Find and fix the issue on line 145 with String type
@@ -22,10 +22,10 @@ export const useTransactionListData = (
     filterType?: string | null;
   } = {}
 ) => {
-  const [transactionData, setTransactionData] = useState<any[]>([]);
+  const [transactionData, setTransactionData] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
-  const [currencyRates, setCurrencyRates] = useState<any[]>([]);
+  const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
 
   const {
     selectedMonth,
@@ -103,7 +103,7 @@ export const useTransactionListData = (
         } else {
           // Check for missing currency values and populate them if needed
           if (data && data.length > 0 && currencyRates.length > 0) {
-            const updatedData = await Promise.all(data.map(async (transaction) => {
+            const updatedData = await Promise.all(data.map(async (transaction: Transaction) => {
               const needsUpdate = (
                 transaction.currency && 
                 (transaction.sgd_amount === null || 
@@ -112,7 +112,7 @@ export const useTransactionListData = (
               );
               
               if (needsUpdate) {
-                const updates: any = {};
+                const updates: Partial<Transaction> = {};
                 
                 // Calculate missing currency values
                 if (transaction.sgd_amount === null && transaction.currency !== 'SGD') {
