@@ -1,13 +1,19 @@
 
 import React, { useEffect, useState } from 'react';
-import { TransactionType } from '@/types/cashflow';
+import { TransactionType, CurrencyRate } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
+import { formatCurrency, getAmountInPreferredCurrency } from '@/utils/currencyUtils';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
 
 interface CurrencyDisplayProps {
   amount: number;
   currency: string;
   type?: TransactionType;
   className?: string;
+  showOriginal?: boolean;
+  sgdAmount?: number | null;
+  originalAmount?: number | null;
+  originalCurrency?: string | null;
 }
 
 const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
@@ -15,7 +21,12 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   currency = 'INR',
   type,
   className = '',
+  showOriginal = false,
+  sgdAmount,
+  originalAmount,
+  originalCurrency,
 }) => {
+  const { preferences } = useUserPreferences();
   const [currencySymbols, setCurrencySymbols] = useState<Record<string, string>>({
     USD: '$',
     EUR: '€',
@@ -23,9 +34,12 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
     INR: '₹',
     SGD: 'S$'
   });
+  const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchCurrencySymbols();
+    fetchCurrencyRates();
   }, []);
 
   const fetchCurrencySymbols = async () => {
@@ -40,7 +54,7 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
         const symbols = data.reduce((acc, curr) => {
           acc[curr.code] = curr.symbol;
           return acc;
-        }, {});
+        }, {} as Record<string, string>);
         
         setCurrencySymbols(prev => ({
           ...prev,
@@ -52,17 +66,28 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
     }
   };
 
+  const fetchCurrencyRates = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('currency_rates')
+        .select('*');
+      
+      if (error) throw error;
+      
+      if (data) {
+        setCurrencyRates(data as CurrencyRate[]);
+      }
+    } catch (error) {
+      console.error('Error fetching currency rates:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Get currency symbol based on currency code
   const getSymbol = (code: string) => {
     return currencySymbols[code] || code;
-  };
-
-  // Format the amount with commas and decimal places
-  const formatAmount = (value: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
   };
 
   // Get the color class based on transaction type
@@ -71,13 +96,50 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
     return type === 'income' ? 'text-emerald-600' : 'text-destructive';
   };
 
-  const symbol = getSymbol(currency);
-  const formattedAmount = formatAmount(amount);
   const colorClass = getColorClass();
+  
+  // Preferred currency display
+  const preferredCurrency = preferences?.preferred_currency || 'INR';
+  
+  // Object to pass to conversion function
+  const transactionData = {
+    amount,
+    currency,
+    sgd_amount: sgdAmount,
+    original_amount: originalAmount,
+    original_currency: originalCurrency
+  };
+  
+  // Get converted amount in preferred currency
+  const convertedAmount = getAmountInPreferredCurrency(
+    transactionData,
+    preferredCurrency,
+    currencyRates
+  );
+  
+  // Display original amount if requested and it exists
+  const shouldShowOriginal = showOriginal && 
+    originalAmount !== null && 
+    originalAmount !== undefined && 
+    originalCurrency !== null && 
+    originalCurrency !== undefined &&
+    originalCurrency !== preferredCurrency;
 
   return (
     <span className={`font-medium ${colorClass} ${className}`}>
-      {symbol}{formattedAmount}
+      {loading ? (
+        <span className="animate-pulse">Loading...</span>
+      ) : (
+        <>
+          {formatCurrency(convertedAmount, preferredCurrency)}
+          
+          {shouldShowOriginal && (
+            <span className="text-muted-foreground text-xs ml-1">
+              (orig: {getSymbol(originalCurrency || '')}{originalAmount?.toFixed(2)})
+            </span>
+          )}
+        </>
+      )}
     </span>
   );
 };

@@ -215,9 +215,12 @@ export type Database = {
           expense_type: Database["public"]["Enums"]["expense_type"] | null
           id: string
           includes_tax: boolean | null
+          original_amount: number | null
+          original_currency: string | null
           paid_by_user_id: string | null
           payment_type_id: string | null
           receipt_url: string | null
+          sgd_amount: number | null
           status: Database["public"]["Enums"]["transaction_status"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
@@ -233,9 +236,12 @@ export type Database = {
           expense_type?: Database["public"]["Enums"]["expense_type"] | null
           id?: string
           includes_tax?: boolean | null
+          original_amount?: number | null
+          original_currency?: string | null
           paid_by_user_id?: string | null
           payment_type_id?: string | null
           receipt_url?: string | null
+          sgd_amount?: number | null
           status: Database["public"]["Enums"]["transaction_status"]
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
@@ -251,9 +257,12 @@ export type Database = {
           expense_type?: Database["public"]["Enums"]["expense_type"] | null
           id?: string
           includes_tax?: boolean | null
+          original_amount?: number | null
+          original_currency?: string | null
           paid_by_user_id?: string | null
           payment_type_id?: string | null
           receipt_url?: string | null
+          sgd_amount?: number | null
           status?: Database["public"]["Enums"]["transaction_status"]
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
@@ -268,6 +277,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          preferred_currency: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          preferred_currency?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          preferred_currency?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

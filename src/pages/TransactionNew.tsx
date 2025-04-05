@@ -8,37 +8,48 @@ import PageHeader from '@/components/PageHeader';
 import TransactionForm from '@/components/transactions/TransactionForm';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { convertCurrency } from '@/utils/currencyUtils';
 
 const TransactionNew = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [defaultCurrency, setDefaultCurrency] = useState<CurrencyType>("INR");
   const [loading, setIsLoading] = useState(false);
+  const [currencyRates, setCurrencyRates] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchDefaultCurrency = async () => {
+    const fetchInitialData = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch default currency
+        const { data: currencyData, error: currencyError } = await supabase
           .from('currencies')
           .select('code')
           .eq('is_default', true)
           .maybeSingle();
         
-        if (error) {
-          console.error('Error fetching default currency:', error);
-          return;
+        if (currencyError) {
+          console.error('Error fetching default currency:', currencyError);
+        } else if (currencyData && currencyData.code) {
+          console.log('Default currency fetched:', currencyData.code);
+          setDefaultCurrency(currencyData.code as CurrencyType);
         }
-        
-        if (data && data.code) {
-          console.log('Default currency fetched:', data.code);
-          setDefaultCurrency(data.code as CurrencyType);
+
+        // Fetch currency rates
+        const { data: ratesData, error: ratesError } = await supabase
+          .from('currency_rates')
+          .select('*');
+
+        if (ratesError) {
+          console.error('Error fetching currency rates:', ratesError);
+        } else if (ratesData) {
+          setCurrencyRates(ratesData);
         }
       } catch (err) {
-        console.error('Error in fetchDefaultCurrency:', err);
+        console.error('Error in fetchInitialData:', err);
       }
     };
     
-    fetchDefaultCurrency();
+    fetchInitialData();
   }, []);
 
   const handleSave = async (transaction: Partial<Transaction>) => {
@@ -74,6 +85,35 @@ const TransactionNew = () => {
       const receipt_url = transaction.receipt_url || null;
       const comment = transaction.comment || null;
       
+      // Calculate SGD amount if not already calculated
+      let sgdAmount = transaction.sgd_amount;
+      
+      if (!sgdAmount && transaction.currency !== 'SGD') {
+        // Find applicable conversion rate
+        const directRate = currencyRates.find(
+          (rate) => rate.from_currency === transaction.currency && rate.to_currency === 'SGD'
+        );
+        
+        if (directRate) {
+          sgdAmount = transaction.amount * directRate.rate;
+        } else {
+          // Look for inverse rate
+          const inverseRate = currencyRates.find(
+            (rate) => rate.from_currency === 'SGD' && rate.to_currency === transaction.currency
+          );
+          
+          if (inverseRate) {
+            sgdAmount = transaction.amount / inverseRate.rate;
+          }
+        }
+      } else if (transaction.currency === 'SGD') {
+        sgdAmount = transaction.amount;
+      }
+
+      // Set original amount if not already set
+      const originalAmount = transaction.original_amount || transaction.amount;
+      const originalCurrency = transaction.original_currency || transaction.currency;
+      
       const transactionData = {
         amount: transaction.amount,
         date: transaction.date,
@@ -87,7 +127,10 @@ const TransactionNew = () => {
         receipt_url: receipt_url,
         includes_tax: transaction.includes_tax || false,
         payment_type_id: payment_type_id,
-        paid_by_user_id: paid_by_user_id
+        paid_by_user_id: paid_by_user_id,
+        original_amount: originalAmount,
+        original_currency: originalCurrency,
+        sgd_amount: sgdAmount
       };
       
       console.log('Saving transaction:', transactionData);
@@ -133,7 +176,10 @@ const TransactionNew = () => {
     includes_tax: false,
     payment_type_id: '',
     paid_by_user_id: '',
-    expense_type: null // Initialize as null to be updated based on transaction type
+    expense_type: null,
+    original_amount: null,
+    original_currency: null,
+    sgd_amount: null
   };
 
   return (

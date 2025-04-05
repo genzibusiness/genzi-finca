@@ -27,6 +27,7 @@ const TransactionDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [currencyRates, setCurrencyRates] = useState<any[]>([]);
 
   const fetchTransactionData = async () => {
     try {
@@ -45,6 +46,16 @@ const TransactionDetail = () => {
         .single();
 
       if (error) throw error;
+
+      const { data: ratesData, error: ratesError } = await supabase
+        .from('currency_rates')
+        .select('*');
+
+      if (ratesError) {
+        console.error('Error fetching currency rates:', ratesError);
+      } else if (ratesData) {
+        setCurrencyRates(ratesData);
+      }
 
       setTransaction(data || null);
     } catch (error: any) {
@@ -66,19 +77,43 @@ const TransactionDetail = () => {
       
       setTransaction({ ...transaction, ...updatedTransaction });
     
-      // Handle expense_type based on transaction type
       let validExpenseType = null;
       if (updatedTransaction.type === 'expense' && updatedTransaction.expense_type) {
         validExpenseType = updatedTransaction.expense_type;
       }
     
-      // Handle payment_type_id and paid_by_user_id
       const payment_type_id = updatedTransaction.payment_type_id === 'none' ? null : updatedTransaction.payment_type_id;
       const paid_by_user_id = updatedTransaction.paid_by_user_id === 'none' ? null : updatedTransaction.paid_by_user_id;
       
-      // Ensure document_url and comment are properly handled as null if empty
       const document_url = updatedTransaction.document_url || null;
       const comment = updatedTransaction.comment || null;
+      
+      let sgdAmount = updatedTransaction.sgd_amount;
+      let originalAmount = updatedTransaction.original_amount || updatedTransaction.amount;
+      let originalCurrency = updatedTransaction.original_currency || updatedTransaction.currency;
+      
+      if (
+        (transaction.amount !== updatedTransaction.amount || transaction.currency !== updatedTransaction.currency) &&
+        updatedTransaction.currency !== 'SGD'
+      ) {
+        const directRate = currencyRates.find(
+          (rate) => rate.from_currency === updatedTransaction.currency && rate.to_currency === 'SGD'
+        );
+        
+        if (directRate) {
+          sgdAmount = updatedTransaction.amount * directRate.rate;
+        } else {
+          const inverseRate = currencyRates.find(
+            (rate) => rate.from_currency === 'SGD' && rate.to_currency === updatedTransaction.currency
+          );
+          
+          if (inverseRate) {
+            sgdAmount = updatedTransaction.amount / inverseRate.rate;
+          }
+        }
+      } else if (updatedTransaction.currency === 'SGD') {
+        sgdAmount = updatedTransaction.amount;
+      }
       
       const { error } = await supabase
         .from('transactions')
@@ -93,7 +128,10 @@ const TransactionDetail = () => {
           document_url: document_url,
           includes_tax: updatedTransaction.includes_tax,
           payment_type_id: payment_type_id,
-          paid_by_user_id: paid_by_user_id
+          paid_by_user_id: paid_by_user_id,
+          original_amount: originalAmount,
+          original_currency: originalCurrency,
+          sgd_amount: sgdAmount
         })
         .eq('id', id);
         

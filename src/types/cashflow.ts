@@ -36,12 +36,24 @@ export interface Transaction {
   includes_tax?: boolean | null;
   payment_type_id?: string | null;
   paid_by_user_id?: string | null;
+  // New fields for currency conversion
+  original_amount?: number | null;
+  original_currency?: CurrencyType | null;
+  sgd_amount?: number | null;
 }
 
 export interface User {
   id: string;
   name: string;
   email: string;
+}
+
+export interface UserPreference {
+  id: string;
+  user_id: string;
+  preferred_currency: 'SGD' | 'INR';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CashflowSummary {
