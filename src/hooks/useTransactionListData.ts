@@ -103,7 +103,10 @@ export const useTransactionListData = (
         } else {
           // Check for missing currency values and populate them if needed
           if (data && data.length > 0 && currencyRates.length > 0) {
-            const updatedData = await Promise.all(data.map(async (transaction: Transaction) => {
+            const updatedData = await Promise.all(data.map(async (transactionData) => {
+              // Cast the database result to our Transaction type
+              const transaction = transactionData as unknown as Transaction;
+              
               const needsUpdate = (
                 transaction.currency && 
                 (transaction.sgd_amount === null || 
@@ -150,7 +153,8 @@ export const useTransactionListData = (
                     return transaction;
                   }
                   
-                  return updatedTransaction;
+                  // Cast the updated transaction to our Transaction type
+                  return updatedTransaction as unknown as Transaction;
                 }
               }
               
@@ -159,7 +163,8 @@ export const useTransactionListData = (
             
             setTransactionData(updatedData);
           } else {
-            setTransactionData(data || []);
+            // Cast the data array to our Transaction[] type
+            setTransactionData(data as unknown as Transaction[]);
           }
         }
       } catch (err) {

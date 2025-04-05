@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useState, useEffect } from 'react';
 import {
@@ -37,20 +36,8 @@ import TypeBadge from '@/components/TypeBadge';
 import StatusBadge from '@/components/StatusBadge';
 import TablePagination from '@/components/transactions/table/TablePagination';
 
-// Import the corrected hook
 import { useTransactionListData } from '@/hooks/useTransactionListData';
-import { TransactionType, TransactionStatus } from '@/types/cashflow';
-
-interface Transaction {
-  id: string;
-  date: string;
-  type: TransactionType;
-  amount: number;
-  currency: string;
-  expense_type: string | null;
-  comment: string | null;
-  status: TransactionStatus;
-}
+import { Transaction, TransactionType, TransactionStatus, CurrencyType, ExpenseType } from '@/types/cashflow';
 
 interface TransactionListProps {
   showSubCategory?: boolean;
@@ -85,14 +72,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
   useEffect(() => {
     if (transactions) {
-      // Ensure the data is properly typed when setting state
-      const typedTransactions = transactions.map(transaction => ({
-        ...transaction,
-        // Cast the string values to their respective union types
-        type: transaction.type as TransactionType,
-        status: transaction.status as TransactionStatus
-      }));
-      setData(typedTransactions);
+      setData(transactions);
     }
   }, [transactions]);
 
@@ -265,7 +245,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
     },
   });
 
-  // Set default page size
   useEffect(() => {
     table.setPageSize(10);
   }, [table]);
