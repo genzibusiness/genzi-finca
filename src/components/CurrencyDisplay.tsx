@@ -99,9 +99,9 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
       return inrAmount;
     }
     
-    // Fixed: This comparison needed to be fixed since preferredCurrency can only be 'SGD' or 'INR'
-    // but we still need to handle the case where USD amount should be used
-    if (preferredCurrency === 'USD' || (usdAmount !== null && usdAmount !== undefined && !sgdAmount && !inrAmount)) {
+    // Fixed by handling USD amount as a fallback, without directly comparing preferredCurrency to 'USD'
+    // since preferredCurrency is typed to only be 'SGD' or 'INR'
+    if (usdAmount !== null && usdAmount !== undefined && (!sgdAmount || !inrAmount)) {
       return usdAmount;
     }
     
