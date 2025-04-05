@@ -1,4 +1,3 @@
-
 import React, { Suspense, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -17,6 +16,7 @@ import NotFound from '@/pages/NotFound';
 import Auth from '@/pages/Auth';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ConfigureMasterData from '@/pages/ConfigureMasterData';
+import FincaChat from '@/pages/FincaChat';
 
 // Import context providers
 import { AuthProvider } from '@/context/AuthContext';
@@ -26,6 +26,7 @@ import UserSettings from '@/pages/UserSettings';
 
 // Import Sidebar components from ui
 import { SidebarProvider as UISidebarProvider } from '@/components/ui/sidebar';
+import ChatButton from '@/components/chat/ChatButton';
 
 const App = () => {
   // Initialize query client here to ensure it's stable across renders
@@ -95,12 +96,14 @@ const App = () => {
                       <Route path="/expenses" element={<Expenses />} />
                       <Route path="/settings" element={<UserSettings />} />
                       <Route path="/configure" element={<ConfigureMasterData />} />
+                      <Route path="/chat" element={<FincaChat />} />
                     </Route>
                     
                     {/* Error/Not Found Route */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <Toaster position="top-right" />
+                  <ChatButton />
                 </SidebarProvider>
               </UISidebarProvider>
             </ThemeProvider>

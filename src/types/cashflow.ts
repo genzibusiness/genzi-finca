@@ -1,4 +1,3 @@
-
 export type TransactionStatus = "paid" | "received" | "yet_to_be_paid" | "yet_to_be_received";
 
 export type TransactionType = "income" | "expense";
@@ -36,10 +35,12 @@ export interface Transaction {
   includes_tax?: boolean | null;
   payment_type_id?: string | null;
   paid_by_user_id?: string | null;
-  // New fields for currency conversion
+  // Currency conversion fields
   original_amount?: number | null;
   original_currency?: CurrencyType | null;
   sgd_amount?: number | null;
+  inr_amount?: number | null;
+  usd_amount?: number | null;
 }
 
 export interface User {

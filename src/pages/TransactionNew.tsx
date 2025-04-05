@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Transaction, CurrencyType, TransactionStatus } from '@/types/cashflow';
@@ -20,7 +19,6 @@ const TransactionNew = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Fetch default currency
         const { data: currencyData, error: currencyError } = await supabase
           .from('currencies')
           .select('code')
@@ -34,7 +32,6 @@ const TransactionNew = () => {
           setDefaultCurrency(currencyData.code as CurrencyType);
         }
 
-        // Fetch currency rates
         const { data: ratesData, error: ratesError } = await supabase
           .from('currency_rates')
           .select('*');
@@ -61,7 +58,6 @@ const TransactionNew = () => {
         throw new Error('Missing required fields for transaction');
       }
       
-      // Use the user from Auth context
       if (!user) {
         throw new Error('User not authenticated');
       }
@@ -70,49 +66,24 @@ const TransactionNew = () => {
         ? transaction.status 
         : 'yet_to_be_paid';
       
-      // Handle expense_type properly based on transaction type
       let validExpenseType = null;
       if (transaction.type === 'expense' && transaction.expense_type) {
         validExpenseType = transaction.expense_type;
       }
       
-      // Handle payment_type_id and paid_by_user_id
       const payment_type_id = transaction.payment_type_id === 'none' ? null : transaction.payment_type_id;
       const paid_by_user_id = transaction.paid_by_user_id === 'none' ? null : transaction.paid_by_user_id;
       
-      // Ensure document_url, receipt_url and comment are properly handled as null if empty
       const document_url = transaction.document_url || null;
       const receipt_url = transaction.receipt_url || null;
       const comment = transaction.comment || null;
       
-      // Calculate SGD amount if not already calculated
-      let sgdAmount = transaction.sgd_amount;
-      
-      if (!sgdAmount && transaction.currency !== 'SGD') {
-        // Find applicable conversion rate
-        const directRate = currencyRates.find(
-          (rate) => rate.from_currency === transaction.currency && rate.to_currency === 'SGD'
-        );
-        
-        if (directRate) {
-          sgdAmount = transaction.amount * directRate.rate;
-        } else {
-          // Look for inverse rate
-          const inverseRate = currencyRates.find(
-            (rate) => rate.from_currency === 'SGD' && rate.to_currency === transaction.currency
-          );
-          
-          if (inverseRate) {
-            sgdAmount = transaction.amount / inverseRate.rate;
-          }
-        }
-      } else if (transaction.currency === 'SGD') {
-        sgdAmount = transaction.amount;
-      }
-
-      // Set original amount if not already set
       const originalAmount = transaction.original_amount || transaction.amount;
       const originalCurrency = transaction.original_currency || transaction.currency;
+      
+      const sgdAmount = transaction.sgd_amount || (transaction.currency === 'SGD' ? transaction.amount : null);
+      const inrAmount = transaction.inr_amount || (transaction.currency === 'INR' ? transaction.amount : null);
+      const usdAmount = transaction.usd_amount || (transaction.currency === 'USD' ? transaction.amount : null);
       
       const transactionData = {
         amount: transaction.amount,
@@ -130,7 +101,9 @@ const TransactionNew = () => {
         paid_by_user_id: paid_by_user_id,
         original_amount: originalAmount,
         original_currency: originalCurrency,
-        sgd_amount: sgdAmount
+        sgd_amount: sgdAmount,
+        inr_amount: inrAmount,
+        usd_amount: usdAmount
       };
       
       console.log('Saving transaction:', transactionData);
@@ -156,7 +129,6 @@ const TransactionNew = () => {
     }
   };
 
-  // Helper function to validate transaction status
   const isValidTransactionStatus = (status: string): status is TransactionStatus => {
     return ['paid', 'received', 'yet_to_be_paid', 'yet_to_be_received'].includes(status as TransactionStatus);
   };
@@ -179,7 +151,9 @@ const TransactionNew = () => {
     expense_type: null,
     original_amount: null,
     original_currency: null,
-    sgd_amount: null
+    sgd_amount: null,
+    inr_amount: null,
+    usd_amount: null
   };
 
   return (

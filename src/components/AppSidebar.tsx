@@ -7,7 +7,8 @@ import {
   TrendingUp, 
   TrendingDown,
   Settings,
-  Database
+  Database,
+  MessageSquare
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSidebar } from '@/context/SidebarContext';
@@ -54,6 +55,13 @@ const AppSidebar = () => {
             >
               <TrendingDown size={18} />
               {expanded && <span>Expenses</span>}
+            </Link>
+            <Link 
+              to="/chat" 
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
+            >
+              <MessageSquare size={18} />
+              {expanded && <span>Chat</span>}
             </Link>
           </nav>
           

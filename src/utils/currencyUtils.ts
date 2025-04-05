@@ -102,6 +102,8 @@ export const getAmountInPreferredCurrency = (
     amount: number;
     currency: string;
     sgd_amount?: number | null;
+    inr_amount?: number | null;
+    usd_amount?: number | null;
     original_amount?: number | null;
     original_currency?: string | null;
   },
@@ -113,16 +115,19 @@ export const getAmountInPreferredCurrency = (
     return transaction.amount;
   }
 
-  // If preferred currency is SGD and sgd_amount is available, use it
+  // If preferred currency is one of the stored amounts, use it directly
   if (preferredCurrency === 'SGD' && transaction.sgd_amount !== null && transaction.sgd_amount !== undefined) {
     return transaction.sgd_amount;
   }
-
-  // Try to convert from SGD to preferred currency
-  if (transaction.sgd_amount !== null && transaction.sgd_amount !== undefined) {
-    return convertCurrency(transaction.sgd_amount, 'SGD', preferredCurrency, rates);
+  
+  if (preferredCurrency === 'INR' && transaction.inr_amount !== null && transaction.inr_amount !== undefined) {
+    return transaction.inr_amount;
+  }
+  
+  if (preferredCurrency === 'USD' && transaction.usd_amount !== null && transaction.usd_amount !== undefined) {
+    return transaction.usd_amount;
   }
 
-  // If no SGD amount, try direct conversion from transaction currency
+  // Try to convert from transaction currency to preferred currency
   return convertCurrency(transaction.amount, transaction.currency, preferredCurrency, rates);
 };

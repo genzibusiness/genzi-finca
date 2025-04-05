@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -61,6 +60,24 @@ interface Currency {
   symbol: string;
 }
 
+const REQUIRED_CURRENCY_PAIRS = [
+  { from: 'SGD', to: 'INR' },
+  { from: 'INR', to: 'SGD' },
+  { from: 'SGD', to: 'USD' },
+  { from: 'USD', to: 'SGD' },
+  { from: 'USD', to: 'INR' },
+  { from: 'INR', to: 'USD' },
+];
+
+const DEFAULT_RATES = {
+  'SGD-INR': 61.32,  // 1 SGD = 61.32 INR
+  'INR-SGD': 0.0163, // 1 INR = 0.0163 SGD
+  'SGD-USD': 0.74,   // 1 SGD = 0.74 USD
+  'USD-SGD': 1.35,   // 1 USD = 1.35 SGD
+  'USD-INR': 82.97,  // 1 USD = 82.97 INR
+  'INR-USD': 0.012,  // 1 INR = 0.012 USD
+};
+
 const CurrencyRateConfig = () => {
   const [rates, setRates] = useState<CurrencyRate[]>([]);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -101,11 +118,58 @@ const CurrencyRateConfig = () => {
       if (currencyError) throw currencyError;
       setCurrencies(currencyData || []);
       
+      // Check if we have all required currency pairs
+      if (rateData) {
+        await ensureRequiredCurrencyRates(rateData, currencyData || []);
+      }
+      
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load currency rates');
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const ensureRequiredCurrencyRates = async (existingRates: CurrencyRate[], currencies: Currency[]) => {
+    try {
+      // Filter out active currencies to get required pairs
+      const activeCurrencyCodes = currencies.map(c => c.code);
+      const requiredPairs = REQUIRED_CURRENCY_PAIRS.filter(
+        pair => activeCurrencyCodes.includes(pair.from) && activeCurrencyCodes.includes(pair.to)
+      );
+      
+      // Check which required pairs are missing
+      const missingPairs = requiredPairs.filter(
+        pair => !existingRates.some(
+          rate => rate.from_currency === pair.from && rate.to_currency === pair.to
+        )
+      );
+      
+      if (missingPairs.length > 0) {
+        // Prepare data for insertion
+        const newRatesData = missingPairs.map(pair => ({
+          from_currency: pair.from,
+          to_currency: pair.to,
+          rate: DEFAULT_RATES[`${pair.from}-${pair.to}`] || 1.0
+        }));
+        
+        // Insert missing pairs
+        const { data, error } = await supabase
+          .from('currency_rates')
+          .insert(newRatesData);
+        
+        if (error) throw error;
+        
+        // If successful, refresh the rates list
+        if (missingPairs.length > 0) {
+          toast.success(`Added ${missingPairs.length} missing currency rates`);
+          fetchData(); // Refresh data to show the new rates
+        }
+      }
+    } catch (error) {
+      console.error('Error ensuring required currency rates:', error);
+      toast.error('Failed to add missing currency rates');
     }
   };
   

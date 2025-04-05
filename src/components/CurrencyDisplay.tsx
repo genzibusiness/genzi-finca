@@ -12,6 +12,8 @@ interface CurrencyDisplayProps {
   className?: string;
   showOriginal?: boolean;
   sgdAmount?: number | null;
+  inrAmount?: number | null;
+  usdAmount?: number | null;
   originalAmount?: number | null;
   originalCurrency?: string | null;
 }
@@ -23,6 +25,8 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   className = '',
   showOriginal = false,
   sgdAmount,
+  inrAmount,
+  usdAmount,
   originalAmount,
   originalCurrency,
 }) => {
@@ -101,11 +105,13 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   // Preferred currency display
   const preferredCurrency = preferences?.preferred_currency || 'INR';
   
-  // Object to pass to conversion function
+  // Object to pass to conversion function with additional currency fields
   const transactionData = {
     amount,
     currency,
     sgd_amount: sgdAmount,
+    inr_amount: inrAmount,
+    usd_amount: usdAmount,
     original_amount: originalAmount,
     original_currency: originalCurrency
   };
