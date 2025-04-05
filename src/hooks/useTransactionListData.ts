@@ -55,6 +55,94 @@ export const useTransactionListData = (
     fetchCurrencyRates();
   }, []);
 
+  // Populate missing currency amounts for a transaction
+  const populateMissingCurrencyAmounts = async (transaction: Transaction): Promise<Transaction> => {
+    // Skip if we already have all currency values
+    if (
+      transaction.sgd_amount !== null && 
+      transaction.inr_amount !== null && 
+      transaction.usd_amount !== null
+    ) {
+      return transaction;
+    }
+    
+    const updates: Partial<Transaction> = {};
+    
+    // Set the amount for the original currency if missing
+    if (transaction.currency === 'SGD' && transaction.sgd_amount === null) {
+      updates.sgd_amount = transaction.amount;
+    } else if (transaction.currency === 'INR' && transaction.inr_amount === null) {
+      updates.inr_amount = transaction.amount;
+    } else if (transaction.currency === 'USD' && transaction.usd_amount === null) {
+      updates.usd_amount = transaction.amount;
+    }
+    
+    // Calculate missing SGD amount if needed
+    if (transaction.sgd_amount === null && transaction.currency !== 'SGD') {
+      const sgdAmount = convertCurrency(transaction.amount, transaction.currency, 'SGD', currencyRates);
+      if (sgdAmount !== null) updates.sgd_amount = sgdAmount;
+    }
+    
+    // Calculate missing INR amount if needed
+    if (transaction.inr_amount === null && transaction.currency !== 'INR') {
+      // Try direct conversion first
+      const inrAmount = convertCurrency(transaction.amount, transaction.currency, 'INR', currencyRates);
+      if (inrAmount !== null) {
+        updates.inr_amount = inrAmount;
+      } 
+      // If direct conversion failed and we have SGD amount, try via SGD
+      else if (transaction.sgd_amount !== null || updates.sgd_amount !== undefined) {
+        const sgdAmount = transaction.sgd_amount !== null ? transaction.sgd_amount : updates.sgd_amount;
+        if (sgdAmount !== undefined) {
+          const inrViasgd = convertCurrency(sgdAmount, 'SGD', 'INR', currencyRates);
+          if (inrViasgd !== null) updates.inr_amount = inrViasgd;
+        }
+      }
+    }
+    
+    // Calculate missing USD amount if needed
+    if (transaction.usd_amount === null && transaction.currency !== 'USD') {
+      // Try direct conversion first
+      const usdAmount = convertCurrency(transaction.amount, transaction.currency, 'USD', currencyRates);
+      if (usdAmount !== null) {
+        updates.usd_amount = usdAmount;
+      }
+      // If direct conversion failed and we have SGD amount, try via SGD
+      else if (transaction.sgd_amount !== null || updates.sgd_amount !== undefined) {
+        const sgdAmount = transaction.sgd_amount !== null ? transaction.sgd_amount : updates.sgd_amount;
+        if (sgdAmount !== undefined) {
+          const usdViasgd = convertCurrency(sgdAmount, 'SGD', 'USD', currencyRates);
+          if (usdViasgd !== null) updates.usd_amount = usdViasgd;
+        }
+      }
+    }
+    
+    // If we have updates to make
+    if (Object.keys(updates).length > 0) {
+      try {
+        const { data: updatedTransaction, error: updateError } = await supabase
+          .from('transactions')
+          .update(updates)
+          .eq('id', transaction.id)
+          .select('*')
+          .single();
+          
+        if (updateError) {
+          console.error('Error updating transaction currency amounts:', updateError);
+          return transaction;
+        }
+        
+        // Return the updated transaction
+        return updatedTransaction as unknown as Transaction;
+      } catch (err) {
+        console.error('Error in update transaction operation:', err);
+        return transaction;
+      }
+    }
+    
+    return transaction;
+  };
+
   useEffect(() => {
     const fetchTransactionData = async () => {
       setLoading(true);
@@ -101,67 +189,17 @@ export const useTransactionListData = (
         if (error) {
           setError(error);
         } else {
-          // Check for missing currency values and populate them if needed
+          // Process transactions - populate missing currency amounts if needed
           if (data && data.length > 0 && currencyRates.length > 0) {
-            const updatedData = await Promise.all(data.map(async (transactionData) => {
-              // Cast the database result to our Transaction type
-              const transaction = transactionData as unknown as Transaction;
-              
-              const needsUpdate = (
-                transaction.currency && 
-                (transaction.sgd_amount === null || 
-                 transaction.inr_amount === null || 
-                 transaction.usd_amount === null)
-              );
-              
-              if (needsUpdate) {
-                const updates: Partial<Transaction> = {};
-                
-                // Calculate missing currency values
-                if (transaction.sgd_amount === null && transaction.currency !== 'SGD') {
-                  const sgdAmount = convertCurrency(transaction.amount, transaction.currency, 'SGD', currencyRates);
-                  if (sgdAmount !== null) updates.sgd_amount = sgdAmount;
-                } else if (transaction.currency === 'SGD' && transaction.sgd_amount === null) {
-                  updates.sgd_amount = transaction.amount;
-                }
-                
-                if (transaction.inr_amount === null && transaction.currency !== 'INR') {
-                  const inrAmount = convertCurrency(transaction.amount, transaction.currency, 'INR', currencyRates);
-                  if (inrAmount !== null) updates.inr_amount = inrAmount;
-                } else if (transaction.currency === 'INR' && transaction.inr_amount === null) {
-                  updates.inr_amount = transaction.amount;
-                }
-                
-                if (transaction.usd_amount === null && transaction.currency !== 'USD') {
-                  const usdAmount = convertCurrency(transaction.amount, transaction.currency, 'USD', currencyRates);
-                  if (usdAmount !== null) updates.usd_amount = usdAmount;
-                } else if (transaction.currency === 'USD' && transaction.usd_amount === null) {
-                  updates.usd_amount = transaction.amount;
-                }
-                
-                // Update transaction in database if we have changes
-                if (Object.keys(updates).length > 0) {
-                  const { data: updatedTransaction, error: updateError } = await supabase
-                    .from('transactions')
-                    .update(updates)
-                    .eq('id', transaction.id)
-                    .select('*')
-                    .single();
-                    
-                  if (updateError) {
-                    console.error('Error updating transaction:', updateError);
-                    return transaction;
-                  }
-                  
-                  // Cast the updated transaction to our Transaction type
-                  return updatedTransaction as unknown as Transaction;
-                }
-              }
-              
-              return transaction;
-            }));
+            // Cast the data to our Transaction type
+            const transactions = data as unknown as Transaction[];
             
-            setTransactionData(updatedData);
+            // Process each transaction to ensure it has all currency amounts
+            const updatedTransactions = await Promise.all(
+              transactions.map(transaction => populateMissingCurrencyAmounts(transaction))
+            );
+            
+            setTransactionData(updatedTransactions);
           } else {
             // Cast the data array to our Transaction[] type
             setTransactionData(data as unknown as Transaction[]);

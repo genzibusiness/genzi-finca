@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,6 +25,8 @@ const createTransactionFormSchema = () => {
     original_amount: z.number().nullable().optional(),
     original_currency: z.string().nullable().optional(),
     sgd_amount: z.number().nullable().optional(),
+    inr_amount: z.number().nullable().optional(),
+    usd_amount: z.number().nullable().optional(),
   });
 };
 
@@ -51,6 +54,8 @@ export const useTransactionForm = (
           original_amount: transaction.original_amount || null,
           original_currency: transaction.original_currency || null,
           sgd_amount: transaction.sgd_amount || null,
+          inr_amount: transaction.inr_amount || null,
+          usd_amount: transaction.usd_amount || null,
         }
       : {
           amount: 0,
@@ -68,6 +73,8 @@ export const useTransactionForm = (
           original_amount: null,
           original_currency: null,
           sgd_amount: null,
+          inr_amount: null,
+          usd_amount: null,
         },
   });
 
@@ -75,58 +82,73 @@ export const useTransactionForm = (
     (status) => !status.type || status.type === form.getValues('type')
   );
   
-  const convertToSGD = async (amount: number, fromCurrency: string): Promise<number | null> => {
-    if (fromCurrency === 'SGD') {
-      return amount;
-    }
-
-    const directRate = currencyRates.find(
-      rate => rate.from_currency === fromCurrency && rate.to_currency === 'SGD'
-    );
-
-    if (directRate) {
-      return amount * directRate.rate;
-    }
-
-    const inverseRate = currencyRates.find(
-      rate => rate.from_currency === 'SGD' && rate.to_currency === fromCurrency
-    );
-
-    if (inverseRate) {
-      return amount / inverseRate.rate;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('currency_rates')
-        .select('*')
-        .or(`from_currency.eq.${fromCurrency},to_currency.eq.${fromCurrency}`);
-      
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        const freshDirectRate = data.find(
-          rate => rate.from_currency === fromCurrency && rate.to_currency === 'SGD'
-        );
-
-        if (freshDirectRate) {
-          return amount * freshDirectRate.rate;
+  // Calculate all currency amounts upfront
+  const calculateCurrencyAmounts = (amount: number, currency: string): {
+    sgd_amount: number | null;
+    inr_amount: number | null;
+    usd_amount: number | null;
+  } => {
+    // Default all to null
+    let sgdAmount: number | null = null;
+    let inrAmount: number | null = null;
+    let usdAmount: number | null = null;
+    
+    // Set the amount for the original currency
+    if (currency === 'SGD') sgdAmount = amount;
+    if (currency === 'INR') inrAmount = amount;
+    if (currency === 'USD') usdAmount = amount;
+    
+    // Find all direct conversion rates first
+    const sgdToInr = currencyRates.find(rate => rate.from_currency === 'SGD' && rate.to_currency === 'INR')?.rate;
+    const sgdToUsd = currencyRates.find(rate => rate.from_currency === 'SGD' && rate.to_currency === 'USD')?.rate;
+    const inrToSgd = currencyRates.find(rate => rate.from_currency === 'INR' && rate.to_currency === 'SGD')?.rate;
+    const inrToUsd = currencyRates.find(rate => rate.from_currency === 'INR' && rate.to_currency === 'USD')?.rate;
+    const usdToSgd = currencyRates.find(rate => rate.from_currency === 'USD' && rate.to_currency === 'SGD')?.rate;
+    const usdToInr = currencyRates.find(rate => rate.from_currency === 'USD' && rate.to_currency === 'INR')?.rate;
+    
+    // Calculate based on original currency
+    if (currency === 'SGD') {
+      // SGD to others
+      if (sgdToInr) inrAmount = amount * sgdToInr;
+      if (sgdToUsd) usdAmount = amount * sgdToUsd;
+    } 
+    else if (currency === 'INR') {
+      // INR to others
+      if (inrToSgd) sgdAmount = amount * inrToSgd;
+      if (inrToUsd) usdAmount = amount * inrToUsd;
+      // If direct conversion not available, use SGD as intermediary
+      else if (inrToSgd && sgdToUsd) usdAmount = (amount * inrToSgd) * sgdToUsd;
+    } 
+    else if (currency === 'USD') {
+      // USD to others
+      if (usdToSgd) sgdAmount = amount * usdToSgd;
+      if (usdToInr) inrAmount = amount * usdToInr;
+      // If direct conversion not available, use SGD as intermediary
+      else if (usdToSgd && sgdToInr) inrAmount = (amount * usdToSgd) * sgdToInr;
+    } 
+    else {
+      // For other currencies, try to convert to SGD first, then others
+      const toSgd = currencyRates.find(rate => rate.from_currency === currency && rate.to_currency === 'SGD');
+      if (toSgd) {
+        sgdAmount = amount * toSgd.rate;
+        
+        // Then convert SGD to others
+        if (sgdAmount !== null) {
+          if (sgdToInr) inrAmount = sgdAmount * sgdToInr;
+          if (sgdToUsd) usdAmount = sgdAmount * sgdToUsd;
         }
-
-        const freshInverseRate = data.find(
-          rate => rate.from_currency === 'SGD' && rate.to_currency === fromCurrency
-        );
-
-        if (freshInverseRate) {
-          return amount / freshInverseRate.rate;
-        }
+      } else {
+        // Try other paths or skip if no conversion found
+        console.warn(`No conversion path found for ${currency} to standard currencies`);
       }
-    } catch (error) {
-      console.error('Error fetching currency rates:', error);
     }
-
-    console.error(`No conversion rate found for ${fromCurrency} to SGD`);
-    return null;
+    
+    // Return all calculated amounts
+    return {
+      sgd_amount: sgdAmount,
+      inr_amount: inrAmount,
+      usd_amount: usdAmount
+    };
   };
 
   const applyConversionRate = (selectedCurrency: string) => {
@@ -147,95 +169,18 @@ export const useTransactionForm = (
         if (confirmConversion) {
           form.setValue('amount', Number(convertedAmount.toFixed(2)));
           form.setValue('currency', defaultCurrency);
+          
+          // Calculate and set all currency amounts immediately
+          const amounts = calculateCurrencyAmounts(convertedAmount, defaultCurrency);
+          form.setValue('sgd_amount', amounts.sgd_amount);
+          form.setValue('inr_amount', amounts.inr_amount);
+          form.setValue('usd_amount', amounts.usd_amount);
+          
           return true;
         }
       }
     }
     return false;
-  };
-
-  const convertToAllCurrencies = async (amount: number, fromCurrency: string): Promise<{
-    sgd_amount: number | null;
-    inr_amount: number | null;
-    usd_amount: number | null;
-  }> => {
-    if (!amount || isNaN(amount)) {
-      return {
-        sgd_amount: null,
-        inr_amount: null,
-        usd_amount: null
-      };
-    }
-    
-    let sgdAmount: number | null = null;
-    let inrAmount: number | null = null;
-    let usdAmount: number | null = null;
-    
-    if (fromCurrency === 'SGD') {
-      sgdAmount = amount;
-    } else {
-      const directToSGD = currencyRates.find(
-        rate => rate.from_currency === fromCurrency && rate.to_currency === 'SGD'
-      );
-      
-      if (directToSGD) {
-        sgdAmount = amount * directToSGD.rate;
-      } else {
-        const inverseFromSGD = currencyRates.find(
-          rate => rate.from_currency === 'SGD' && rate.to_currency === fromCurrency
-        );
-        
-        if (inverseFromSGD) {
-          sgdAmount = amount / inverseFromSGD.rate;
-        }
-      }
-    }
-    
-    if (fromCurrency === 'INR') {
-      inrAmount = amount;
-    } else if (sgdAmount !== null) {
-      const sgdToINR = currencyRates.find(
-        rate => rate.from_currency === 'SGD' && rate.to_currency === 'INR'
-      );
-      
-      if (sgdToINR) {
-        inrAmount = sgdAmount * sgdToINR.rate;
-      } else {
-        const directToINR = currencyRates.find(
-          rate => rate.from_currency === fromCurrency && rate.to_currency === 'INR'
-        );
-        
-        if (directToINR) {
-          inrAmount = amount * directToINR.rate;
-        }
-      }
-    }
-    
-    if (fromCurrency === 'USD') {
-      usdAmount = amount;
-    } else if (sgdAmount !== null) {
-      const sgdToUSD = currencyRates.find(
-        rate => rate.from_currency === 'SGD' && rate.to_currency === 'USD'
-      );
-      
-      if (sgdToUSD) {
-        usdAmount = sgdAmount * sgdToUSD.rate;
-      } else {
-        const directToUSD = currencyRates.find(
-          rate => rate.from_currency === fromCurrency && rate.to_currency === 'USD'
-        );
-        
-        if (directToUSD) {
-          usdAmount = amount * directToUSD.rate;
-        }
-      }
-    }
-    
-    return {
-      sgd_amount: sgdAmount,
-      inr_amount: inrAmount,
-      usd_amount: usdAmount
-    };
   };
 
   useEffect(() => {
@@ -258,25 +203,16 @@ export const useTransactionForm = (
         applyConversionRate(value.currency);
       }
 
+      // Calculate currency conversions immediately when amount or currency changes
       if ((name === 'amount' || name === 'currency') && value.amount && value.currency) {
         form.setValue('original_amount', value.amount);
         form.setValue('original_currency', value.currency);
         
-        if (value.currency !== 'SGD') {
-          convertToSGD(value.amount, value.currency).then(sgdAmount => {
-            if (sgdAmount !== null) {
-              form.setValue('sgd_amount', sgdAmount);
-            }
-          });
-        } else {
-          form.setValue('sgd_amount', value.amount);
-        }
-        
-        convertToAllCurrencies(value.amount, value.currency).then(amounts => {
-          form.setValue('sgd_amount', amounts.sgd_amount);
-          form.setValue('inr_amount', amounts.inr_amount);
-          form.setValue('usd_amount', amounts.usd_amount);
-        });
+        // Calculate all currency amounts at once and set them all
+        const amounts = calculateCurrencyAmounts(value.amount, value.currency);
+        form.setValue('sgd_amount', amounts.sgd_amount);
+        form.setValue('inr_amount', amounts.inr_amount);
+        form.setValue('usd_amount', amounts.usd_amount);
       }
     });
     

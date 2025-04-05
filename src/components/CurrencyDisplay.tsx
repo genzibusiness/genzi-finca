@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import { TransactionType, CurrencyRate } from '@/types/cashflow';
+import { TransactionType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency, getAmountInPreferredCurrency } from '@/utils/currencyUtils';
+import { formatCurrency } from '@/utils/currencyUtils';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 
 interface CurrencyDisplayProps {
@@ -38,12 +38,10 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
     INR: '₹',
     SGD: 'S$'
   });
-  const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchCurrencySymbols();
-    fetchCurrencyRates();
   }, []);
 
   const fetchCurrencySymbols = async () => {
@@ -70,25 +68,6 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
     }
   };
 
-  const fetchCurrencyRates = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('currency_rates')
-        .select('*');
-      
-      if (error) throw error;
-      
-      if (data) {
-        setCurrencyRates(data as CurrencyRate[]);
-      }
-    } catch (error) {
-      console.error('Error fetching currency rates:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Get currency symbol based on currency code
   const getSymbol = (code: string) => {
     return currencySymbols[code] || code;
@@ -102,26 +81,33 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
 
   const colorClass = getColorClass();
   
-  // Preferred currency display
+  // Get preferred currency and amount
   const preferredCurrency = preferences?.preferred_currency || 'INR';
   
-  // Object to pass to conversion function with additional currency fields
-  const transactionData = {
-    amount,
-    currency,
-    sgd_amount: sgdAmount,
-    inr_amount: inrAmount,
-    usd_amount: usdAmount,
-    original_amount: originalAmount,
-    original_currency: originalCurrency
+  // Get the appropriate pre-calculated amount based on the preferred currency
+  const getPreferredAmount = (): number | null => {
+    if (preferredCurrency === currency) {
+      return amount;
+    }
+    
+    // Use pre-calculated amounts if available
+    if (preferredCurrency === 'SGD' && sgdAmount !== null && sgdAmount !== undefined) {
+      return sgdAmount;
+    }
+    
+    if (preferredCurrency === 'INR' && inrAmount !== null && inrAmount !== undefined) {
+      return inrAmount;
+    }
+    
+    if (preferredCurrency === 'USD' && usdAmount !== null && usdAmount !== undefined) {
+      return usdAmount;
+    }
+    
+    // Fallback to original amount if no pre-calculated amount is available
+    return amount;
   };
   
-  // Get converted amount in preferred currency
-  const convertedAmount = getAmountInPreferredCurrency(
-    transactionData,
-    preferredCurrency,
-    currencyRates
-  );
+  const displayAmount = getPreferredAmount();
   
   // Display original amount if requested and it exists
   const shouldShowOriginal = showOriginal && 
@@ -137,7 +123,7 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
         <span className="animate-pulse">Loading...</span>
       ) : (
         <>
-          {formatCurrency(convertedAmount, preferredCurrency)}
+          {formatCurrency(displayAmount, preferredCurrency)}
           
           {shouldShowOriginal && (
             <span className="text-muted-foreground text-xs ml-1">
