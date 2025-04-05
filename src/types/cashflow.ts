@@ -1,3 +1,4 @@
+
 export type TransactionStatus = "paid" | "received" | "yet_to_be_paid" | "yet_to_be_received";
 
 export type TransactionType = "income" | "expense";
