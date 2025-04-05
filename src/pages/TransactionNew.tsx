@@ -81,9 +81,32 @@ const TransactionNew = () => {
       const originalAmount = transaction.original_amount || transaction.amount;
       const originalCurrency = transaction.original_currency || transaction.currency;
       
-      const sgdAmount = transaction.sgd_amount || (transaction.currency === 'SGD' ? transaction.amount : null);
-      const inrAmount = transaction.inr_amount || (transaction.currency === 'INR' ? transaction.amount : null);
-      const usdAmount = transaction.usd_amount || (transaction.currency === 'USD' ? transaction.amount : null);
+      let sgdAmount = transaction.sgd_amount;
+      let inrAmount = transaction.inr_amount;
+      let usdAmount = transaction.usd_amount;
+      
+      if (transaction.currency === 'SGD' && sgdAmount === null) {
+        sgdAmount = transaction.amount;
+      } 
+      if (transaction.currency === 'INR' && inrAmount === null) {
+        inrAmount = transaction.amount;
+      }
+      if (transaction.currency === 'USD' && usdAmount === null) {
+        usdAmount = transaction.amount;
+      }
+      
+      if (!sgdAmount && !inrAmount && !usdAmount) {
+        console.warn("No currency conversions available, using fallbacks");
+        if (transaction.currency === 'SGD') sgdAmount = transaction.amount;
+        if (transaction.currency === 'INR') inrAmount = transaction.amount;
+        if (transaction.currency === 'USD') usdAmount = transaction.amount;
+      }
+      
+      console.log('Currency values being saved:', {
+        sgd_amount: sgdAmount,
+        inr_amount: inrAmount,
+        usd_amount: usdAmount
+      });
       
       const transactionData = {
         amount: transaction.amount,

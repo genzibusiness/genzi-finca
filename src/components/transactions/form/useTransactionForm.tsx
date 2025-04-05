@@ -205,14 +205,20 @@ export const useTransactionForm = (
 
       // Calculate currency conversions immediately when amount or currency changes
       if ((name === 'amount' || name === 'currency') && value.amount && value.currency) {
+        // Set original amount and currency
         form.setValue('original_amount', value.amount);
         form.setValue('original_currency', value.currency);
         
-        // Calculate all currency amounts at once and set them all
+        // Calculate all currency amounts
         const amounts = calculateCurrencyAmounts(value.amount, value.currency);
+        
+        // Store the calculated amounts
         form.setValue('sgd_amount', amounts.sgd_amount);
         form.setValue('inr_amount', amounts.inr_amount);
         form.setValue('usd_amount', amounts.usd_amount);
+        
+        // Log for debugging
+        console.log('Calculated currency amounts:', amounts);
       }
     });
     

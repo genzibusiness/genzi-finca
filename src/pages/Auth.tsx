@@ -1,373 +1,238 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Eye, EyeOff, ArrowRight, Mail, Lock } from 'lucide-react';
 import { toast } from 'sonner';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-
-// Validation schemas
-const loginSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(1, { message: "Password is required" }),
-});
-
-const registerSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string()
-    .min(8, { message: "Password must be at least 8 characters" })
-    .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
-    .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
-    .regex(/[0-9]/, { message: "Password must contain at least one number" }),
-  confirmPassword: z.string(),
-  termsAccepted: z.boolean().refine(val => val === true, {
-    message: "You must accept the terms and conditions",
-  }),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
-
-const resetSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-type RegisterFormValues = z.infer<typeof registerSchema>;
-type ResetFormValues = z.infer<typeof resetSchema>;
 
 const Auth = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const { signIn, signUp, user, loading, resetPassword } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Check your email for the confirmation link');
+      navigate('/confirm-signup');
+    } catch (error: any) {
+      toast.error(error.message || 'An error occurred during sign up');
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  // Initialize active tab from location state or default to signin
-  const locationState = location.state as { activeTab?: string } | null;
-  const initialTab = locationState?.activeTab || 'signin';
-  const [activeTab, setActiveTab] = useState(initialTab);
-  
-  // Check for confirmed email parameter
-  const searchParams = new URLSearchParams(location.search);
-  const isConfirmed = searchParams.get('confirmed') === 'true';
-
-  // Forms
-  const loginForm = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    }
-  });
-
-  const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      termsAccepted: false,
-    }
-  });
-
-  const resetForm = useForm<ResetFormValues>({
-    resolver: zodResolver(resetSchema),
-    defaultValues: {
-      email: '',
-    }
-  });
-
-  useEffect(() => {
-    if (isConfirmed) {
-      toast.success('Email confirmed! You can now sign in.');
-    }
-  }, [isConfirmed]);
-  
-  useEffect(() => {
-    // If user is already authenticated, redirect to dashboard
-    if (user && !loading) {
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Signed in successfully');
       navigate('/');
-    }
-  }, [user, loading, navigate]);
-
-  const handleSignIn = async (values: LoginFormValues) => {
-    setIsSubmitting(true);
-    try {
-      await signIn(values.email, values.password);
-      navigate('/');
-    } catch (error) {
-      // Error is handled in the signIn function
+    } catch (error: any) {
+      toast.error(error.message || 'An error occurred during sign in');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
-
-  const handleSignUp = async (values: RegisterFormValues) => {
-    setIsSubmitting(true);
-    try {
-      await signUp(values.email, values.password, values.name);
-      setActiveTab('signin');
-      loginForm.setValue('email', values.email);
-      toast.success('Registration successful! Please check your email to confirm your account.');
-    } catch (error) {
-      // Error is handled in the signUp function
-    } finally {
-      setIsSubmitting(false);
-    }
+  
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
-
-  const handleResetPassword = async (values: ResetFormValues) => {
-    setIsSubmitting(true);
-    try {
-      await resetPassword(values.email);
-      toast.success('Password reset email sent. Please check your inbox.');
-    } catch (error) {
-      // Error is handled in the resetPassword function
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+  
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader className="space-y-2">
-          <div className="flex justify-center mb-2">
-            <img 
-              src="/lovable-uploads/c6205e0f-d02f-4ea9-a6dd-ea17fa945b79.png" 
-              alt="Genzi Finca Logo" 
-              className="h-12 w-auto" 
-            />
-          </div>
-          <CardTitle className="text-center">Genzi Finca</CardTitle>
-          <CardDescription className="text-center">
-            Manage your finances with ease
-          </CardDescription>
-        </CardHeader>
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            <TabsTrigger value="reset">Reset</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="signin">
-            <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(handleSignIn)}>
-                <CardContent className="space-y-4 pt-4">
-                  <FormField
-                    control={loginForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="email"
-                            placeholder="you@example.com"
-                            autoComplete="email"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-200 p-4">
+      <div className="w-full max-w-md mb-8 flex flex-col items-center">
+        <img 
+          src="/lovable-uploads/adc2386b-98c0-4b41-8e5c-0659f259536f.png" 
+          alt="Finca Logo" 
+          className="h-16 w-16 mb-2" 
+        />
+        <h1 className="text-3xl font-bold text-center">Finca Finance</h1>
+        <p className="text-muted-foreground text-center mt-2">
+          Your finance management solution
+        </p>
+      </div>
+      
+      <Tabs defaultValue="signin" className="w-full max-w-md">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="signin">Sign In</TabsTrigger>
+          <TabsTrigger value="signup">Sign Up</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="signin">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sign In</CardTitle>
+              <CardDescription>
+                Welcome back! Enter your credentials to access your account.
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSignIn}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email" className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </Label>
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                    className="w-full"
                   />
-                  
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center justify-between">
-                          <FormLabel>Password</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="••••••••"
-                            autoComplete="current-password"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="signin-password" className="flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="signin-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="w-full pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <Link to="/reset-password" className="text-sm text-primary hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
+              </CardContent>
+              
+              <CardFooter>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Signing in...' : 'Sign In'}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="signup">
+          <Card>
+            <CardHeader>
+              <CardTitle>Create Account</CardTitle>
+              <CardDescription>
+                Join us! Enter your details to create a new account.
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSignUp}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email" className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                    className="w-full"
                   />
-                </CardContent>
-                <CardFooter className="flex flex-col">
-                  <Button 
-                    type="submit" 
-                    className="w-full mb-2" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Signing in...' : 'Sign In'}
-                  </Button>
-                </CardFooter>
-              </form>
-            </Form>
-          </TabsContent>
-          
-          <TabsContent value="signup">
-            <Form {...registerForm}>
-              <form onSubmit={registerForm.handleSubmit(handleSignUp)}>
-                <CardContent className="space-y-4 pt-4">
-                  <FormField
-                    control={registerForm.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="John Doe"
-                            autoComplete="name"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="email"
-                            placeholder="you@example.com"
-                            autoComplete="email"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="••••••••"
-                            autoComplete="new-password"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="••••••••"
-                            autoComplete="new-password"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="termsAccepted"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-2">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel className="font-normal">
-                            I accept the terms and conditions
-                          </FormLabel>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Creating account...' : 'Create account'}
-                  </Button>
-                </CardFooter>
-              </form>
-            </Form>
-          </TabsContent>
-          
-          <TabsContent value="reset">
-            <Form {...resetForm}>
-              <form onSubmit={resetForm.handleSubmit(handleResetPassword)}>
-                <CardContent className="space-y-4 pt-4">
-                  <FormField
-                    control={resetForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="email"
-                            placeholder="you@example.com"
-                            autoComplete="email"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Sending reset link...' : 'Send reset link'}
-                  </Button>
-                </CardFooter>
-              </form>
-            </Form>
-          </TabsContent>
-        </Tabs>
-      </Card>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password" className="flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="signup-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Create a password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="w-full pr-10"
+                      minLength={6}
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Password must be at least 6 characters
+                  </p>
+                </div>
+              </CardContent>
+              
+              <CardFooter>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Creating account...' : 'Create Account'}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="mt-8 text-center text-sm text-muted-foreground">
+        <p>© 2025 Finca Finance. All rights reserved.</p>
+      </div>
     </div>
   );
 };
