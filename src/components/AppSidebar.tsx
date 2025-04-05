@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSidebar } from '@/context/SidebarContext';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronLeft, Home, BarChart4, PiggyBank, FileCog, Users, MessageSquare, ArrowDown, ArrowUp, Settings, Menu } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Home, BarChart4, PiggyBank, FileCog, MessageSquare, ArrowDown, ArrowUp, Settings, Menu } from 'lucide-react';
 
 const menuItems = [
   { name: 'Dashboard', path: '/dashboard', icon: <Home className="h-5 w-5" /> },
@@ -14,7 +14,6 @@ const menuItems = [
   { name: 'Expenses', path: '/expenses', icon: <ArrowDown className="h-5 w-5" /> },
   { name: 'Transactions', path: '/transactions', icon: <BarChart4 className="h-5 w-5" /> },
   { name: 'Finca Chat', path: '/chat', icon: <MessageSquare className="h-5 w-5" /> },
-  { name: 'Team', path: '/team', icon: <Users className="h-5 w-5" /> },
   { name: 'Settings', path: '/settings', icon: <Settings className="h-5 w-5" /> },
   { name: 'Configure', path: '/configure', icon: <FileCog className="h-5 w-5" /> },
 ];
