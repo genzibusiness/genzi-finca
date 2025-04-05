@@ -58,7 +58,16 @@ const TransactionDetail = () => {
         setCurrencyRates(ratesData);
       }
 
-      setTransaction(data || null);
+      // Ensure transaction.original_currency is properly typed when setting state
+      if (data) {
+        const typedData = {
+          ...data,
+          original_currency: data.original_currency as CurrencyType
+        };
+        setTransaction(typedData);
+      } else {
+        setTransaction(null);
+      }
     } catch (error: any) {
       console.error('Error fetching transaction:', error);
       setError(error.message || 'Failed to load transaction');
@@ -76,13 +85,15 @@ const TransactionDetail = () => {
     try {
       if (!transaction || !id) return;
       
-      // Type assertion to ensure the merged transaction has the correct types
-      const mergedTransaction = { 
-        ...transaction, 
+      // Explicitly cast the original_currency to CurrencyType
+      const originalCurrency = (updatedTransaction.original_currency || updatedTransaction.currency) as CurrencyType;
+      
+      // Create a properly typed merged transaction object
+      const mergedTransaction: Transaction = {
+        ...transaction,
         ...updatedTransaction,
-        // Ensure original_currency is properly typed as CurrencyType
-        original_currency: (updatedTransaction.original_currency || updatedTransaction.currency) as CurrencyType
-      } as Transaction;
+        original_currency: originalCurrency
+      };
       
       setTransaction(mergedTransaction);
     
@@ -99,7 +110,6 @@ const TransactionDetail = () => {
       
       let sgdAmount = updatedTransaction.sgd_amount;
       let originalAmount = updatedTransaction.original_amount || updatedTransaction.amount;
-      let originalCurrency = updatedTransaction.original_currency || updatedTransaction.currency;
       
       if (
         (transaction.amount !== updatedTransaction.amount || transaction.currency !== updatedTransaction.currency) &&
@@ -139,7 +149,7 @@ const TransactionDetail = () => {
           payment_type_id: payment_type_id,
           paid_by_user_id: paid_by_user_id,
           original_amount: originalAmount,
-          original_currency: originalCurrency as CurrencyType, // Type assertion here as well
+          original_currency: originalCurrency,
           sgd_amount: sgdAmount
         })
         .eq('id', id);
