@@ -1,5 +1,6 @@
 
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import './index.css'
 
@@ -12,5 +13,12 @@ if (!rootElement) {
   errorDiv.innerText = "Unable to find root element. Please check your HTML structure.";
   document.body.appendChild(errorDiv);
 } else {
-  createRoot(rootElement).render(<App />);
+  const root = createRoot(rootElement);
+  
+  // Wrap the entire app with error boundaries and proper providers
+  root.render(
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  );
 }
