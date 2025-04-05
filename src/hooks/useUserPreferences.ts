@@ -25,6 +25,7 @@ export function useUserPreferences() {
       setLoading(true);
       setError(null);
 
+      // Use the properly typed supabase client
       const { data, error } = await supabase
         .from('user_preferences')
         .select('*')
@@ -52,6 +53,7 @@ export function useUserPreferences() {
     if (!user) return;
 
     try {
+      // Create default preferences with the correct types
       const defaultPreferences = {
         user_id: user.id,
         preferred_currency: 'INR' as const

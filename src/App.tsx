@@ -1,7 +1,8 @@
+
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { ReactQueryDevtools } from 'react-query/devtools';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query/devtools';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { Toaster } from 'sonner';
 
@@ -12,8 +13,6 @@ import TransactionNew from '@/pages/TransactionNew';
 import TransactionDetail from '@/pages/TransactionDetail';
 import Income from '@/pages/Income';
 import Expenses from '@/pages/Expenses';
-import Configure from '@/pages/Configure';
-import Profile from '@/pages/Profile';
 import NotFound from '@/pages/NotFound';
 import Auth from '@/pages/Auth';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -47,8 +46,6 @@ const App = () => {
                   <Route path="/income" element={<Income />} />
                   <Route path="/expenses" element={<Expenses />} />
                   <Route path="/settings" element={<UserSettings />} />
-                  <Route path="/configure" element={<Configure />} />
-                  <Route path="/profile" element={<Profile />} />
                 </Route>
                 
                 {/* Error/Not Found Route */}

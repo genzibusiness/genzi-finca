@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from './AppSidebar';
 import { useAuth } from '@/context/AuthContext';
 import Copyright from './Copyright';
@@ -22,33 +21,31 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { preferences, loading } = useUserPreferences();
 
   return (
-    <SidebarProvider defaultOpen={!isMobile}>
-      <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar />
-        <main className="flex-1 flex flex-col">
-          <div className="flex justify-end p-2 sm:p-4 border-b">
-            {preferences && (
-              <div className="flex items-center mr-4">
-                <span className="text-sm text-muted-foreground mr-2">
-                  Display Currency: {preferences.preferred_currency}
-                </span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate('/settings')}
-                  className="h-8"
-                >
-                  <Settings className="h-4 w-4 mr-1" />
-                  Settings
-                </Button>
-              </div>
-            )}
-          </div>
-          {children}
-          <Copyright />
-        </main>
-      </div>
-    </SidebarProvider>
+    <div className="flex min-h-screen w-full bg-background">
+      <AppSidebar />
+      <main className="flex-1 flex flex-col">
+        <div className="flex justify-end p-2 sm:p-4 border-b">
+          {preferences && (
+            <div className="flex items-center mr-4">
+              <span className="text-sm text-muted-foreground mr-2">
+                Display Currency: {preferences.preferred_currency}
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/settings')}
+                className="h-8"
+              >
+                <Settings className="h-4 w-4 mr-1" />
+                Settings
+              </Button>
+            </div>
+          )}
+        </div>
+        {children}
+        <Copyright />
+      </main>
+    </div>
   );
 };
 

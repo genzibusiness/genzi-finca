@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Sidebar, SidebarTab, SidebarTabs, SidebarSection } from '@/components/ui/sidebar';
+import { Sidebar } from '@/components/ui/sidebar';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -7,6 +8,7 @@ import {
   TrendingDown,
   Settings
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const AppSidebar = () => {
   return (
@@ -18,26 +20,51 @@ const AppSidebar = () => {
             Finca
           </h2>
         </div>
-        <SidebarTabs>
-          <SidebarTab value="dashboard" url='/dashboard' icon={<LayoutDashboard size={18} />}>
-            Dashboard
-          </SidebarTab>
-          <SidebarTab value="transactions" url='/transactions' icon={<FileText size={18} />}>
-            Transactions
-          </SidebarTab>
-          <SidebarTab value="income" url='/income' icon={<TrendingUp size={18} />}>
-            Income
-          </SidebarTab>
-          <SidebarTab value="expenses" url='/expenses' icon={<TrendingDown size={18} />}>
-            Expenses
-          </SidebarTab>
+        <div className="flex-1 overflow-auto py-2">
+          <nav className="grid gap-1 px-2">
+            <Link 
+              to="/dashboard" 
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
+            >
+              <LayoutDashboard size={18} />
+              <span>Dashboard</span>
+            </Link>
+            <Link 
+              to="/transactions" 
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
+            >
+              <FileText size={18} />
+              <span>Transactions</span>
+            </Link>
+            <Link 
+              to="/income" 
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
+            >
+              <TrendingUp size={18} />
+              <span>Income</span>
+            </Link>
+            <Link 
+              to="/expenses" 
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
+            >
+              <TrendingDown size={18} />
+              <span>Expenses</span>
+            </Link>
+          </nav>
           
-          <SidebarSection title="Account">
-            <SidebarTab value="settings" url='/settings' icon={<Settings size={18} />}>
-              Settings
-            </SidebarTab>
-          </SidebarSection>
-        </SidebarTabs>
+          <div className="mt-6">
+            <h3 className="px-4 text-sm font-medium text-muted-foreground">Account</h3>
+            <nav className="grid gap-1 px-2 mt-2">
+              <Link 
+                to="/settings" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
+              >
+                <Settings size={18} />
+                <span>Settings</span>
+              </Link>
+            </nav>
+          </div>
+        </div>
       </div>
     </Sidebar>
   );
