@@ -9,10 +9,14 @@ import {
   Settings
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSidebar } from '@/context/SidebarContext';
 
 const AppSidebar = () => {
+  // Use our custom sidebar context
+  const { expanded } = useSidebar();
+  
   return (
-    <Sidebar className="border-r bg-background">
+    <Sidebar expanded={expanded} className="border-r bg-background">
       <div className="flex h-full flex-col">
         <div className="p-2 pt-6">
           <h2 className="flex items-center px-4 text-lg font-semibold tracking-tight">
