@@ -23,7 +23,14 @@ import { CashflowProvider } from '@/context/CashflowContext';
 import UserSettings from '@/pages/UserSettings';
 
 const App = () => {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 1,
+        refetchOnWindowFocus: false,
+      },
+    },
+  });
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -56,7 +63,7 @@ const App = () => {
           </CashflowProvider>
         </AuthProvider>
       </Suspense>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   );
 };
