@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ExpenseType, TransactionType } from '@/types/cashflow';
+import { convertCurrency } from '@/utils/currencyUtils';
 
 // Find and fix the issue on line 145 with String type
 // Changed from: const dateMatch = dateValue.match(/^\d{4}-\d{2}-\d{2}$/);
@@ -24,6 +25,7 @@ export const useTransactionListData = (
   const [transactionData, setTransactionData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
+  const [currencyRates, setCurrencyRates] = useState<any[]>([]);
 
   const {
     selectedMonth,
@@ -31,6 +33,27 @@ export const useTransactionListData = (
     selectedCategory,
     filterType
   } = options;
+
+  // Fetch currency rates once
+  useEffect(() => {
+    const fetchCurrencyRates = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('currency_rates')
+          .select('*');
+          
+        if (error) {
+          console.error('Error fetching currency rates:', error);
+        } else {
+          setCurrencyRates(data || []);
+        }
+      } catch (err) {
+        console.error('Error in currency rates fetch:', err);
+      }
+    };
+    
+    fetchCurrencyRates();
+  }, []);
 
   useEffect(() => {
     const fetchTransactionData = async () => {
@@ -78,7 +101,66 @@ export const useTransactionListData = (
         if (error) {
           setError(error);
         } else {
-          setTransactionData(data || []);
+          // Check for missing currency values and populate them if needed
+          if (data && data.length > 0 && currencyRates.length > 0) {
+            const updatedData = await Promise.all(data.map(async (transaction) => {
+              const needsUpdate = (
+                transaction.currency && 
+                (transaction.sgd_amount === null || 
+                 transaction.inr_amount === null || 
+                 transaction.usd_amount === null)
+              );
+              
+              if (needsUpdate) {
+                const updates: any = {};
+                
+                // Calculate missing currency values
+                if (transaction.sgd_amount === null && transaction.currency !== 'SGD') {
+                  const sgdAmount = convertCurrency(transaction.amount, transaction.currency, 'SGD', currencyRates);
+                  if (sgdAmount !== null) updates.sgd_amount = sgdAmount;
+                } else if (transaction.currency === 'SGD' && transaction.sgd_amount === null) {
+                  updates.sgd_amount = transaction.amount;
+                }
+                
+                if (transaction.inr_amount === null && transaction.currency !== 'INR') {
+                  const inrAmount = convertCurrency(transaction.amount, transaction.currency, 'INR', currencyRates);
+                  if (inrAmount !== null) updates.inr_amount = inrAmount;
+                } else if (transaction.currency === 'INR' && transaction.inr_amount === null) {
+                  updates.inr_amount = transaction.amount;
+                }
+                
+                if (transaction.usd_amount === null && transaction.currency !== 'USD') {
+                  const usdAmount = convertCurrency(transaction.amount, transaction.currency, 'USD', currencyRates);
+                  if (usdAmount !== null) updates.usd_amount = usdAmount;
+                } else if (transaction.currency === 'USD' && transaction.usd_amount === null) {
+                  updates.usd_amount = transaction.amount;
+                }
+                
+                // Update transaction in database if we have changes
+                if (Object.keys(updates).length > 0) {
+                  const { data: updatedTransaction, error: updateError } = await supabase
+                    .from('transactions')
+                    .update(updates)
+                    .eq('id', transaction.id)
+                    .select('*')
+                    .single();
+                    
+                  if (updateError) {
+                    console.error('Error updating transaction:', updateError);
+                    return transaction;
+                  }
+                  
+                  return updatedTransaction;
+                }
+              }
+              
+              return transaction;
+            }));
+            
+            setTransactionData(updatedData);
+          } else {
+            setTransactionData(data || []);
+          }
         }
       } catch (err) {
         setError(err);
@@ -87,8 +169,11 @@ export const useTransactionListData = (
       }
     };
 
-    fetchTransactionData();
-  }, [selectedMonth, selectedYear, selectedCategory, filterType]);
+    // Only fetch if we have currency rates
+    if (currencyRates.length > 0) {
+      fetchTransactionData();
+    }
+  }, [selectedMonth, selectedYear, selectedCategory, filterType, currencyRates]);
 
   const deleteTransaction = async (id: string) => {
     try {
