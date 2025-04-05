@@ -21,7 +21,8 @@ const menuItems = [
 
 const AppSidebar = () => {
   const location = useLocation();
-  const { isCollapsed, toggleSidebar } = useSidebar();
+  const { expanded, toggleExpanded } = useSidebar();
+  const isCollapsed = !expanded;
 
   return (
     <aside
@@ -50,7 +51,7 @@ const AppSidebar = () => {
             variant="ghost"
             size="icon"
             className={cn("text-white hover:bg-sidebar-button-hover", isCollapsed ? "absolute right-0 -mr-3 top-4 bg-sidebar-header" : "")}
-            onClick={toggleSidebar}
+            onClick={toggleExpanded}
           >
             {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </Button>
@@ -59,7 +60,7 @@ const AppSidebar = () => {
         {/* Mobile menu button - only shown on smaller screens */}
         <div className="lg:hidden flex justify-between items-center px-4 py-2 border-b">
           <span className="font-medium">Menu</span>
-          <Button variant="ghost" size="sm" onClick={toggleSidebar}>
+          <Button variant="ghost" size="sm" onClick={toggleExpanded}>
             <Menu className="h-5 w-5" />
           </Button>
         </div>
