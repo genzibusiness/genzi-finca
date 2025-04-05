@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronRight, ChevronLeft, Home, BarChart4, PiggyBank, FileCog, Users, MessageSquare, ArrowDown, ArrowUp, Settings, Menu } from 'lucide-react';
 
 const menuItems = [
-  { name: 'Dashboard', path: '/', icon: <Home className="h-5 w-5" /> },
+  { name: 'Dashboard', path: '/dashboard', icon: <Home className="h-5 w-5" /> },
   { name: 'Income', path: '/income', icon: <ArrowUp className="h-5 w-5" /> },
   { name: 'Expenses', path: '/expenses', icon: <ArrowDown className="h-5 w-5" /> },
   { name: 'Transactions', path: '/transactions', icon: <BarChart4 className="h-5 w-5" /> },
@@ -38,7 +38,7 @@ const AppSidebar = () => {
           isCollapsed ? "justify-center" : "justify-between"
         )}>
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-2">
+            <Link to="/dashboard" className="flex items-center gap-2">
               <img 
                 src="/lovable-uploads/adc2386b-98c0-4b41-8e5c-0659f259536f.png" 
                 alt="Finca" 

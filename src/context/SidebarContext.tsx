@@ -1,35 +1,43 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Create a separate interface for our context to avoid conflicts with shadcn's useSidebar
-type FincaSidebarContextType = {
+export type FincaSidebarContextType = {
   expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
   toggleExpanded: () => void;
 };
 
-const FincaSidebarContext = createContext<FincaSidebarContextType | undefined>(undefined);
+const SidebarContext = createContext<FincaSidebarContextType>({
+  expanded: true,
+  toggleExpanded: () => {},
+});
 
-export function SidebarProvider({ children }: { children: React.ReactNode }) {
-  const [expanded, setExpanded] = useState(true);
+export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Check for previously saved state in localStorage
+  const [expanded, setExpanded] = useState(() => {
+    const saved = localStorage.getItem('sidebar-expanded');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  // Save to localStorage on change
+  useEffect(() => {
+    localStorage.setItem('sidebar-expanded', JSON.stringify(expanded));
+  }, [expanded]);
 
   const toggleExpanded = () => {
-    setExpanded((prev) => !prev);
+    setExpanded(!expanded);
   };
 
   return (
-    <FincaSidebarContext.Provider value={{ expanded, setExpanded, toggleExpanded }}>
+    <SidebarContext.Provider value={{ expanded, toggleExpanded }}>
       {children}
-    </FincaSidebarContext.Provider>
+    </SidebarContext.Provider>
   );
-}
+};
 
-export function useSidebar() {
-  const context = useContext(FincaSidebarContext);
-  
-  if (context === undefined) {
+export const useSidebar = (): FincaSidebarContextType => {
+  const context = useContext(SidebarContext);
+  if (!context) {
     throw new Error('useSidebar must be used within a SidebarProvider');
   }
-  
   return context;
-}
+};
