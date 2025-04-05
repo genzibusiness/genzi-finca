@@ -1,13 +1,14 @@
 
 import React, { createContext, useContext, useState } from 'react';
 
-type SidebarContextType = {
+// Create a separate interface for our context to avoid conflicts with shadcn's useSidebar
+type FincaSidebarContextType = {
   expanded: boolean;
   setExpanded: (expanded: boolean) => void;
   toggleExpanded: () => void;
 };
 
-const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
+const FincaSidebarContext = createContext<FincaSidebarContextType | undefined>(undefined);
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [expanded, setExpanded] = useState(true);
@@ -17,14 +18,14 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <SidebarContext.Provider value={{ expanded, setExpanded, toggleExpanded }}>
+    <FincaSidebarContext.Provider value={{ expanded, setExpanded, toggleExpanded }}>
       {children}
-    </SidebarContext.Provider>
+    </FincaSidebarContext.Provider>
   );
 }
 
 export function useSidebar() {
-  const context = useContext(SidebarContext);
+  const context = useContext(FincaSidebarContext);
   
   if (context === undefined) {
     throw new Error('useSidebar must be used within a SidebarProvider');
