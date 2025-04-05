@@ -16,6 +16,7 @@ import Expenses from '@/pages/Expenses';
 import NotFound from '@/pages/NotFound';
 import Auth from '@/pages/Auth';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import ConfigureMasterData from '@/pages/ConfigureMasterData';
 
 // Import context providers
 import { AuthProvider } from '@/context/AuthContext';
@@ -93,6 +94,7 @@ const App = () => {
                       <Route path="/income" element={<Income />} />
                       <Route path="/expenses" element={<Expenses />} />
                       <Route path="/settings" element={<UserSettings />} />
+                      <Route path="/configure" element={<ConfigureMasterData />} />
                     </Route>
                     
                     {/* Error/Not Found Route */}

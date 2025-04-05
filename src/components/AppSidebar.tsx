@@ -6,7 +6,8 @@ import {
   FileText, 
   TrendingUp, 
   TrendingDown,
-  Settings
+  Settings,
+  Database
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSidebar } from '@/context/SidebarContext';
@@ -57,8 +58,15 @@ const AppSidebar = () => {
           </nav>
           
           <div className="mt-6">
-            <h3 className="px-4 text-sm font-medium text-muted-foreground">Account</h3>
+            <h3 className="px-4 text-sm font-medium text-muted-foreground">Administration</h3>
             <nav className="grid gap-1 px-2 mt-2">
+              <Link 
+                to="/configure" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
+              >
+                <Database size={18} />
+                {expanded && <span>Master Data</span>}
+              </Link>
               <Link 
                 to="/settings" 
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
