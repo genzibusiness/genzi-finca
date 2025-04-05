@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
-import { toast } from 'sonner';
 
 interface AppLayoutProps {
   children: React.ReactNode;

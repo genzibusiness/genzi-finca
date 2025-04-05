@@ -23,6 +23,9 @@ import { CashflowProvider } from '@/context/CashflowContext';
 import { SidebarProvider } from '@/context/SidebarContext';
 import UserSettings from '@/pages/UserSettings';
 
+// Import Sidebar components from ui
+import { SidebarProvider as UISidebarProvider } from '@/components/ui/sidebar';
+
 const App = () => {
   // Initialize query client here to ensure it's stable across renders
   const [queryClient] = useState(() => new QueryClient({
@@ -73,29 +76,31 @@ const App = () => {
         <AuthProvider>
           <CashflowProvider>
             <ThemeProvider defaultTheme="system" storageKey="finca-ui-theme">
-              <SidebarProvider>
-                <Routes>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
-                  
-                  {/* Auth Route */}
-                  <Route path="/auth" element={<Auth />} />
-                  
-                  {/* Protected Routes */}
-                  <Route element={<ProtectedRoute />}>
-                    <Route path="/dashboard" element={<Index />} />
-                    <Route path="/transactions" element={<Transactions />} />
-                    <Route path="/transactions/new" element={<TransactionNew />} />
-                    <Route path="/transactions/:id" element={<TransactionDetail />} />
-                    <Route path="/income" element={<Income />} />
-                    <Route path="/expenses" element={<Expenses />} />
-                    <Route path="/settings" element={<UserSettings />} />
-                  </Route>
-                  
-                  {/* Error/Not Found Route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <Toaster position="top-right" />
-              </SidebarProvider>
+              <UISidebarProvider>
+                <SidebarProvider>
+                  <Routes>
+                    <Route index element={<Navigate to="/dashboard" replace />} />
+                    
+                    {/* Auth Route */}
+                    <Route path="/auth" element={<Auth />} />
+                    
+                    {/* Protected Routes */}
+                    <Route element={<ProtectedRoute />}>
+                      <Route path="/dashboard" element={<Index />} />
+                      <Route path="/transactions" element={<Transactions />} />
+                      <Route path="/transactions/new" element={<TransactionNew />} />
+                      <Route path="/transactions/:id" element={<TransactionDetail />} />
+                      <Route path="/income" element={<Income />} />
+                      <Route path="/expenses" element={<Expenses />} />
+                      <Route path="/settings" element={<UserSettings />} />
+                    </Route>
+                    
+                    {/* Error/Not Found Route */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <Toaster position="top-right" />
+                </SidebarProvider>
+              </UISidebarProvider>
             </ThemeProvider>
           </CashflowProvider>
         </AuthProvider>
