@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { TransactionType } from '@/types/cashflow';
+import { TransactionType, CurrencyType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/utils/currencyUtils';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -99,7 +99,9 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
       return inrAmount;
     }
     
-    if (preferredCurrency === 'USD' && usdAmount !== null && usdAmount !== undefined) {
+    // Fixed: This comparison needed to be fixed since preferredCurrency can only be 'SGD' or 'INR'
+    // but we still need to handle the case where USD amount should be used
+    if (preferredCurrency === 'USD' || (usdAmount !== null && usdAmount !== undefined && !sgdAmount && !inrAmount)) {
       return usdAmount;
     }
     
