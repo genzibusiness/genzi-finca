@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Transaction, ExpenseType } from '@/types/cashflow';
+import { Transaction, ExpenseType, CurrencyType } from '@/types/cashflow';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
 import PageHeader from '@/components/PageHeader';
@@ -75,7 +75,7 @@ const TransactionDetail = () => {
     try {
       if (!transaction || !id) return;
       
-      setTransaction({ ...transaction, ...updatedTransaction });
+      setTransaction({ ...transaction, ...updatedTransaction } as Transaction);
     
       let validExpenseType = null;
       if (updatedTransaction.type === 'expense' && updatedTransaction.expense_type) {
@@ -130,7 +130,7 @@ const TransactionDetail = () => {
           payment_type_id: payment_type_id,
           paid_by_user_id: paid_by_user_id,
           original_amount: originalAmount,
-          original_currency: originalCurrency,
+          original_currency: originalCurrency as CurrencyType,
           sgd_amount: sgdAmount
         })
         .eq('id', id);
