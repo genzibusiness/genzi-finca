@@ -16,12 +16,12 @@ const AppSidebar = () => {
   const { expanded } = useSidebar();
   
   return (
-    <Sidebar expanded={expanded} className="border-r bg-background">
-      <div className="flex h-full flex-col">
+    <Sidebar className="border-r bg-background">
+      <div className="flex h-full flex-col" data-expanded={expanded ? 'true' : 'false'}>
         <div className="p-2 pt-6">
           <h2 className="flex items-center px-4 text-lg font-semibold tracking-tight">
             <img src="/logo.svg" alt="Finca" className="h-6 mr-2" />
-            Finca
+            {expanded && <span>Finca</span>}
           </h2>
         </div>
         <div className="flex-1 overflow-auto py-2">
@@ -31,28 +31,28 @@ const AppSidebar = () => {
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
             >
               <LayoutDashboard size={18} />
-              <span>Dashboard</span>
+              {expanded && <span>Dashboard</span>}
             </Link>
             <Link 
               to="/transactions" 
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
             >
               <FileText size={18} />
-              <span>Transactions</span>
+              {expanded && <span>Transactions</span>}
             </Link>
             <Link 
               to="/income" 
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
             >
               <TrendingUp size={18} />
-              <span>Income</span>
+              {expanded && <span>Income</span>}
             </Link>
             <Link 
               to="/expenses" 
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
             >
               <TrendingDown size={18} />
-              <span>Expenses</span>
+              {expanded && <span>Expenses</span>}
             </Link>
           </nav>
           
@@ -64,7 +64,7 @@ const AppSidebar = () => {
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
               >
                 <Settings size={18} />
-                <span>Settings</span>
+                {expanded && <span>Settings</span>}
               </Link>
             </nav>
           </div>
