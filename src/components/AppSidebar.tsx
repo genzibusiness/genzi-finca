@@ -1,12 +1,14 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSidebar } from '@/context/SidebarContext';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronLeft, Home, BarChart4, FileCog, MessageSquare, ArrowDown, ArrowUp, Settings, Menu } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Home, BarChart4, FileCog, MessageSquare, ArrowDown, ArrowUp, Settings, Menu, LogOut } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const menuItems = [
   { name: 'Dashboard', path: '/dashboard', icon: <Home className="h-5 w-5" /> },
@@ -20,8 +22,20 @@ const menuItems = [
 
 const AppSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { expanded, toggleExpanded } = useSidebar();
   const isCollapsed = !expanded;
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success('Logged out successfully');
+      navigate('/auth');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to log out');
+    }
+  };
 
   return (
     <aside
@@ -38,12 +52,7 @@ const AppSidebar = () => {
         )}>
           <div className="flex items-center">
             <Link to="/dashboard" className="flex items-center gap-2">
-              <img 
-                src="/lovable-uploads/adc2386b-98c0-4b41-8e5c-0659f259536f.png" 
-                alt="Finca" 
-                className="h-8 w-8" 
-              />
-              {!isCollapsed && <span className="text-xl font-semibold text-white">Genzi Finca</span>}
+              {!isCollapsed && <span className="text-xl font-semibold text-white">Finca</span>}
             </Link>
           </div>
           <Button
@@ -85,6 +94,21 @@ const AppSidebar = () => {
             ))}
           </nav>
         </ScrollArea>
+
+        {/* Logout button */}
+        <div className="p-4">
+          <Button 
+            variant="ghost" 
+            onClick={handleLogout}
+            className={cn(
+              "w-full flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-white hover:bg-[#00526e]",
+              isCollapsed && "justify-center px-2"
+            )}
+          >
+            <LogOut className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-3">Logout</span>}
+          </Button>
+        </div>
 
         {/* Bottom section */}
         <div className="mt-auto p-4">

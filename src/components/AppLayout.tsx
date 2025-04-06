@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useSidebar } from '@/context/SidebarContext';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -18,11 +19,20 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { preferences, loading } = useUserPreferences();
+  const { expanded } = useSidebar();
+  const sidebarWidth = expanded ? '16rem' : '4rem';
 
   return (
     <div className="flex min-h-screen w-full bg-background">
       <AppSidebar />
-      <main className="flex-1 flex flex-col">
+      <main 
+        className="flex-1 flex flex-col" 
+        style={{ 
+          marginLeft: sidebarWidth, 
+          width: `calc(100% - ${sidebarWidth})`,
+          transition: 'margin-left 0.3s ease-in-out, width 0.3s ease-in-out'
+        }}
+      >
         <div className="flex justify-end p-2 sm:p-4 border-b">
           {preferences && (
             <div className="flex items-center mr-4">
@@ -41,7 +51,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             </div>
           )}
         </div>
-        {children}
+        <div className="p-4">
+          {children}
+        </div>
         <Copyright />
       </main>
     </div>
