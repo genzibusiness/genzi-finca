@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form } from '@/components/ui/form';
 import { Transaction } from '@/types/cashflow';
@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 
 // Import custom form hooks
 import useFormData from './form/useFormData';
-import useCurrencyConvertor from './form/useCurrencyConvertor';
 import { useTransactionForm } from './form/useTransactionForm';
 
 // Import form layout components
@@ -54,7 +53,6 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
   const { 
     form, 
     filteredStatuses, 
-    applyConversionRate, 
     prepareSubmissionData 
   } = useTransactionForm(transaction, statuses, defaultCurrency, currencyRates);
   
@@ -63,7 +61,7 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
     try {
       console.log('Form values:', values);
       
-      // Prepare transaction data for submission
+      // Prepare transaction data for submission with automatic currency conversion
       const transactionData = prepareSubmissionData(values);
       console.log('Submitting transaction:', transactionData);
       
@@ -135,7 +133,6 @@ const TransactionForm = ({ transaction, onSave, isSubmitting = false }: Transact
               form={form} 
               currencies={currencies} 
               defaultCurrency={defaultCurrency}
-              onCurrencyChange={applyConversionRate}
             />
             <StatusField form={form} statuses={filteredStatuses} />
             {transactionType === 'expense' && (

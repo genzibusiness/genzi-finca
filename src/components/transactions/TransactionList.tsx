@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useState, useEffect } from 'react';
 import {
@@ -123,11 +124,17 @@ const TransactionList: React.FC<TransactionListProps> = ({
         )
       },
       cell: ({ row }) => {
+        const transaction = row.original;
         return (
           <CurrencyDisplay 
-            amount={row.original.amount} 
-            currency={row.original.currency}
-            type={row.original.type}
+            amount={transaction.amount} 
+            currency={transaction.currency}
+            type={transaction.type}
+            sgdAmount={transaction.sgd_amount}
+            inrAmount={transaction.inr_amount}
+            usdAmount={transaction.usd_amount}
+            originalAmount={transaction.original_amount}
+            originalCurrency={transaction.original_currency}
           />
         );
       },

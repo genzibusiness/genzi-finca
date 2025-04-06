@@ -8,20 +8,15 @@ interface CurrencyFieldProps {
   form: UseFormReturn<any>;
   currencies: { id: string; code: string; name: string; symbol: string }[];
   defaultCurrency: string;
-  onCurrencyChange?: (currency: string) => void;
 }
 
 const CurrencyField: React.FC<CurrencyFieldProps> = ({ 
   form, 
   currencies, 
-  defaultCurrency,
-  onCurrencyChange
+  defaultCurrency
 }) => {
   const handleValueChange = (value: string) => {
     form.setValue('currency', value);
-    if (onCurrencyChange) {
-      onCurrencyChange(value);
-    }
   };
 
   // Find the currency display format based on the code

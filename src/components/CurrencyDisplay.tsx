@@ -99,8 +99,7 @@ const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
       return inrAmount;
     }
     
-    // Use USD amount as a fallback when the others aren't available
-    if (usdAmount !== null && usdAmount !== undefined) {
+    if (preferredCurrency === 'USD' && usdAmount !== null && usdAmount !== undefined) {
       return usdAmount;
     }
     
