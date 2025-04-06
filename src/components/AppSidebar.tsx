@@ -43,7 +43,7 @@ const AppSidebar = () => {
                 alt="Finca" 
                 className="h-8 w-8" 
               />
-              {!isCollapsed && <span className="text-xl font-semibold text-white">Finca</span>}
+              {!isCollapsed && <span className="text-xl font-semibold text-white">Genzi Finca</span>}
             </Link>
           </div>
           <Button
@@ -91,7 +91,7 @@ const AppSidebar = () => {
           <Separator className="my-2 bg-white/10" />
           {!isCollapsed && (
             <div className="text-xs text-white/70">
-              <p>© 2025 Finca Finance</p>
+              <p>© 2025 Genzi Finca</p>
             </div>
           )}
         </div>

@@ -66,7 +66,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#f5f7f9] p-4">
       <div className="w-full max-w-md mb-8 text-center">
-        <h1 className="text-3xl font-bold text-[#004058]">Finca Finance</h1>
+        <h1 className="text-3xl font-bold text-[#004058]">Genzi Finca</h1>
         <p className="text-muted-foreground mt-2">
           Your finance management solution
         </p>
@@ -228,7 +228,7 @@ const Auth = () => {
       </div>
       
       <div className="mt-8 text-center text-sm text-muted-foreground">
-        <p>© 2025 Finca Finance. All rights reserved.</p>
+        <p>© 2025 Genzi Finca. All rights reserved.</p>
       </div>
     </div>
   );

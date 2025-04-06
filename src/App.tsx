@@ -25,8 +25,7 @@ import { CashflowProvider } from '@/context/CashflowContext';
 import { SidebarProvider } from '@/context/SidebarContext';
 import UserSettings from '@/pages/UserSettings';
 
-// Import Sidebar components from ui
-import { SidebarProvider as UISidebarProvider } from '@/components/ui/sidebar';
+// Import UI components
 import ChatButton from '@/components/chat/ChatButton';
 import { useLocation } from 'react-router-dom';
 
@@ -89,35 +88,33 @@ const App = () => {
         <AuthProvider>
           <CashflowProvider>
             <ThemeProvider defaultTheme="system" storageKey="finca-ui-theme">
-              <UISidebarProvider>
-                <SidebarProvider>
-                  <Routes>
-                    {/* Redirect from / to /dashboard */}
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    
-                    {/* Auth Route */}
-                    <Route path="/auth" element={<Auth />} />
-                    
-                    {/* Protected Routes */}
-                    <Route element={<ProtectedRoute />}>
-                      <Route path="/dashboard" element={<Index />} />
-                      <Route path="/transactions" element={<Transactions />} />
-                      <Route path="/transactions/new" element={<TransactionNew />} />
-                      <Route path="/transactions/:id" element={<TransactionDetail />} />
-                      <Route path="/income" element={<Income />} />
-                      <Route path="/expenses" element={<Expenses />} />
-                      <Route path="/settings" element={<UserSettings />} />
-                      <Route path="/configure" element={<ConfigureMasterData />} />
-                      <Route path="/chat" element={<FincaChat />} />
-                    </Route>
-                    
-                    {/* Error/Not Found Route */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <Toaster position="top-right" />
-                  <ConditionalChatButton />
-                </SidebarProvider>
-              </UISidebarProvider>
+              <SidebarProvider>
+                <Routes>
+                  {/* Redirect from / to /dashboard */}
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  
+                  {/* Auth Route */}
+                  <Route path="/auth" element={<Auth />} />
+                  
+                  {/* Protected Routes */}
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="/dashboard" element={<Index />} />
+                    <Route path="/transactions" element={<Transactions />} />
+                    <Route path="/transactions/new" element={<TransactionNew />} />
+                    <Route path="/transactions/:id" element={<TransactionDetail />} />
+                    <Route path="/income" element={<Income />} />
+                    <Route path="/expenses" element={<Expenses />} />
+                    <Route path="/settings" element={<UserSettings />} />
+                    <Route path="/configure" element={<ConfigureMasterData />} />
+                    <Route path="/chat" element={<FincaChat />} />
+                  </Route>
+                  
+                  {/* Error/Not Found Route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster position="top-right" />
+                <ConditionalChatButton />
+              </SidebarProvider>
             </ThemeProvider>
           </CashflowProvider>
         </AuthProvider>
