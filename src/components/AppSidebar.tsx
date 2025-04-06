@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSidebar } from '@/context/SidebarContext';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronLeft, Home, BarChart4, PiggyBank, FileCog, MessageSquare, ArrowDown, ArrowUp, Settings, Menu } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Home, BarChart4, FileCog, MessageSquare, ArrowDown, ArrowUp, Settings, Menu } from 'lucide-react';
 
 const menuItems = [
   { name: 'Dashboard', path: '/dashboard', icon: <Home className="h-5 w-5" /> },
@@ -26,14 +26,14 @@ const AppSidebar = () => {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen border-r bg-sidebar transition-width duration-300 ease-in-out",
+        "fixed left-0 top-0 z-40 h-screen border-r bg-[#004058] transition-width duration-300 ease-in-out",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
       <div className="flex h-full flex-col">
         {/* Logo and collapse button */}
         <div className={cn(
-          "relative flex h-16 items-center justify-between border-b bg-sidebar-header px-4",
+          "relative flex h-16 items-center justify-between border-b border-white/10 bg-[#004058] px-4",
           isCollapsed ? "justify-center" : "justify-between"
         )}>
           <div className="flex items-center">
@@ -49,7 +49,7 @@ const AppSidebar = () => {
           <Button
             variant="ghost"
             size="icon"
-            className={cn("text-white hover:bg-sidebar-button-hover", isCollapsed ? "absolute right-0 -mr-3 top-4 bg-sidebar-header" : "")}
+            className={cn("text-white hover:bg-[#00526e]", isCollapsed ? "absolute right-0 -mr-3 top-4 bg-[#004058]" : "")}
             onClick={toggleExpanded}
           >
             {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
@@ -57,9 +57,9 @@ const AppSidebar = () => {
         </div>
 
         {/* Mobile menu button - only shown on smaller screens */}
-        <div className="lg:hidden flex justify-between items-center px-4 py-2 border-b">
-          <span className="font-medium">Menu</span>
-          <Button variant="ghost" size="sm" onClick={toggleExpanded}>
+        <div className="lg:hidden flex justify-between items-center px-4 py-2 border-b border-white/10">
+          <span className="font-medium text-white">Menu</span>
+          <Button variant="ghost" size="sm" onClick={toggleExpanded} className="text-white">
             <Menu className="h-5 w-5" />
           </Button>
         </div>
@@ -74,8 +74,8 @@ const AppSidebar = () => {
                 className={cn(
                   "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   location.pathname === item.path
-                    ? "bg-sidebar-item-active text-white"
-                    : "text-sidebar-item hover:bg-sidebar-item-hover hover:text-white",
+                    ? "bg-[#00526e] text-white"
+                    : "text-white hover:bg-[#00526e] hover:text-white",
                   isCollapsed && "justify-center px-2"
                 )}
               >
@@ -88,9 +88,9 @@ const AppSidebar = () => {
 
         {/* Bottom section */}
         <div className="mt-auto p-4">
-          <Separator className="my-2 bg-sidebar-separator" />
+          <Separator className="my-2 bg-white/10" />
           {!isCollapsed && (
-            <div className="text-xs text-sidebar-text">
+            <div className="text-xs text-white/70">
               <p>© 2025 Finca Finance</p>
             </div>
           )}

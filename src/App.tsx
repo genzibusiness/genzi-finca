@@ -28,6 +28,7 @@ import UserSettings from '@/pages/UserSettings';
 // Import Sidebar components from ui
 import { SidebarProvider as UISidebarProvider } from '@/components/ui/sidebar';
 import ChatButton from '@/components/chat/ChatButton';
+import { useLocation } from 'react-router-dom';
 
 const App = () => {
   // Initialize query client here to ensure it's stable across renders
@@ -69,6 +70,15 @@ const App = () => {
     );
   }
 
+  const ConditionalChatButton = () => {
+    const location = useLocation();
+    // Don't show chat button on auth page
+    if (location.pathname === '/auth') {
+      return null;
+    }
+    return <ChatButton />;
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <Suspense fallback={
@@ -105,7 +115,7 @@ const App = () => {
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <Toaster position="top-right" />
-                  <ChatButton />
+                  <ConditionalChatButton />
                 </SidebarProvider>
               </UISidebarProvider>
             </ThemeProvider>
