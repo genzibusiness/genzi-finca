@@ -53,7 +53,7 @@ export interface User {
 export interface UserPreference {
   id: string;
   user_id: string;
-  preferred_currency: 'SGD' | 'INR';
+  preferred_currency: string;
   created_at: string;
   updated_at: string;
 }

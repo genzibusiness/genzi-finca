@@ -56,7 +56,7 @@ export function useUserPreferences() {
       // Create default preferences with the correct types
       const defaultPreferences = {
         user_id: user.id,
-        preferred_currency: 'INR' as const
+        preferred_currency: 'INR'
       };
 
       const { data, error } = await supabase
@@ -76,7 +76,7 @@ export function useUserPreferences() {
     }
   };
 
-  const updatePreferredCurrency = async (currency: 'SGD' | 'INR') => {
+  const updatePreferredCurrency = async (currency: string) => {
     if (!user || !preferences) return;
 
     try {
