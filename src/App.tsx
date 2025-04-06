@@ -1,4 +1,3 @@
-
 import React, { Suspense, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,6 +17,7 @@ import Auth from '@/pages/Auth';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ConfigureMasterData from '@/pages/ConfigureMasterData';
 import FincaChat from '@/pages/FincaChat';
+import About from '@/pages/About';
 
 // Import context providers
 import { AuthProvider } from '@/context/AuthContext';
@@ -107,6 +107,7 @@ const App = () => {
                     <Route path="/settings" element={<UserSettings />} />
                     <Route path="/configure" element={<ConfigureMasterData />} />
                     <Route path="/chat" element={<FincaChat />} />
+                    <Route path="/about" element={<About />} />
                   </Route>
                   
                   {/* Error/Not Found Route */}

@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSidebar } from '@/context/SidebarContext';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronLeft, Home, BarChart4, FileCog, MessageSquare, ArrowDown, ArrowUp, Settings, Menu, LogOut } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Home, BarChart4, FileCog, MessageSquare, ArrowDown, ArrowUp, Settings, Menu, LogOut, InfoIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -18,6 +18,7 @@ const menuItems = [
   { name: 'Finca Chat', path: '/chat', icon: <MessageSquare className="h-5 w-5" /> },
   { name: 'Settings', path: '/settings', icon: <Settings className="h-5 w-5" /> },
   { name: 'Configure', path: '/configure', icon: <FileCog className="h-5 w-5" /> },
+  { name: 'About', path: '/about', icon: <InfoIcon className="h-5 w-5" /> },
 ];
 
 const AppSidebar = () => {
