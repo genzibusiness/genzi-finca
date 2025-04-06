@@ -13,7 +13,7 @@ import { Loader2 } from 'lucide-react';
 const UserSettings = () => {
   const navigate = useNavigate();
   const { preferences, loading, error, updatePreferredCurrency } = useUserPreferences();
-  const [selectedCurrency, setSelectedCurrency] = useState<'SGD' | 'INR'>(
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(
     preferences?.preferred_currency || 'INR'
   );
   const [saving, setSaving] = useState(false);
@@ -80,7 +80,7 @@ const UserSettings = () => {
                   </p>
                   <RadioGroup
                     value={selectedCurrency}
-                    onValueChange={(value) => setSelectedCurrency(value as 'SGD' | 'INR')}
+                    onValueChange={setSelectedCurrency}
                     className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2"
                   >
                     <div className="flex items-center space-x-2 border rounded-md p-4 hover:bg-muted/50 cursor-pointer">
@@ -95,6 +95,13 @@ const UserSettings = () => {
                       <Label htmlFor="sgd" className="cursor-pointer flex-1">
                         <div className="font-medium">Singapore Dollar (S$)</div>
                         <p className="text-sm text-muted-foreground">View all amounts in SGD</p>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border rounded-md p-4 hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="USD" id="usd" />
+                      <Label htmlFor="usd" className="cursor-pointer flex-1">
+                        <div className="font-medium">US Dollar ($)</div>
+                        <p className="text-sm text-muted-foreground">View all amounts in USD</p>
                       </Label>
                     </div>
                   </RadioGroup>
